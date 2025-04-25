@@ -101,19 +101,19 @@
                     @foreach ($pengajuan as $value => $item)
                         <tr class="hover">
                             <td class="font-bold">{{ $value + 1 }}</td>
-                            <td class="text-slate-500 dark:text-slate-300">{{ $item->nama_karyawan }} -
+                            <td>{{ $item->nama_karyawan }} -
                                 {{ $item->nik }}</td>
-                            <td class="text-slate-500 dark:text-slate-300">{{ $item->nama_departemen }}</td>
-                            <td class="text-slate-500 dark:text-slate-300">
+                            <td>{{ $item->nama_departemen }}</td>
+                            <td>
                                 {{ \Carbon\Carbon::parse($item->tanggal_pengajuan)->format('l, d-m-Y') }}</td>
-                            <td class="text-slate-500 dark:text-slate-300">
+                            <td>
                                 @if ($item->status == 'I')
                                     <span>Izin</span>
                                 @elseif ($item->status == 'S')
                                     <span>Sakit</span>
                                 @endif
                             </td>
-                            <td class="text-slate-500 dark:text-slate-300">{{ $item->keterangan }}</td>
+                            <td>{{ $item->keterangan }}</td>
                             <td class="flex justify-center gap-2">
                                 @if ($item->status_approved == 1)
                                     <label class="btn btn-warning btn-sm tooltip flex items-center" data-tip="Diterima"

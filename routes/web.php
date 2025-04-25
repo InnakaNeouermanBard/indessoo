@@ -1,16 +1,18 @@
 <?php
 
+use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\UserController;
 use App\Http\Controllers\AdminController;
-use App\Http\Controllers\Auth\AuthenticatedSessionController;
-use App\Http\Controllers\AuthKaryawanController;
+use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\KaryawanController;
+use App\Http\Controllers\PresensiController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DepartemenController;
-use App\Http\Controllers\KaryawanController;
+use App\Http\Controllers\FormLemburController;
+use App\Http\Controllers\AuthKaryawanController;
 use App\Http\Controllers\LokasiKantorController;
-use App\Http\Controllers\PresensiController;
-use App\Http\Controllers\ProfileController;
-use App\Http\Controllers\UserController;
-use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\ShiftScheduleController;
+use App\Http\Controllers\Auth\AuthenticatedSessionController;
 
 Route::get('/', function () {
     return view('auth.login');
@@ -49,6 +51,52 @@ Route::middleware(['auth:web'])->prefix('admin')->group(function () {
     Route::get('/admin-management/edit', [AdminController::class, 'edit'])->name('admin-management.edit');
     Route::post('/admin-management/update', [AdminController::class, 'update'])->name('admin-management.update');
     Route::post('/admin-management/delete', [AdminController::class, 'delete'])->name('admin-management.delete');
+
+    Route::resource('form-lembur', FormLemburController::class)->names([
+        'index' => 'form-lembur.index',
+        'create' => 'form-lembur.create',
+        'store' => 'form-lembur.store',
+        'show' => 'form-lembur.show',
+        'edit' => 'form-lembur.edit',
+        'update' => 'form-lembur.update',
+
+    ]);
+    Route::post('form-lembur/delete', [FormLemburController::class, 'destroy'])->name('form-lembur.delete');
+    Route::get('/form-lembur/karyawan/{nik}', [FormLemburController::class, 'getKaryawanData'])->name('form-lembur.getKaryawanData');
+    Route::get('/admin/form-lembur/{id}/edit', [FormLemburController::class, 'edit'])->name('form-lembur.edit');
+
+    // 1. Rute Index
+    Route::get('jadwal-shift', [App\Http\Controllers\ShiftScheduleController::class, 'index'])
+        ->name('jadwal-shift.index');
+
+    // 2. Rute Create/Store biasa (tanpa parameter di URL)
+    Route::get('jadwal-shift/create', [App\Http\Controllers\ShiftScheduleController::class, 'create'])
+        ->name('jadwal-shift.create');
+    Route::post('jadwal-shift', [App\Http\Controllers\ShiftScheduleController::class, 'store'])
+        ->name('jadwal-shift.store');
+
+    // 3. Rute untuk jadwal massal dan fitur khusus lainnya (tanpa parameter di URL)
+    Route::get('jadwal-shift/create-massal', [App\Http\Controllers\ShiftScheduleController::class, 'createMassal'])
+        ->name('jadwal-shift.create-massal');
+    Route::post('jadwal-shift/store-massal', [App\Http\Controllers\ShiftScheduleController::class, 'storeMassal'])
+        ->name('jadwal-shift.store-massal');
+    Route::get('jadwal-shift/get-day', [App\Http\Controllers\ShiftScheduleController::class, 'getDaySchedule'])
+        ->name('jadwal-shift.get-day');
+    Route::post('jadwal-shift/update-single-day', [App\Http\Controllers\ShiftScheduleController::class, 'updateSingleDay'])
+        ->name('jadwal-shift.update-single-day');
+
+    // 4. Rute dengan parameter HARUS ditempatkan PALING TERAKHIR
+    Route::get('jadwal-shift/karyawan/{nik}', [App\Http\Controllers\ShiftScheduleController::class, 'karyawanDetail'])
+        ->name('jadwal-shift.karyawan-detail');
+    Route::get('jadwal-shift/{id}/edit', [App\Http\Controllers\ShiftScheduleController::class, 'edit'])
+        ->name('jadwal-shift.edit');
+    Route::put('jadwal-shift/{id}', [App\Http\Controllers\ShiftScheduleController::class, 'update'])
+        ->name('jadwal-shift.update');
+    Route::delete('jadwal-shift/{id}', [App\Http\Controllers\ShiftScheduleController::class, 'destroy'])
+        ->name('jadwal-shift.destroy');
+    Route::get('jadwal-shift/{id}', [App\Http\Controllers\ShiftScheduleController::class, 'show'])
+        ->name('jadwal-shift.show');
+
 
     Route::get('/departemen', [DepartemenController::class, 'index'])->name('admin.departemen');
     Route::post('/departemen/tambah', [DepartemenController::class, 'store'])->name('admin.departemen.store');

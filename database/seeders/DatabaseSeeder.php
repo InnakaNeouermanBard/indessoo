@@ -36,6 +36,7 @@ class DatabaseSeeder extends Seeder
             KaryawanSeeder::class,
             PresensiSeeder::class,
             PengajuanPresensiSeeder::class,
+            ShiftSeeder::class,
         ]);
     }
 }

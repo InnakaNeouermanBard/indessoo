@@ -472,7 +472,7 @@
                     "</div>",
                 icon: 'warning',
                 showCancelButton: true,
-                confirmButtonColor: '#6419E6',
+                confirmButtonColor: '##eb4034',
                 cancelButtonColor: '#F87272',
                 confirmButtonText: 'Hapus',
                 cancelButtonText: 'Batal',

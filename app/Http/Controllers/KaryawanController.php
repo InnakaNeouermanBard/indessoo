@@ -37,7 +37,6 @@ class KaryawanController extends Controller
                 'foto' => $foto,
                 'updated_at' => Carbon::now(),
             ]);
-
         } elseif ($request->password == null) {
             $update = Karyawan::where('nik', auth()->guard('karyawan')->user()->nik)->update([
                 'nama_lengkap' => $request->nama_lengkap,
@@ -66,10 +65,10 @@ class KaryawanController extends Controller
 
         $query = Karyawan::join('departemen as d', 'karyawan.departemen_id', '=', 'd.id')->select('karyawan.*', 'd.kode')->orderBy('d.kode', 'asc')->orderBy('karyawan.nama_lengkap', 'asc');
         if ($request->nama_karyawan) {
-            $query->where('karyawan.nama_lengkap', 'like', '%'.$request->nama_karyawan.'%');
+            $query->where('karyawan.nama_lengkap', 'like', '%' . $request->nama_karyawan . '%');
         }
         if ($request->kode_departemen) {
-            $query->where('d.kode', 'like', '%'.$request->kode_departemen.'%');
+            $query->where('d.kode', 'like', '%' . $request->kode_departemen . '%');
         }
         $karyawan = $query->paginate(10);
 

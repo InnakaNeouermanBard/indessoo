@@ -40,4 +40,8 @@ class Karyawan extends Authenticatable
     {
         return $this->belongsTo(Departemen::class);
     }
+    public function shiftSchedules()
+    {
+        return $this->hasMany(ShiftSchedule::class, 'karyawan_nik', 'nik');
+    }
 }
