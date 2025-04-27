@@ -17,10 +17,18 @@
 
             {{-- Navigation Links --}}
             <div class="py-4 space-y-1">
-                <x-sidebar-link :href="route('admin.dashboard')" :active="request()->routeIs('admin.dashboard')">
-                    <i class="ri-dashboard-line mr-2"></i> {{ __('Dashboard') }}
+                <x-sidebar-link :href="route('admin.monitoring-presensi')" :active="request()->routeIs('admin.monitoring-presensi')">
+                    <i class="ri-fingerprint-line mr-2"></i> {{ __('Absensi') }}
                 </x-sidebar-link>
-
+                {{-- <x-sidebar-link :href="route('admin.dashboard')" :active="request()->routeIs('admin.dashboard')">
+                    <i class="ri-dashboard-line mr-2"></i> {{ __('Dashboard') }}
+                </x-sidebar-link> --}}
+                <x-sidebar-link :href="route('admin.administrasi-presensi')" :active="request()->routeIs('admin.administrasi-presensi')">
+                    <i class="ri-settings-line mr-2"></i> {{ __('Form Perizinan') }}
+                </x-sidebar-link>
+                <x-sidebar-link :href="route('form-lembur.index')" :active="request()->routeIs('form-lembur')">
+                    <i class="ri-file-chart-line mr-2"></i> {{ __('Form Lembur') }}
+                </x-sidebar-link>
                 <x-sidebar-link :href="route('admin-management')" :active="request()->routeIs('admin-management')">
                     <i class="ri-user-line mr-2"></i> {{ __('Data Admin') }}
                 </x-sidebar-link>
@@ -28,33 +36,17 @@
                 <x-sidebar-link :href="route('admin.karyawan')" :active="request()->routeIs('admin.karyawan')">
                     <i class="ri-user-line mr-2"></i> {{ __('Data Karyawan') }}
                 </x-sidebar-link>
-
-                <x-sidebar-link :href="route('admin.departemen')" :active="request()->routeIs('admin.departemen')">
-                    <i class="ri-building-line mr-2"></i> {{ __('Data Departemen') }}
-                </x-sidebar-link>
-
-                <x-sidebar-link :href="route('admin.monitoring-presensi')" :active="request()->routeIs('admin.monitoring-presensi')">
-                    <i class="ri-fingerprint-line mr-2"></i> {{ __('Monitoring Presensi') }}
-                </x-sidebar-link>
-
-                <x-sidebar-link :href="route('admin.laporan.presensi')" :active="request()->routeIs('admin.laporan.presensi')">
-                    <i class="ri-file-chart-line mr-2"></i> {{ __('Laporan Presensi') }}
-                </x-sidebar-link>
-
-                <x-sidebar-link :href="route('form-lembur.index')" :active="request()->routeIs('form-lembur')">
-                    <i class="ri-file-chart-line mr-2"></i> {{ __('Form Lembur') }}
-                </x-sidebar-link>
-
-                <x-sidebar-link :href="route('jadwal-shift.index')" :active="request()->routeIs('admin.laporan.presensi')">
+                <x-sidebar-link :href="route('jadwal-shift.index')" :active="request()->routeIs('admin.jadwal')">
                     <i class="ri-file-chart-line mr-2"></i> {{ __('Jadwal Kerja') }}
                 </x-sidebar-link>
-
+                <x-sidebar-link :href="route('admin.laporan.presensi')" :active="request()->routeIs('admin.laporan.presensi')">
+                    <i class="ri-file-chart-line mr-2"></i> {{ __('Laporan') }}
+                </x-sidebar-link>
+                {{-- <x-sidebar-link :href="route('admin.departemen')" :active="request()->routeIs('admin.departemen')">
+                    <i class="ri-building-line mr-2"></i> {{ __('Data Departemen') }}
+                </x-sidebar-link> --}}
                 <x-sidebar-link :href="route('admin.lokasi-kantor')" :active="request()->routeIs('admin.lokasi-kantor')">
                     <i class="ri-map-pin-line mr-2"></i> {{ __('Lokasi Kantor') }}
-                </x-sidebar-link>
-
-                <x-sidebar-link :href="route('admin.administrasi-presensi')" :active="request()->routeIs('admin.administrasi-presensi')">
-                    <i class="ri-settings-line mr-2"></i> {{ __('Administrasi Presensi') }}
                 </x-sidebar-link>
             </div>
         </div>

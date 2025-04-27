@@ -6,4 +6,5 @@ enum StatusPengajuanPresensi: string
 {
     case IZIN = "I";
     case SAKIT = "S";
+    case CUTI = "C";
 }
