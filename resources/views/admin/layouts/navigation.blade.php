@@ -4,16 +4,16 @@
         {{-- Desktop Sidebar - Fixed Left --}}
         <div class="hidden sm:block w-64 bg-gray-800 text-white fixed inset-y-0 left-0 z-30 overflow-y-auto">
             {{-- Logo --}}
-            <div class="flex items-center justify-center h-16 border-b border-gray-700">
+            <div class="flex items-center justify-center h-20 border-b border-gray-700">
                 <a href="{{ route('admin.dashboard') }}">
-                    <x-application-logo class="block h-10 w-auto fill-current text-white" />
+                    <x-application-logo class="w-auto h-20 fill-current text-gray-500" />
                 </a>
             </div>
 
             {{-- Admin Title --}}
-            <div class="px-4 py-3 border-b border-gray-700">
+            {{-- <div class="px-4 py-3 border-b border-gray-700">
                 <h2 class="text-lg font-bold text-center text-white">Admin Panel</h2>
-            </div>
+            </div> --}}
 
             {{-- Navigation Links --}}
             <div class="py-4 space-y-1">
@@ -26,7 +26,7 @@
                 <x-sidebar-link :href="route('admin.administrasi-presensi')" :active="request()->routeIs('admin.administrasi-presensi')">
                     <i class="ri-settings-line mr-2"></i> {{ __('Form Perizinan') }}
                 </x-sidebar-link>
-                <x-sidebar-link :href="route('form-lembur.index')" :active="request()->routeIs('form-lembur')">
+                <x-sidebar-link :href="route('form-lembur.index')" :active="request()->routeIs('form-lembur.index')">
                     <i class="ri-file-chart-line mr-2"></i> {{ __('Form Lembur') }}
                 </x-sidebar-link>
                 <x-sidebar-link :href="route('admin-management')" :active="request()->routeIs('admin-management')">

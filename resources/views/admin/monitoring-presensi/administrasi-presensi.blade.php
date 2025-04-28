@@ -61,6 +61,7 @@
                             <option value="0">Semua Status</option>
                             <option value="I" {{ request()->status == 'I' ? 'selected' : '' }}>Izin</option>
                             <option value="S" {{ request()->status == 'S' ? 'selected' : '' }}>Sakit</option>
+                            <option value="C" {{ request()->status == 'C' ? 'selected' : '' }}>Cuti</option>
                         </select>
                     </label>
                     <label class="form-control w-full max-w-xs">
@@ -111,6 +112,8 @@
                                     <span>Izin</span>
                                 @elseif ($item->status == 'S')
                                     <span>Sakit</span>
+                                @elseif ($item->status == 'C')
+                                    <span>Cuti</span>
                                 @endif
                             </td>
                             <td>{{ $item->keterangan }}</td>
@@ -124,7 +127,7 @@
                                         onclick="return tolak_button('{{ $item->id }}', '{{ $item->nama_karyawan }}', '{{ \Carbon\Carbon::parse($item->tanggal_pengajuan)->format('d-m-Y') }}', 'tolak')">
                                         <i class="ri-close-circle-line"></i>
                                     </label>
-                                @elseif ($item->status_approved == 1)
+                                @elseif ($item->status_approved == 2)
                                     <div class="flex items-center gap-2">
                                         <div class="badge badge-success">Diterima</div>
                                         <label class="btn btn-error btn-sm tooltip flex items-center"

@@ -31,7 +31,7 @@
                             </div>
                             <select name="status"
                                 class="select select-bordered text-base text-blue-700 dark:bg-slate-100 w-full" required>
-                                <option disabled selected>Izin / Sakit</option>
+                                <option disabled selected>Izin / Sakit / Cuti</option>
                                 @foreach ($statusPengajuan as $item)
                                     <option value="{{ $item->value }}">{{ $item->name }}</option>
                                 @endforeach

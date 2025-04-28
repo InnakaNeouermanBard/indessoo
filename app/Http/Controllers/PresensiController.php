@@ -17,6 +17,12 @@ class PresensiController extends Controller
 {
     public function index()
     {
+        $riwayatPresensi = DB::table("presensi")
+            ->where('nik', auth()->guard('karyawan')->user()->nik)
+            ->orderBy("tanggal_presensi", "desc")
+            ->paginate(10);
+        $bulan = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+
         $title = 'Presensi';
         // Cek apakah karyawan sudah presensi pada hari ini
         $presensiKaryawan = DB::table('presensi')
@@ -27,7 +33,7 @@ class PresensiController extends Controller
         // Ambil lokasi kantor
         $lokasiKantor = LokasiKantor::where('is_used', true)->first();
 
-        return view('dashboard.presensi.index', compact('title', 'presensiKaryawan', 'lokasiKantor'));
+        return view('dashboard.presensi.index', compact('title', 'presensiKaryawan', 'lokasiKantor', 'bulan', 'riwayatPresensi'));
     }
 
     public function store(Request $request)
@@ -347,7 +353,7 @@ class PresensiController extends Controller
     {
         if ($request->ajuan == "terima") {
             $pengajuan = DB::table('pengajuan_presensi')->where('id', $request->id)->update([
-                'status_approved' => 1
+                'status_approved' => 2
             ]);
             if ($pengajuan) {
                 return response()->json(['success' => true, 'message' => 'Pengajuan presensi telah diterima']);
@@ -356,7 +362,7 @@ class PresensiController extends Controller
             }
         } elseif ($request->ajuan == "tolak") {
             $pengajuan = DB::table('pengajuan_presensi')->where('id', $request->id)->update([
-                'status_approved' => 2
+                'status_approved' => 3
             ]);
             if ($pengajuan) {
                 return response()->json(['success' => true, 'message' => 'Pengajuan presensi telah ditolak']);
