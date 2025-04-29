@@ -29,12 +29,11 @@
                         <th></th>
                         <th>NIK</th>
                         <th>Nama Karyawan</th>
-                        <th>Departemen</th>
+                        <th>Tanggal</th>
                         <th>Jam Masuk</th>
-                        <th>Foto & Lokasi</th>
                         <th>Jam Keluar</th>
-                        <th>Foto & Lokasi</th>
                         <th>Keterangan</th>
+                        <th>Aksi</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -43,40 +42,14 @@
                             <td class="font-bold">{{ $monitoring->firstItem() + $value }}</td>
                             <td>{{ $item->nik }}</td>
                             <td>{{ $item->nama_karyawan }}</td>
-                            <td>{{ $item->nama_departemen }}</td>
+                            <td>{{ $item->tanggal_presensi }}</td>
                             <td>{{ $item->jam_masuk }}</td>
-                            <td>
-                                <div class="avatar">
-                                    <div class="w-24 rounded">
-                                        <label for="view_modal" class="cursor-pointer"
-                                            onclick="return viewLokasi('lokasi_masuk', '{{ $item->nik }}')">
-                                            <img src="{{ asset("storage/unggah/presensi/$item->foto_masuk") }}"
-                                                alt="{{ $item->foto_masuk }}" />
-                                        </label>
-                                    </div>
-                                </div>
-                            </td>
                             <td class="text-slate-500 dark:text-slate-300">
                                 @if ($item->jam_keluar)
                                     {{ $item->jam_keluar }}
                                 @else
                                     <div class="w-fit rounded-md bg-error p-1 text-white">Belum Presensi</div>
                                 @endif
-                            </td>
-                            <td class="text-slate-500 dark:text-slate-300">
-                                <div class="avatar">
-                                    <div class="w-24 rounded">
-                                        @if ($item->foto_keluar)
-                                            <label for="view_modal" class="cursor-pointer"
-                                                onclick="return viewLokasi('lokasi_keluar', '{{ $item->nik }}')">
-                                                <img src="{{ asset("storage/unggah/presensi/$item->foto_keluar") }}"
-                                                    alt="{{ $item->foto_keluar }}" />
-                                            </label>
-                                        @else
-                                            <span></span>
-                                        @endif
-                                    </div>
-                                </div>
                             </td>
                             <td class="text-slate-500 dark:text-slate-300">
                                 @if ($item->jam_masuk > Carbon\Carbon::make('08:00:00')->format('H:i:s'))
@@ -96,6 +69,11 @@
                                     <div class="w-fit rounded-md bg-success p-1 text-white">Tepat Waktu</div>
                                 @endif
                             </td>
+                            <td>
+                                <label for="detail_modal_{{ $item->nik }}" class="btn btn-primary btn-sm">
+                                    Detail
+                                </label>
+                            </td>
                         </tr>
                     @endforeach
                 </tbody>
@@ -105,6 +83,74 @@
             </div>
         </div>
     </div>
+
+    {{-- Modal Detail untuk Setiap Karyawan --}}
+    @foreach ($monitoring as $item)
+        <input type="checkbox" id="detail_modal_{{ $item->nik }}" class="modal-toggle" />
+        <div class="modal" role="dialog">
+            <div class="modal-box">
+                <div class="mb-3 flex justify-between">
+                    <h3 class="text-lg font-bold">Detail Presensi</h3>
+                    <label for="detail_modal_{{ $item->nik }}" class="cursor-pointer">
+                        <i class="ri-close-large-fill"></i>
+                    </label>
+                </div>
+                <div class="mb-4">
+                    <h4 class="font-semibold">Informasi Karyawan</h4>
+                    <p><span class="font-medium">NIK:</span> {{ $item->nik }}</p>
+                    <p><span class="font-medium">Nama:</span> {{ $item->nama_karyawan }}</p>
+                    <p><span class="font-medium">Tanggal:</span> {{ $item->tanggal_presensi }}</p>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="border rounded-md p-3">
+                        <h5 class="font-semibold mb-2">Foto Masuk</h5>
+                        <div class="avatar">
+                            <div class="w-full rounded">
+                                <img src="{{ asset("storage/unggah/presensi/$item->foto_masuk") }}"
+                                    alt="{{ $item->foto_masuk }}" />
+                            </div>
+                        </div>
+                        <p class="mt-2"><span class="font-medium">Jam Masuk:</span> {{ $item->jam_masuk }}</p>
+                        <button class="btn btn-sm btn-info mt-2"
+                            onclick="return viewLokasi('lokasi_masuk', '{{ $item->nik }}')">
+                            Lihat Lokasi
+                        </button>
+                    </div>
+                    <div class="border rounded-md p-3">
+                        <h5 class="font-semibold mb-2">Foto Keluar</h5>
+                        <div class="avatar">
+                            <div class="w-full rounded">
+                                @if ($item->foto_keluar)
+                                    <img src="{{ asset("storage/unggah/presensi/$item->foto_keluar") }}"
+                                        alt="{{ $item->foto_keluar }}" />
+                                @else
+                                    <div class="flex items-center justify-center h-32 bg-gray-200 rounded-md">
+                                        <p class="text-gray-500">Belum ada foto keluar</p>
+                                    </div>
+                                @endif
+                            </div>
+                        </div>
+                        <p class="mt-2"><span class="font-medium">Jam Keluar:</span>
+                            @if ($item->jam_keluar)
+                                {{ $item->jam_keluar }}
+                            @else
+                                <span class="text-error">Belum Presensi</span>
+                            @endif
+                        </p>
+                        @if ($item->jam_keluar)
+                            <button class="btn btn-sm btn-info mt-2"
+                                onclick="return viewLokasi('lokasi_keluar', '{{ $item->nik }}')">
+                                Lihat Lokasi
+                            </button>
+                        @endif
+                    </div>
+                </div>
+                <div class="modal-action">
+                    <label for="detail_modal_{{ $item->nik }}" class="btn btn-outline">Kembali</label>
+                </div>
+            </div>
+        </div>
+    @endforeach
 
     {{-- Awal Modal View Lokasi --}}
     <input type="checkbox" id="view_modal" class="modal-toggle" />
@@ -173,6 +219,9 @@
         }
 
         function viewLokasi(tipe, nik) {
+            // Buka modal lokasi
+            document.getElementById('view_modal').checked = true;
+
             // Loading effect start
             let loading = `<span class="loading loading-dots loading-md text-purple-600"></span>`;
             $("#loading_edit1").html(loading);

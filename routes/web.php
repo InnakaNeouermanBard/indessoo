@@ -52,18 +52,13 @@ Route::middleware(['auth:web'])->prefix('admin')->group(function () {
     Route::post('/admin-management/update', [AdminController::class, 'update'])->name('admin-management.update');
     Route::post('/admin-management/delete', [AdminController::class, 'delete'])->name('admin-management.delete');
 
-    Route::resource('form-lembur', FormLemburController::class)->names([
-        'index' => 'form-lembur.index',
-        'create' => 'form-lembur.create',
-        'store' => 'form-lembur.store',
-        'show' => 'form-lembur.show',
-        'edit' => 'form-lembur.edit',
-        'update' => 'form-lembur.update',
-
-    ]);
-    Route::post('form-lembur/delete', [FormLemburController::class, 'destroy'])->name('form-lembur.delete');
-    Route::get('/form-lembur/karyawan/{nik}', [FormLemburController::class, 'getKaryawanData'])->name('form-lembur.getKaryawanData');
-    Route::get('/admin/form-lembur/{id}/edit', [FormLemburController::class, 'edit'])->name('form-lembur.edit');
+    Route::get('/form-lembur', [FormLemburController::class, 'index'])->name('form-lembur.index');
+    Route::post('/form-lembur', [FormLemburController::class, 'store'])->name('form-lembur.store');
+    Route::get('/form-lembur/{id}', [FormLemburController::class, 'show'])->name('form-lembur.show');
+    Route::get('/form-lembur/{id}/edit', [FormLemburController::class, 'edit'])->name('form-lembur.edit');
+    Route::put('/form-lembur/{id}', [FormLemburController::class, 'update'])->name('form-lembur.update');
+    Route::post('/form-lembur/delete', [FormLemburController::class, 'destroy'])->name('form-lembur.delete');
+    Route::get('/form-lembur/get-karyawan-data/{nik}', [FormLemburController::class, 'getKaryawanData'])->name('form-lembur.getKaryawanData');
 
     // 1. Rute Index
     Route::get('jadwal-shift', [App\Http\Controllers\ShiftScheduleController::class, 'index'])

@@ -1,8 +1,8 @@
 {{-- Sidebar Navigation with fixed left positioning --}}
-<div x-data="{ open: false }">
+<div x-data="{ open: false, showLogoutConfirm: false }">
     <div class="flex min-h-screen bg-gray-100">
         {{-- Desktop Sidebar - Fixed Left --}}
-        <div class="hidden sm:block w-64 bg-gray-800 text-white fixed inset-y-0 left-0 z-30 overflow-y-auto">
+        <div class="hidden sm:block w-64 bg-blue-800 text-white fixed inset-y-0 left-0 z-30 overflow-y-auto">
             {{-- Logo --}}
             <div class="flex items-center justify-center h-20 border-b border-gray-700">
                 <a href="{{ route('admin.dashboard') }}">
@@ -18,35 +18,35 @@
             {{-- Navigation Links --}}
             <div class="py-4 space-y-1">
                 <x-sidebar-link :href="route('admin.monitoring-presensi')" :active="request()->routeIs('admin.monitoring-presensi')">
-                    <i class="ri-fingerprint-line mr-2"></i> {{ __('Absensi') }}
+                    <i></i> {{ __('Absensi') }}
                 </x-sidebar-link>
                 {{-- <x-sidebar-link :href="route('admin.dashboard')" :active="request()->routeIs('admin.dashboard')">
                     <i class="ri-dashboard-line mr-2"></i> {{ __('Dashboard') }}
                 </x-sidebar-link> --}}
                 <x-sidebar-link :href="route('admin.administrasi-presensi')" :active="request()->routeIs('admin.administrasi-presensi')">
-                    <i class="ri-settings-line mr-2"></i> {{ __('Form Perizinan') }}
+                    <i></i> {{ __('Form Perizinan') }}
                 </x-sidebar-link>
                 <x-sidebar-link :href="route('form-lembur.index')" :active="request()->routeIs('form-lembur.index')">
-                    <i class="ri-file-chart-line mr-2"></i> {{ __('Form Lembur') }}
+                    <i></i> {{ __('Form Lembur') }}
                 </x-sidebar-link>
                 <x-sidebar-link :href="route('admin-management')" :active="request()->routeIs('admin-management')">
-                    <i class="ri-user-line mr-2"></i> {{ __('Data Admin') }}
+                    <i></i> {{ __('Data Admin') }}
                 </x-sidebar-link>
 
                 <x-sidebar-link :href="route('admin.karyawan')" :active="request()->routeIs('admin.karyawan')">
-                    <i class="ri-user-line mr-2"></i> {{ __('Data Karyawan') }}
+                    <i></i> {{ __('Data Karyawan') }}
                 </x-sidebar-link>
                 <x-sidebar-link :href="route('jadwal-shift.index')" :active="request()->routeIs('admin.jadwal')">
-                    <i class="ri-file-chart-line mr-2"></i> {{ __('Jadwal Kerja') }}
+                    <i></i> {{ __('Jadwal Kerja') }}
                 </x-sidebar-link>
                 <x-sidebar-link :href="route('admin.laporan.presensi')" :active="request()->routeIs('admin.laporan.presensi')">
-                    <i class="ri-file-chart-line mr-2"></i> {{ __('Laporan') }}
+                    <i></i> {{ __('Laporan') }}
                 </x-sidebar-link>
                 {{-- <x-sidebar-link :href="route('admin.departemen')" :active="request()->routeIs('admin.departemen')">
                     <i class="ri-building-line mr-2"></i> {{ __('Data Departemen') }}
                 </x-sidebar-link> --}}
                 <x-sidebar-link :href="route('admin.lokasi-kantor')" :active="request()->routeIs('admin.lokasi-kantor')">
-                    <i class="ri-map-pin-line mr-2"></i> {{ __('Lokasi Kantor') }}
+                    <i></i> {{ __('Lokasi Kantor') }}
                 </x-sidebar-link>
             </div>
         </div>
@@ -103,15 +103,16 @@
                                         {{ __('Profile') }}
                                     </x-dropdown-link>
 
-                                    <!-- Authentication -->
-                                    <form method="POST" action="{{ route('logout') }}">
-                                        @csrf
+                                    <!-- Button to show logout confirmation -->
+                                    <button @click="showLogoutConfirm = true"
+                                        class="w-full text-left block px-4 py-2 text-sm leading-5 text-gray-700 hover:bg-gray-100 focus:outline-none focus:bg-gray-100 transition duration-150 ease-in-out">
+                                        {{ __('Log Out') }}
+                                    </button>
 
-                                        <x-dropdown-link :href="route('logout')"
-                                            onclick="event.preventDefault();
-                                                            this.closest('form').submit();">
-                                            {{ __('Log Out') }}
-                                        </x-dropdown-link>
+                                    <!-- Hidden form for actual logout -->
+                                    <form id="logout-form" method="POST" action="{{ route('logout') }}"
+                                        class="hidden">
+                                        @csrf
                                     </form>
                                 </x-slot>
                             </x-dropdown>
@@ -171,6 +172,55 @@
                 <main>
                     {{ $slot ?? '' }}
                 </main>
+            </div>
+        </div>
+    </div>
+
+    <!-- Logout Confirmation Modal -->
+    <div x-show="showLogoutConfirm" style="display: none"
+        class="fixed inset-0 overflow-y-auto z-50 flex items-center justify-center"
+        x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0"
+        x-transition:enter-end="opacity-100" x-transition:leave="transition ease-in duration-200"
+        x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0">
+
+        <!-- Backdrop -->
+        <div class="fixed inset-0 transition-opacity" @click="showLogoutConfirm = false">
+            <div class="absolute inset-0 bg-gray-500 opacity-75"></div>
+        </div>
+
+        <!-- Modal -->
+        <div
+            class="bg-white rounded-lg overflow-hidden shadow-xl transform transition-all sm:max-w-lg sm:w-full p-6 z-50">
+            <div class="sm:flex sm:items-start">
+                <div
+                    class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-red-100 sm:mx-0 sm:h-10 sm:w-10">
+                    <svg class="h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    </svg>
+                </div>
+                <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
+                    <h3 class="text-lg leading-6 font-medium text-gray-900">
+                        Konfirmasi Logout
+                    </h3>
+                    <div class="mt-2">
+                        <p class="text-sm text-gray-500">
+                            Anda yakin ingin keluar dari sistem?
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <div class="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse">
+                <button type="button"
+                    class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:ml-3 sm:w-auto sm:text-sm"
+                    @click="document.getElementById('logout-form').submit()">
+                    Ya, Logout
+                </button>
+                <button type="button"
+                    class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:w-auto sm:text-sm"
+                    @click="showLogoutConfirm = false">
+                    Batal
+                </button>
             </div>
         </div>
     </div>
