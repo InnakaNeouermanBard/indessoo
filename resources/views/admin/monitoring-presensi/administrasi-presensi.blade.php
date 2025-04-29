@@ -2,7 +2,7 @@
     <x-slot name="header">
         <div class="flex items-center justify-between">
             <h2 class="text-xl font-semibold leading-tight text-gray-800">
-                {{ __('Administrasi Presensi') }}
+                {{ __('Form Perizinan') }}
             </h2>
         </div>
     </x-slot>
@@ -26,7 +26,7 @@
                         <input type="text" name="karyawan" placeholder="Nama Karyawan"
                             class="input input-bordered w-full" value="{{ request()->karyawan }}" />
                     </label>
-                    <label class="form-control w-full max-w-xs">
+                    {{-- <label class="form-control w-full max-w-xs">
                         <div class="label">
                             <span class="label-text">Departemen</span>
                         </div>
@@ -38,7 +38,7 @@
                                 </option>
                             @endforeach
                         </select>
-                    </label>
+                    </label> --}}
                     <label class="form-control w-full max-w-xs">
                         <div class="label">
                             <span class="label-text">Tanggal Awal</span>
@@ -89,9 +89,9 @@
                 class="table mb-4 w-full border-collapse items-center border-gray-200 align-top dark:border-white/40">
                 <thead class="text-sm text-black">
                     <tr>
-                        <th></th>
+                        <th>No</th>
                         <th>Nama Karyawan / NIK</th>
-                        <th>Departemen</th>
+                        {{-- <th>Departemen</th> --}}
                         <th>Tanggal Pengajuan</th>
                         <th>Status</th>
                         <th>Keterangan</th>
@@ -104,7 +104,7 @@
                             <td class="font-bold">{{ $value + 1 }}</td>
                             <td>{{ $item->nama_karyawan }} -
                                 {{ $item->nik }}</td>
-                            <td>{{ $item->nama_departemen }}</td>
+                            {{-- <td>{{ $item->nama_departemen }}</td> --}}
                             <td>
                                 {{ \Carbon\Carbon::parse($item->tanggal_pengajuan)->format('l, d-m-Y') }}</td>
                             <td>

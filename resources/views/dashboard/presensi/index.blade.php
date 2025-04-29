@@ -13,6 +13,10 @@
                 margin: auto;
                 border-radius: 33px;
             }
+
+            #map {
+                height: 250px !important;
+            }
         }
 
         @media (min-width: 640px) {
@@ -24,6 +28,10 @@
                 margin: auto;
                 border-radius: 33px;
             }
+
+            #map {
+                height: 300px !important;
+            }
         }
 
         @media (min-width: 768px) {
@@ -34,6 +42,38 @@
                 height: 480px !important;
                 margin: auto;
                 border-radius: 33px;
+            }
+
+            #map {
+                height: 400px !important;
+            }
+        }
+
+        #map-container {
+            display: none;
+            margin-top: 20px;
+        }
+
+        #map {
+            width: 100%;
+            height: 400px;
+            border-radius: 15px;
+        }
+
+        .camera-map-container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        @media (min-width: 1024px) {
+            .camera-map-container {
+                flex-direction: row;
+            }
+
+            #webcam-container,
+            #map-container {
+                width: 50%;
             }
         }
     </style>
@@ -53,49 +93,125 @@
         const presensiKaryawanExists = {{ $presensiKaryawan ? 'true' : 'false' }};
         const presensiKaryawanKeluar = {{ $presensiKaryawan && $presensiKaryawan->jam_keluar != null ? 'true' : 'false' }};
 
-        // Variabel untuk status webcam
+        // Variabel untuk status webcam dan map
         let webcamInitialized = false;
+        let mapInitialized = false;
         let image = null;
+        let map = null;
+        let marker = null;
+        let circle = null;
+        let userLatitude = null;
+        let userLongitude = null;
 
         // Mendapatkan lokasi dan simpan di input hidden
         let lokasi = document.getElementById('lokasi');
-        if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(successCallback, errorCallBack);
+
+        // Fungsi untuk mendapatkan lokasi
+        function getLocation() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(successCallback, errorCallBack, {
+                    enableHighAccuracy: true,
+                    timeout: 10000,
+                    maximumAge: 0
+                });
+            } else {
+                Swal.fire({
+                    title: "Error",
+                    text: "Geolocation tidak didukung oleh browser ini.",
+                    icon: "error",
+                    confirmButtonText: "OK"
+                });
+            }
         }
+
+        // Panggil getLocation saat halaman dimuat
+        document.addEventListener('DOMContentLoaded', function() {
+            getLocation();
+        });
 
         function successCallback(position) {
-            let latitude = position.coords.latitude;
-            let longitude = position.coords.longitude;
-            lokasi.value = latitude + ", " + longitude;
+            userLatitude = position.coords.latitude;
+            userLongitude = position.coords.longitude;
+            lokasi.value = userLatitude + ", " + userLongitude;
 
-            // Kode untuk map dikomentari tapi tetap disimpan untuk kebutuhan di masa depan
-            /*
-            let map = L.map('map').setView([latitude, longitude], 17);
-            L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                maxZoom: 19,
-                attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-            }).addTo(map);
-
-            let marker = L.marker([latitude, longitude]).addTo(map);
-            marker.bindPopup("<b>Anda berada di sini</b>").openPopup();
-
-            let circle = L.circle([{{ $lokasiKantor->latitude }}, {{ $lokasiKantor->longitude }}], {
-                color: 'red',
-                fillColor: '#f03',
-                fillOpacity: 0.5,
-                radius: {{ $lokasiKantor->radius }}
-            }).addTo(map);
-            */
+            // Jika map sudah diinisialisasi, perbarui posisi marker
+            if (mapInitialized && map) {
+                updateMarkerPosition(userLatitude, userLongitude);
+            }
         }
 
-        function errorCallBack(position) {
-            console.error("Error getting location:", position);
+        function errorCallBack(error) {
+            console.error("Error getting location:", error);
             Swal.fire({
                 title: "Error",
-                text: "Tidak dapat mengakses lokasi Anda. Pastikan GPS diaktifkan.",
+                text: "Tidak dapat mengakses lokasi Anda. Pastikan GPS diaktifkan. Error: " + error.message,
                 icon: "error",
                 confirmButtonText: "OK"
             });
+        }
+
+        // Inisialisasi map
+        function initMap() {
+            if (mapInitialized) return;
+
+            document.getElementById('map-container').style.display = 'block';
+
+            setTimeout(function() {
+                try {
+                    // Jika lokasi belum didapatkan, coba dapatkan lagi
+                    if (!userLatitude || !userLongitude) {
+                        getLocation();
+                        // Gunakan lokasi default jika masih belum ada
+                        if (!userLatitude || !userLongitude) {
+                            userLatitude = -7.7956; // Default latitude (contoh: Jakarta)
+                            userLongitude = 110.3695; // Default longitude (contoh: Jakarta)
+                        }
+                    }
+
+                    map = L.map('map').setView([userLatitude, userLongitude], 17);
+
+                    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                        maxZoom: 19,
+                        attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+                    }).addTo(map);
+
+                    // Tambahkan marker posisi user
+                    marker = L.marker([userLatitude, userLongitude]).addTo(map);
+                    marker.bindPopup("<b>Anda berada di sini</b>").openPopup();
+
+                    // Tambahkan circle untuk menunjukkan radius kantor
+                    circle = L.circle([{{ $lokasiKantor->latitude }}, {{ $lokasiKantor->longitude }}], {
+                        color: 'red',
+                        fillColor: '#f03',
+                        fillOpacity: 0.5,
+                        radius: {{ $lokasiKantor->radius }}
+                    }).addTo(map);
+
+                    // Pastikan map dirender dengan benar
+                    setTimeout(function() {
+                        map.invalidateSize();
+                    }, 500);
+
+                    mapInitialized = true;
+                    console.log("Map berhasil dimuat");
+                } catch (error) {
+                    console.error("Error initializing map:", error);
+                    Swal.fire({
+                        title: "Error",
+                        text: "Terjadi kesalahan saat memuat peta. Silakan refresh halaman.",
+                        icon: "error",
+                        confirmButtonText: "OK"
+                    });
+                }
+            }, 1000);
+        }
+
+        // Fungsi untuk memperbarui posisi marker
+        function updateMarkerPosition(lat, lng) {
+            if (marker && map) {
+                marker.setLatLng([lat, lng]);
+                map.panTo([lat, lng]);
+            }
         }
 
         let notifikasi_presensi_masuk = document.getElementById('notifikasi_presensi_masuk');
@@ -135,7 +251,9 @@
 
         // Tombol presensi masuk
         $("#btn-presensi-masuk").click(function() {
+            // Inisialisasi webcam dan map
             initWebcam();
+            initMap();
 
             if (presensiKaryawanExists) {
                 // Sudah presensi masuk
@@ -171,7 +289,9 @@
 
         // Tombol presensi keluar
         $("#btn-presensi-keluar").click(function() {
+            // Inisialisasi webcam dan map
             initWebcam();
+            initMap();
 
             if (!presensiKaryawanExists) {
                 // Belum presensi masuk sama sekali
@@ -225,9 +345,22 @@
                 return;
             }
 
+            // Perbarui lokasi sebelum mengirim
+            getLocation();
+
             try {
                 Webcam.snap(function(uri) {
                     image = uri;
+
+                    // Tambahkan indikator loading
+                    Swal.fire({
+                        title: "Memproses...",
+                        text: "Sedang mengirim data presensi",
+                        allowOutsideClick: false,
+                        didOpen: () => {
+                            Swal.showLoading();
+                        }
+                    });
 
                     $.ajax({
                         type: "POST",
@@ -240,6 +373,8 @@
                         },
                         cache: false,
                         success: function(res) {
+                            Swal.close();
+
                             if (res.status == 200) {
                                 if (res.jenis_presensi == "masuk") {
                                     notifikasi_presensi_masuk.play();
@@ -252,7 +387,7 @@
                                     icon: "success",
                                     confirmButtonText: "OK"
                                 });
-                                setTimeout("location.href='{{ route('karyawan.dashboard') }}'", 5000);
+                                setTimeout("location.href='{{ route('karyawan.dashboard') }}'", 3000);
 
                             } else if (res.status == 500) {
                                 if (res.jenis_error == "radius") {
@@ -267,6 +402,7 @@
                             }
                         },
                         error: function(xhr, status, error) {
+                            Swal.close();
                             console.error("AJAX Error:", error);
                             Swal.fire({
                                 title: "Error",
@@ -346,22 +482,20 @@
                             </div>
                         </div>
 
-                        <!-- Webcam Container - awalnya tersembunyi -->
-                        <div id="webcam-container" style="display: none;">
-                            <div id="webcam-capture" class="mx-auto"></div>
+                        <!-- Container untuk Webcam dan Map -->
+                        <div class="camera-map-container">
+                            <!-- Webcam Container - awalnya tersembunyi -->
+                            <div id="webcam-container" style="display: none;">
+                                <div id="webcam-capture" class="mx-auto"></div>
+                            </div>
+
+                            <!-- Map Container - awalnya tersembunyi -->
+                            <div id="map-container" style="display: none;">
+                                <div id="map" class="mx-auto"></div>
+                            </div>
                         </div>
                     </div>
                 </div>
-
-                <!-- Map dikomentari tapi kodenya disimpan untuk kebutuhan masa depan -->
-                <!--
-                    <div
-                        class="dark:bg-slate-850 dark:shadow-dark-xl relative mt-3 flex min-w-0 flex-col break-words rounded-2xl bg-white bg-clip-border shadow-xl">
-                        <div class="flex-auto p-4">
-                            <div id="map" class="mx-auto h-80 w-full"></div>
-                        </div>
-                    </div>
-                    -->
             </div>
         </div>
     </div>
