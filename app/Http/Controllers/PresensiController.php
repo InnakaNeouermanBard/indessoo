@@ -2,15 +2,16 @@
 
 namespace App\Http\Controllers;
 
-use App\Enums\StatusPengajuanPresensi;
-use App\Models\Departemen;
-use App\Models\Karyawan;
-use App\Models\LokasiKantor;
-use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
-use Illuminate\Database\Query\Builder;
+use App\Models\Karyawan;
+use App\Models\Departemen;
+use App\Models\LokasiKantor;
 use Illuminate\Http\Request;
+use App\Models\ShiftSchedule;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\DB;
+use App\Enums\StatusPengajuanPresensi;
+use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Facades\Storage;
 
 class PresensiController extends Controller
@@ -33,7 +34,13 @@ class PresensiController extends Controller
         // Ambil lokasi kantor
         $lokasiKantor = LokasiKantor::where('is_used', true)->first();
 
-        return view('dashboard.presensi.index', compact('title', 'presensiKaryawan', 'lokasiKantor', 'bulan', 'riwayatPresensi'));
+        // Ambil jadwal shift karyawan hari ini
+        $jadwalHariIni = ShiftSchedule::where('karyawan_nik', auth()->guard('karyawan')->user()->nik)
+            ->where('tanggal', date('Y-m-d'))
+            ->with('shift')
+            ->first();
+
+        return view('dashboard.presensi.index', compact('title', 'presensiKaryawan', 'lokasiKantor', 'bulan', 'riwayatPresensi', 'jadwalHariIni'));
     }
 
     public function store(Request $request)
@@ -45,6 +52,21 @@ class PresensiController extends Controller
         $now = Carbon::now('Asia/Jakarta');
         $tglPresensi = $now->format('Y-m-d');
         $jam = $now->format('H:i:s');
+
+        // Cek jadwal shift karyawan hari ini
+        $jadwalShift = ShiftSchedule::where('karyawan_nik', $nik)
+            ->where('tanggal', $tglPresensi)
+            ->with('shift')
+            ->first();
+
+        // Jika karyawan libur, tolak presensi
+        if ($jadwalShift && $jadwalShift->is_libur) {
+            return response()->json([
+                'status' => 500,
+                'success' => false,
+                'message' => "Anda dijadwalkan libur hari ini, tidak perlu melakukan presensi.",
+            ]);
+        }
 
         $lokasi = $request->lokasi;
         $folderPath = "public/unggah/presensi/";

@@ -2,9 +2,10 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Karyawan;
-use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
+use App\Models\Karyawan;
+use Illuminate\Http\Request;
+use App\Models\ShiftSchedule;
 use Illuminate\Support\Facades\DB;
 
 class DashboardController extends Controller
@@ -12,47 +13,67 @@ class DashboardController extends Controller
     public function index()
     {
         $title = "Dashboard";
+        $nik = auth()->guard('karyawan')->user()->nik;
 
-        $hariIni = Carbon::now()->format("Y-m-d");
-        $user = Auth::guard('karyawan')->user();
-        $presensiHariIni = DB::table("presensi")
-            ->where('nik', $user->nik)
-            ->where('tanggal_presensi', $hariIni)
+        // Ambil data presensi hari ini
+        $presensiHariIni = DB::table('presensi')
+            ->where('nik', $nik)
+            ->where('tanggal_presensi', date('Y-m-d'))
             ->first();
 
-        $riwayatPresensi = DB::table("presensi")
-            ->where('nik', $user->nik)
-            // Cara 1 mencari tanggal
+        // Ambil jadwal shift karyawan untuk periode satu minggu (hari ini + 6 hari ke depan)
+        $startDate = Carbon::now()->format('Y-m-d');
+        $endDate = Carbon::now()->addDays(6)->format('Y-m-d');
+
+        $jadwalShift = ShiftSchedule::where('karyawan_nik', $nik)
+            ->whereBetween('tanggal', [$startDate, $endDate])
+            ->with('shift')
+            ->orderBy('tanggal', 'asc')
+            ->get();
+
+        // Ambil data presensi bulan ini
+        $riwayatPresensi = DB::table('presensi')
+            ->where('nik', $nik)
             ->whereMonth('tanggal_presensi', date('m'))
             ->whereYear('tanggal_presensi', date('Y'))
-            ->orderBy("tanggal_presensi", "desc")
-            ->paginate(10);
+            ->orderBy('tanggal_presensi', 'desc')
+            ->paginate(5);
 
-        $rekapPresensi = DB::table("presensi")
-            ->selectRaw("COUNT(nik) as jml_kehadiran, SUM(IF (jam_masuk > '08:00',1,0)) as jml_terlambat")
-            ->where('nik', $user->nik)
-            // Cara 2 mencari tanggal
-            ->whereRaw("MONTH(tanggal_presensi)='" . date('m') . "'")
-            ->whereRaw("YEAR(tanggal_presensi)='" . date('Y') . "'")
+        // Ambil rekap presensi bulan ini
+        $rekapPresensi = DB::table('presensi')
+            ->where('nik', $nik)
+            ->whereMonth('tanggal_presensi', date('m'))
+            ->whereYear('tanggal_presensi', date('Y'))
+            ->selectRaw('count(*) as jml_kehadiran, sum(if(jam_masuk > "08:00", 1, 0)) as jml_terlambat')
             ->first();
 
-        $rekapPengajuanPresensi = DB::table("pengajuan_presensi")
-            ->selectRaw("SUM(IF (status = 'I',1,0)) as jml_izin, SUM(IF (status = 'S',1,0)) as jml_sakit")
-            ->where('nik', $user->nik)
-            ->where('status_approved', 1)
-            ->whereRaw("MONTH(tanggal_pengajuan)='" . date('m') . "'")
-            ->whereRaw("YEAR(tanggal_pengajuan)='" . date('Y') . "'")
+        // Ambil rekap pengajuan presensi bulan ini
+        $rekapPengajuanPresensi = DB::table('pengajuan_presensi')
+            ->where('nik', $nik)
+            ->whereMonth('tanggal_pengajuan', date('m'))
+            ->whereYear('tanggal_pengajuan', date('Y'))
+            ->where('status_approved', 2) // Status disetujui
+            ->selectRaw('sum(if(status = "Sakit", 1, 0)) as jml_sakit, sum(if(status = "Izin", 1, 0)) as jml_izin')
             ->first();
 
-        $leaderboard = DB::table("presensi as p")
-            ->join('karyawan as k', 'k.nik', '=', 'p.nik')
-            ->where('tanggal_presensi', $hariIni)
-            ->orderBy('jam_masuk', 'asc')
-            ->paginate(10);
+        // Ambil data leaderboard presensi hari ini
+        $leaderboard = DB::table('presensi as p')
+            ->join('karyawan as k', 'p.nik', '=', 'k.nik')
+            ->select('p.*', 'k.nama_lengkap', 'k.jabatan')
+            ->where('p.tanggal_presensi', date('Y-m-d'))
+            ->orderBy('p.jam_masuk', 'asc')
+            ->paginate(5);
 
-        return view("dashboard.index", compact("title", "presensiHariIni", "riwayatPresensi", "rekapPresensi", "rekapPengajuanPresensi", "leaderboard"));
+        return view('dashboard.index', compact(
+            'title',
+            'presensiHariIni',
+            'jadwalShift',
+            'riwayatPresensi',
+            'rekapPresensi',
+            'rekapPengajuanPresensi',
+            'leaderboard'
+        ));
     }
-
     public function indexAdmin()
     {
         $title = "Dashboard Admin";

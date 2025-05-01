@@ -39,7 +39,7 @@
                             @endforeach
                         </select>
                     </label> --}}
-                    <label class="form-control w-full max-w-xs">
+                    {{-- <label class="form-control w-full max-w-xs">
                         <div class="label">
                             <span class="label-text">Tanggal Awal</span>
                         </div>
@@ -52,7 +52,7 @@
                         </div>
                         <input type="date" name="tanggal_akhir" class="input input-bordered w-full"
                             value="{{ request()->tanggal_akhir ? request()->tanggal_akhir : \Carbon\Carbon::now()->endOfMonth()->format('Y-m-d') }}" />
-                    </label>
+                    </label> --}}
                     <label class="form-control w-full max-w-xs">
                         <div class="label">
                             <span class="label-text">Status</span>

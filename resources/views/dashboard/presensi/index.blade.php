@@ -1,5 +1,5 @@
 @extends('dashboard.layouts.main')
-
+{{-- dashboard\presensi\index  --}}
 @section('css')
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
         integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
@@ -92,6 +92,10 @@
         // Data status presensi karyawan
         const presensiKaryawanExists = {{ $presensiKaryawan ? 'true' : 'false' }};
         const presensiKaryawanKeluar = {{ $presensiKaryawan && $presensiKaryawan->jam_keluar != null ? 'true' : 'false' }};
+
+        // Jadwal shift karyawan hari ini
+        const jadwalShiftExists = {{ isset($jadwalHariIni) && $jadwalHariIni ? 'true' : 'false' }};
+        const isLibur = {{ isset($jadwalHariIni) && $jadwalHariIni && $jadwalHariIni->is_libur ? 'true' : 'false' }};
 
         // Variabel untuk status webcam dan map
         let webcamInitialized = false;
@@ -251,6 +255,17 @@
 
         // Tombol presensi masuk
         $("#btn-presensi-masuk").click(function() {
+            // Cek jika karyawan libur
+            if (jadwalShiftExists && isLibur) {
+                Swal.fire({
+                    title: "Peringatan",
+                    text: "Anda dijadwalkan libur hari ini, tidak perlu melakukan presensi!",
+                    icon: "warning",
+                    confirmButtonText: "OK"
+                });
+                return;
+            }
+
             // Inisialisasi webcam dan map
             initWebcam();
             initMap();
@@ -289,6 +304,17 @@
 
         // Tombol presensi keluar
         $("#btn-presensi-keluar").click(function() {
+            // Cek jika karyawan libur
+            if (jadwalShiftExists && isLibur) {
+                Swal.fire({
+                    title: "Peringatan",
+                    text: "Anda dijadwalkan libur hari ini, tidak perlu melakukan presensi!",
+                    icon: "warning",
+                    confirmButtonText: "OK"
+                });
+                return;
+            }
+
             // Inisialisasi webcam dan map
             initWebcam();
             initMap();
@@ -467,6 +493,51 @@
                         <input type="text" name="lokasi" id="lokasi" class="input input-primary" hidden>
                         <input type="text" name="presensi" id="presensi" value="" hidden>
 
+                        <!-- Informasi Jadwal Shift Hari Ini -->
+                        @if (isset($jadwalHariIni) && $jadwalHariIni)
+                            <div class="mb-4 flex flex-col items-center justify-center">
+                                @if ($jadwalHariIni->is_libur)
+                                    <div class="alert alert-warning">
+                                        <div class="flex items-center">
+                                            <i class="ri-calendar-event-line mr-2 text-2xl"></i>
+                                            <div>
+                                                <h3 class="font-bold">Jadwal Libur</h3>
+                                                <p>Anda dijadwalkan libur pada hari ini</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                @elseif($jadwalHariIni->shift)
+                                    <div class="alert alert-info">
+                                        <div class="flex items-center">
+                                            <i class="ri-time-line mr-2 text-2xl"></i>
+                                            <div>
+                                                <h3 class="font-bold">Jadwal Shift Hari Ini:
+                                                    {{ $jadwalHariIni->shift->nama }}</h3>
+                                                <p>Jam Kerja:
+                                                    {{ Carbon\Carbon::parse($jadwalHariIni->shift->waktu_mulai)->format('H:i') }}
+                                                    -
+                                                    {{ Carbon\Carbon::parse($jadwalHariIni->shift->waktu_selesai)->format('H:i') }}
+                                                    WIB</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                @endif
+                            </div>
+                        @else
+                            <div class="mb-4 flex flex-col items-center justify-center">
+                                <div class="alert alert-info">
+                                    <div class="flex items-center">
+                                        <i class="ri-information-line mr-2 text-2xl"></i>
+                                        <div>
+                                            <h3 class="font-bold">Informasi Shift</h3>
+                                            <p>Tidak ada jadwal shift yang ditemukan untuk hari ini. Menggunakan jadwal
+                                                default (08:00 - 16:00)</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        @endif
+
                         <!-- Tombol Presensi -->
                         <div class="flex justify-center mb-4">
                             <div class="flex gap-4">
@@ -564,25 +635,64 @@
                                         <th>Tanggal</th>
                                         <th>Jam Masuk</th>
                                         <th>Jam Keluar</th>
+                                        <th>Status</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     @foreach ($riwayatPresensi as $value => $item)
+                                        @php
+                                            // Cari jadwal shift untuk tanggal tersebut
+                                            $jadwalShift = App\Models\ShiftSchedule::where(
+                                                'karyawan_nik',
+                                                auth()->guard('karyawan')->user()->nik,
+                                            )
+                                                ->where('tanggal', $item->tanggal_presensi)
+                                                ->with('shift')
+                                                ->first();
+
+                                            // Set jam default
+                                            $jamMasukStandar = '08:00:00';
+                                            $jamKeluarStandar = '16:00:00';
+
+                                            // Jika ada jadwal shift, gunakan jam dari shift
+                                            if ($jadwalShift && $jadwalShift->shift) {
+                                                $jamMasukStandar = Carbon\Carbon::parse(
+                                                    $jadwalShift->shift->waktu_mulai,
+                                                )->format('H:i:s');
+                                                $jamKeluarStandar = Carbon\Carbon::parse(
+                                                    $jadwalShift->shift->waktu_selesai,
+                                                )->format('H:i:s');
+                                            }
+
+                                            // Status presensi
+                                            $statusMasuk =
+                                                $item->jam_masuk < $jamMasukStandar ? 'text-success' : 'text-error';
+                                            $statusKeluar =
+                                                $item->jam_keluar > $jamKeluarStandar ? 'text-success' : 'text-error';
+                                        @endphp
                                         <tr class="hover">
                                             <td class="font-bold">{{ $riwayatPresensi->firstItem() + $value }}</td>
                                             <td class="text-slate-500 dark:text-slate-300">
                                                 {{ date('l', strtotime($item->tanggal_presensi)) }}</td>
                                             <td class="text-slate-500 dark:text-slate-300">
                                                 {{ date('d-m-Y', strtotime($item->tanggal_presensi)) }}</td>
-                                            <td class="{{ $item->jam_masuk < '08:00' ? 'text-success' : 'text-error' }}">
+                                            <td class="{{ $statusMasuk }}">
                                                 {{ date('H:i:s', strtotime($item->jam_masuk)) }}</td>
                                             @if ($item != null && $item->jam_keluar != null)
-                                                <td
-                                                    class="{{ $item->jam_keluar > '16:00' ? 'text-success' : 'text-error' }}">
+                                                <td class="{{ $statusKeluar }}">
                                                     {{ date('H:i:s', strtotime($item->jam_keluar)) }}</td>
                                             @else
                                                 <td>Belum Presensi</td>
                                             @endif
+                                            <td>
+                                                @if ($jadwalShift && $jadwalShift->is_libur)
+                                                    <span class="badge badge-error">Libur</span>
+                                                @elseif($jadwalShift && $jadwalShift->shift)
+                                                    <span class="badge badge-info">{{ $jadwalShift->shift->nama }}</span>
+                                                @else
+                                                    <span class="badge badge-ghost">Reguler</span>
+                                                @endif
+                                            </td>
                                         </tr>
                                     @endforeach
                                 </tbody>
