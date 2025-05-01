@@ -77,10 +77,10 @@
             </li>
 
             <li class="mt-0.5 w-full">
-                <form method="POST" action="{{ route('logout') }}">
+                <form id="logout-form" method="POST" action="{{ route('logout') }}">
                     @csrf
-                    <button type="submit"
-                        class="py-2.7 ease-nav-brand mx-2 my-0 flex items-center whitespace-nowrap px-4 text-sm transition-colors dark:text-white dark:opacity-80">
+                    <button type="button" onclick="openLogoutModal()"
+                        class="py-2.7 ease-nav-brand mx-2 my-0 flex items-center whitespace-nowrap px-4 text-sm transition-colors dark:text-white dark:opacity-80 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg">
                         <div
                             class="mr-2 flex h-8 w-8 items-center justify-center rounded-lg bg-center stroke-0 text-center xl:p-2.5">
                             <i class="ri-logout-box-line relative top-0 text-lg leading-normal text-red-500"></i>
@@ -92,3 +92,96 @@
         </ul>
     </div>
 </aside>
+
+<!-- Logout Confirmation Modal -->
+<div id="logoutModal" class="fixed inset-0 z-[9999] hidden overflow-y-auto overflow-x-hidden">
+    <!-- Modal Background Overlay -->
+    <div class="fixed inset-0 bg-black bg-opacity-50 transition-opacity duration-300 ease-in-out" id="modalOverlay">
+    </div>
+
+    <!-- Modal Content -->
+    <div class="flex items-center justify-center min-h-screen p-4">
+        <div class="relative opacity-0 translate-y-10 transition-all duration-300 ease-in-out transform bg-white dark:bg-slate-800 rounded-lg shadow-xl w-full max-w-md mx-auto"
+            id="modalContent">
+            <!-- Modal Header -->
+            <div class="p-5 border-b border-gray-200 dark:border-gray-700 flex items-center">
+                <div class="bg-red-100 dark:bg-red-900/30 rounded-full p-3 mr-3">
+                    <i class="ri-logout-box-line text-2xl text-red-500"></i>
+                </div>
+                <h3 class="text-xl font-semibold text-gray-900 dark:text-white">
+                    Konfirmasi Logout
+                </h3>
+                <button type="button"
+                    class="absolute top-4 right-4 text-gray-400 hover:text-gray-500 dark:hover:text-gray-300"
+                    onclick="closeLogoutModal()">
+                    <i class="ri-close-line text-2xl"></i>
+                </button>
+            </div>
+
+            <!-- Modal Body -->
+            <div class="p-5">
+                <p class="text-gray-600 dark:text-gray-300 mb-6">
+                    Apakah Anda yakin ingin keluar dari sistem presensi? Semua sesi yang sedang berjalan akan berakhir.
+                </p>
+
+                <!-- Modal Footer -->
+                <div class="flex space-x-3 justify-end">
+                    <button type="button" onclick="closeLogoutModal()"
+                        class="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-lg transition-all duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-gray-400 dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-white">
+                        <i class="ri-close-line mr-1"></i> Batal
+                    </button>
+                    <button type="button" onclick="confirmLogout()"
+                        class="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-all duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-red-400">
+                        <i class="ri-logout-box-line mr-1"></i> Ya, Logout
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function openLogoutModal() {
+        const modal = document.getElementById('logoutModal');
+        const modalContent = document.getElementById('modalContent');
+        const modalOverlay = document.getElementById('modalOverlay');
+
+        // Show the modal
+        modal.classList.remove('hidden');
+
+        // Animate in
+        setTimeout(() => {
+            modalOverlay.classList.add('opacity-100');
+            modalContent.classList.remove('opacity-0', 'translate-y-10');
+            modalContent.classList.add('opacity-100', 'translate-y-0');
+        }, 10);
+    }
+
+    function closeLogoutModal() {
+        const modal = document.getElementById('logoutModal');
+        const modalContent = document.getElementById('modalContent');
+        const modalOverlay = document.getElementById('modalOverlay');
+
+        // Animate out
+        modalContent.classList.remove('opacity-100', 'translate-y-0');
+        modalContent.classList.add('opacity-0', 'translate-y-10');
+        modalOverlay.classList.remove('opacity-100');
+
+        // Hide the modal after animation completes
+        setTimeout(() => {
+            modal.classList.add('hidden');
+        }, 300);
+    }
+
+    function confirmLogout() {
+        // Visual feedback before submitting
+        const logoutButton = document.querySelector('[onclick="confirmLogout()"]');
+        logoutButton.innerHTML = '<i class="ri-loader-4-line animate-spin mr-1"></i> Logging out...';
+        logoutButton.disabled = true;
+
+        // Submit the form after a brief delay for visual feedback
+        setTimeout(() => {
+            document.getElementById('logout-form').submit();
+        }, 500);
+    }
+</script>

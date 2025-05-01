@@ -52,6 +52,11 @@ Route::middleware(['auth:web'])->prefix('admin')->group(function () {
     Route::post('/admin-management/update', [AdminController::class, 'update'])->name('admin-management.update');
     Route::post('/admin-management/delete', [AdminController::class, 'delete'])->name('admin-management.delete');
 
+
+    // Update kuota cuti karyawan
+    Route::put('/admin/kuota-cuti/{nik}', [PresensiController::class, 'updateKuotaCuti'])->name('admin.kuota-cuti.update');
+    Route::get('/admin/kuota-cuti', [PresensiController::class, 'manajemenKuotaCuti'])->name('admin.kuota-cuti');
+
     Route::get('/form-lembur', [FormLemburController::class, 'index'])->name('form-lembur.index');
     Route::post('/form-lembur', [FormLemburController::class, 'store'])->name('form-lembur.store');
     Route::get('/form-lembur/{id}', [FormLemburController::class, 'show'])->name('form-lembur.show');

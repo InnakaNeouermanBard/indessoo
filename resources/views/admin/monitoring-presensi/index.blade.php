@@ -5,6 +5,7 @@
                 {{ __('Monitoring Presensi') }}
             </h2>
         </div>
+
     </x-slot>
 
     <div class="container mx-auto px-5 pt-5">
@@ -44,7 +45,7 @@
                             <td>{{ $item->nama_karyawan }}</td>
                             <td>{{ $item->tanggal_presensi }}</td>
                             <td>{{ $item->jam_masuk }}</td>
-                            <td class="text-slate-500 dark:text-slate-300">
+                            <td>
                                 @if ($item->jam_keluar)
                                     {{ $item->jam_keluar }}
                                 @else

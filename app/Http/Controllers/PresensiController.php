@@ -1,5 +1,5 @@
 <?php
-
+// presensi controller 
 namespace App\Http\Controllers;
 
 use Carbon\Carbon;
@@ -16,6 +16,7 @@ use Illuminate\Support\Facades\Storage;
 
 class PresensiController extends Controller
 {
+    // Metode yang sudah ada tetap sama
     public function index()
     {
         $riwayatPresensi = DB::table("presensi")
@@ -181,14 +182,24 @@ class PresensiController extends Controller
             ->orderBy("tanggal_pengajuan", "asc")
             ->paginate(10);
         $bulan = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
-        return view('dashboard.presensi.izin.index', compact('title', 'riwayatPengajuanPresensi', 'bulan'));
+
+        // Ambil data karyawan untuk mendapatkan sisa kuota cuti
+        $karyawan = Karyawan::find(auth()->guard('karyawan')->user()->nik);
+        $sisaKuota = $karyawan->sisaKuotaCuti();
+
+        return view('dashboard.presensi.izin.index',  compact('title', 'riwayatPengajuanPresensi', 'bulan', 'sisaKuota'));
     }
 
     public function pengajuanPresensiCreate()
     {
         $title = "Form Pengajuan Presensi";
         $statusPengajuan = StatusPengajuanPresensi::cases();
-        return view('dashboard.presensi.izin.create', compact('title', 'statusPengajuan'));
+
+        // Ambil data karyawan untuk mendapatkan sisa kuota cuti
+        $karyawan = Karyawan::find(auth()->guard('karyawan')->user()->nik);
+        $sisaKuota = $karyawan->sisaKuotaCuti();
+
+        return view('dashboard.presensi.izin.create', compact('title', 'statusPengajuan', 'sisaKuota'));
     }
 
     public function pengajuanPresensiStore(Request $request)
@@ -209,16 +220,26 @@ class PresensiController extends Controller
 
         if ($cekPengajuan) {
             return to_route('karyawan.izin')->with("error", "Anda sudah menambahkan pengajuan pada tanggal " . Carbon::make($tanggal_pengajuan)->format('d-m-Y'));
-        } else {
-            $store = DB::table('pengajuan_presensi')->insert([
-                'nik' => $nik,
-                'tanggal_pengajuan' => $tanggal_pengajuan,
-                'status' => $status,
-                'keterangan' => $keterangan,
-                'created_at' => Carbon::now(),
-                'updated_at' => Carbon::now(),
-            ]);
         }
+
+        // Tambahkan validasi untuk cuti
+        if ($status == 'C') {
+            $karyawan = Karyawan::find($nik);
+            $sisaKuota = $karyawan->sisaKuotaCuti();
+
+            if ($sisaKuota <= 0) {
+                return to_route('karyawan.izin')->with("error", "Kuota cuti Anda tahun ini sudah habis");
+            }
+        }
+
+        $store = DB::table('pengajuan_presensi')->insert([
+            'nik' => $nik,
+            'tanggal_pengajuan' => $tanggal_pengajuan,
+            'status' => $status,
+            'keterangan' => $keterangan,
+            'created_at' => Carbon::now(),
+            'updated_at' => Carbon::now(),
+        ]);
 
         if ($store) {
             return to_route('karyawan.izin')->with("success", "Berhasil menambahkan pengajuan");
@@ -260,6 +281,30 @@ class PresensiController extends Controller
         $lokasiKantor = LokasiKantor::where('is_used', true)->first();
 
         return view('admin.monitoring-presensi.index', compact('monitoring', 'lokasiKantor'));
+    }
+
+    // Tambahkan metode baru untuk mengelola kuota cuti karyawan (admin)
+    public function manajemenKuotaCuti()
+    {
+        $title = 'Manajemen Kuota Cuti';
+        $karyawan = Karyawan::with('departemen')
+            ->orderBy('nama_lengkap', 'asc')
+            ->paginate(10);
+
+        return view('admin.monitoring-presensi.kuota-cuti', compact('title', 'karyawan'));
+    }
+
+    public function updateKuotaCuti(Request $request, $nik)
+    {
+        $request->validate([
+            'kuota_cuti' => 'required|integer|min:0'
+        ]);
+
+        $karyawan = Karyawan::find($nik);
+        $karyawan->kuota_cuti = $request->kuota_cuti;
+        $karyawan->save();
+
+        return redirect()->route('admin.kuota-cuti')->with('success', 'Kuota cuti berhasil diperbarui');
     }
 
     public function viewLokasi(Request $request)
@@ -341,7 +386,7 @@ class PresensiController extends Controller
             ->join('departemen as d', 'k.departemen_id', '=', 'd.id')
             ->where('p.tanggal_pengajuan', '>=', Carbon::now()->startOfMonth()->format("Y-m-d"))
             ->where('p.tanggal_pengajuan', '<=', Carbon::now()->endOfMonth()->format("Y-m-d"))
-            ->select('p.*', 'k.nama_lengkap as nama_karyawan', 'd.nama as nama_departemen', 'd.id as id_departemen')
+            ->select('p.*', 'k.nama_lengkap as nama_karyawan', 'd.nama as nama_departemen', 'd.id as id_departemen', 'k.kuota_cuti')
             ->orderBy('p.tanggal_pengajuan', 'asc');
 
         if ($request->nik) {

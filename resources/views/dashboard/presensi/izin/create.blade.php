@@ -1,4 +1,35 @@
 @extends('dashboard.layouts.main')
+{{-- presensi/izin/create.blade.php  --}}
+@section('js')
+    <script>
+        $(document).ready(function() {
+            // Sembunyikan info sisa kuota cuti awalnya
+            $("#info-sisa-kuota").hide();
+            $("#peringatan-kuota").hide();
+
+            // Ketika pilihan status berubah
+            $("select[name='status']").change(function() {
+                // Jika pilihan adalah cuti (C)
+                if ($(this).val() == 'C') {
+                    $("#info-sisa-kuota").show();
+
+                    // Jika kuota cuti habis, tampilkan peringatan
+                    if (parseInt($("#sisa-kuota").text()) <= 0) {
+                        $("#peringatan-kuota").show();
+                        $("button[type='submit']").prop('disabled', true);
+                    } else {
+                        $("#peringatan-kuota").hide();
+                        $("button[type='submit']").prop('disabled', false);
+                    }
+                } else {
+                    $("#info-sisa-kuota").hide();
+                    $("#peringatan-kuota").hide();
+                    $("button[type='submit']").prop('disabled', false);
+                }
+            });
+        });
+    </script>
+@endsection
 
 @section('container')
     <div class="-mx-3 flex flex-wrap">
@@ -42,6 +73,24 @@
                                 </div>
                             @enderror
                         </label>
+
+                        {{-- Info Sisa Kuota Cuti --}}
+                        <div id="info-sisa-kuota" class="my-3 p-3 bg-blue-50 rounded-lg">
+                            <div class="flex items-center gap-2">
+                                <i class="ri-information-line text-blue-500"></i>
+                                <span class="text-blue-700">Sisa kuota cuti Anda: <strong
+                                        id="sisa-kuota">{{ $sisaKuota }}</strong> hari</span>
+                            </div>
+                        </div>
+
+                        {{-- Peringatan jika kuota habis --}}
+                        <div id="peringatan-kuota" class="my-3 p-3 bg-red-50 rounded-lg">
+                            <div class="flex items-center gap-2">
+                                <i class="ri-alert-line text-red-500"></i>
+                                <span class="text-red-700">Kuota cuti Anda tahun ini sudah habis!</span>
+                            </div>
+                        </div>
+
                         <label class="form-control w-full">
                             <div class="label">
                                 <span class="label-text font-semibold dark:text-slate-100">

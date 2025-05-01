@@ -4,6 +4,10 @@
             <h2 class="text-xl font-semibold leading-tight text-gray-800">
                 {{ __('Form Perizinan') }}
             </h2>
+            <a href="{{ route('admin.kuota-cuti') }}" class="btn btn-primary flex items-center gap-2">
+                <i class="ri-calendar-check-line"></i>
+                <span>Manajemen Kuota Cuti</span>
+            </a>
         </div>
     </x-slot>
 
@@ -113,7 +117,12 @@
                                 @elseif ($item->status == 'S')
                                     <span>Sakit</span>
                                 @elseif ($item->status == 'C')
-                                    <span>Cuti</span>
+                                    <span class="font-medium text-blue-700">Cuti</span>
+                                    @if (isset($item->kuota_cuti))
+                                        <div class="text-xs text-gray-500">(Sisa:
+                                            {{ $item->kuota_cuti - \DB::table('pengajuan_presensi')->where('nik', $item->nik)->where('status', 'C')->where('status_approved', 2)->whereYear('tanggal_pengajuan', date('Y'))->count() }}
+                                            hari)</div>
+                                    @endif
                                 @endif
                             </td>
                             <td>{{ $item->keterangan }}</td>

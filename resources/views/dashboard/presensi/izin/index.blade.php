@@ -1,5 +1,5 @@
 @extends('dashboard.layouts.main')
-
+{{-- presensi/izin/index.blade.php  --}}
 @section('js')
     <script>
         $(document).ready(function() {
@@ -52,11 +52,23 @@
                     class="dark:bg-slate-850 dark:shadow-dark-xl border-black-125 relative flex min-w-0 flex-col break-words rounded-2xl border-0 border-solid bg-white bg-clip-border shadow-xl">
                     <div class="rounded-t-4 mb-0 p-4 pb-0">
                         <div class="flex justify-between items-center">
-                            <h6 class="mb-2 font-bold dark:text-white">Data Izin / Sakit</h6>
+                            <h6 class="mb-2 font-bold dark:text-white">Data Izin / Sakit / Cuti</h6>
                             <a href="{{ route('karyawan.izin.create') }}" class="btn btn-primary btn-sm">
                                 <i class="ri-add-fill"></i>
                                 Pengajuan
                             </a>
+                        </div>
+                    </div>
+
+                    {{-- Informasi kuota cuti --}}
+                    <div class="p-4">
+                        <div class="bg-blue-50 p-3 rounded-lg mb-4">
+                            <div class="flex items-center gap-2">
+                                <i class="ri-calendar-check-line text-blue-500"></i>
+                                <span class="text-blue-700">
+                                    Sisa kuota cuti Anda tahun ini: <strong>{{ $sisaKuota }}</strong> hari
+                                </span>
+                            </div>
                         </div>
                     </div>
 
@@ -86,9 +98,13 @@
                                         required>
                                         <option disabled selected>Pilih Tahun!</option>
                                         @php
-                                            $tahunMulai = $riwayatPengajuanPresensi[0]
-                                                ? date('Y', strtotime($riwayatPengajuanPresensi[0]->tanggal_pengajuan))
-                                                : date('Y');
+                                            $tahunMulai =
+                                                $riwayatPengajuanPresensi->count() > 0
+                                                    ? date(
+                                                        'Y',
+                                                        strtotime($riwayatPengajuanPresensi[0]->tanggal_pengajuan),
+                                                    )
+                                                    : date('Y');
                                         @endphp
                                         @for ($tahun = $tahunMulai; $tahun <= date('Y'); $tahun++)
                                             <option value="{{ $tahun }}">{{ $tahun }}</option>
@@ -111,13 +127,13 @@
                                         <th>Hari</th>
                                         <th>Tanggal</th>
                                         <th>Status</th>
-                                        <th>Status</th>
+                                        <th>Status Approval</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     @foreach ($riwayatPengajuanPresensi as $value => $item)
                                         <tr class="hover">
-                                            <td class="font-bold">{{ $riwayatPengajuanPresensi->firstItem() + $value }}</td>
+                                            <td class="font-bold">{{ $value + 1 }}</td>
                                             <td class="text-slate-500 dark:text-slate-300">
                                                 {{ date('l', strtotime($item->tanggal_pengajuan)) }}</td>
                                             <td class="text-slate-500 dark:text-slate-300">
@@ -128,7 +144,7 @@
                                                 @elseif ($item->status == 'S')
                                                     Sakit
                                                 @elseif ($item->status == 'C')
-                                                    Cuti
+                                                    <span class="font-medium text-blue-700">Cuti</span>
                                                 @endif
                                             </td>
                                             <td class="text-slate-500 dark:text-slate-300">

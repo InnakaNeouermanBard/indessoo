@@ -14,13 +14,13 @@
                 <div class="flex w-full flex-wrap gap-2 md:flex-nowrap">
                     <input type="text" name="nama_karyawan" placeholder="Nama Karyawan"
                         class="input input-bordered w-full md:w-1/2" value="{{ request()->nama_karyawan }}" />
-                    <select class="select select-bordered w-full md:w-1/2" name="kode_departemen">
+                    {{-- <select class="select select-bordered w-full md:w-1/2" name="kode_departemen">
                         <option disabled selected>Pilih departemen!</option>
                         @foreach ($departemen as $item)
                             <option value="{{ $item->kode }}" @if ($item->kode == request()->kode_departemen) selected @endif>
                                 {{ $item->nama }}</option>
                         @endforeach
-                    </select>
+                    </select> --}}
                     <button type="submit" class="btn btn-success w-full md:w-14">
                         <i class="ri-search-2-line text-lg text-white"></i>
                     </button>
