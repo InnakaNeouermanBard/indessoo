@@ -9,6 +9,7 @@ use App\Http\Controllers\PresensiController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DepartemenController;
 use App\Http\Controllers\FormLemburController;
+use App\Http\Controllers\JadwalKerjaController;
 use App\Http\Controllers\AuthKaryawanController;
 use App\Http\Controllers\LokasiKantorController;
 use App\Http\Controllers\ShiftScheduleController;
@@ -64,6 +65,15 @@ Route::middleware(['auth:web'])->prefix('admin')->group(function () {
     Route::put('/form-lembur/{id}', [FormLemburController::class, 'update'])->name('form-lembur.update');
     Route::post('/form-lembur/delete', [FormLemburController::class, 'destroy'])->name('form-lembur.delete');
     Route::get('/form-lembur/get-karyawan-data/{nik}', [FormLemburController::class, 'getKaryawanData'])->name('form-lembur.getKaryawanData');
+
+    Route::get('jadwal-kerja', [JadwalKerjaController::class, 'index'])
+        ->name('jadwalkerja.index');
+    Route::post('jadwal-kerja/import', [JadwalKerjaController::class, 'import'])
+        ->name('jadwalkerja.import');
+    Route::get('jadwal-kerja/download/{id}', [JadwalKerjaController::class, 'download'])
+        ->name('jadwalkerja.download');
+    Route::delete('jadwal-kerja/{id}', [JadwalKerjaController::class, 'destroy'])
+        ->name('jadwalkerja.destroy');
 
     // 1. Rute Index
     Route::get('jadwal-shift', [App\Http\Controllers\ShiftScheduleController::class, 'index'])
