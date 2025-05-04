@@ -125,6 +125,12 @@ Route::middleware(['auth:web'])->prefix('admin')->group(function () {
 Route::middleware(['auth:karyawan'])->prefix('karyawan')->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('karyawan.dashboard');
 
+    // Ganti resource route dengan route custom untuk form-lembur
+    Route::prefix('form-lembur')->group(function () {
+        Route::get('/', [FormLemburController::class, 'karyawanIndex'])->name('karyawan.form-lembur.index');
+        Route::post('/', [FormLemburController::class, 'karyawanStore'])->name('karyawan.form-lembur.store');
+    });
+
     Route::prefix('presensi')->group(function () {
         Route::get('/', [PresensiController::class, 'index'])->name('karyawan.presensi');
         Route::post('/', [PresensiController::class, 'store'])->name('karyawan.presensi.store');

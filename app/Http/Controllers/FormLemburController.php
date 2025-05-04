@@ -1,10 +1,11 @@
 <?php
-
+// formLemburController 
 namespace App\Http\Controllers;
 
 use App\Models\Karyawan;
 use App\Models\FormLembur;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class FormLemburController extends Controller
 {
@@ -12,7 +13,6 @@ class FormLemburController extends Controller
     {
         $query = FormLembur::query();
 
-        // Filter berdasarkan NIK jika ada
         if ($request->has('cari_nik') && !empty($request->cari_nik)) {
             $query->where('nik', 'like', '%' . $request->cari_nik . '%');
         }
@@ -20,20 +20,6 @@ class FormLemburController extends Controller
         $karyawan = $query->get();
         $niks = Karyawan::all();
         return view('admin.form-lembur.index', compact('karyawan', 'niks'));
-    }
-
-    public function getKaryawanData($nik)
-    {
-        $karyawan = Karyawan::where('nik', $nik)->first();
-
-        if ($karyawan) {
-            return response()->json([
-                'nik' => $karyawan->nik,
-                'nama_lengkap' => $karyawan->nama_lengkap,
-            ]);
-        }
-
-        return response()->json(null);
     }
 
     public function store(Request $request)
@@ -46,7 +32,6 @@ class FormLemburController extends Controller
             'overtime' => 'required|numeric',
         ]);
 
-        // Cari nama karyawan berdasarkan NIK
         $karyawan = Karyawan::where('nik', $request->nik)->first();
 
         FormLembur::create([
@@ -71,8 +56,6 @@ class FormLemburController extends Controller
     public function update(Request $request, $id)
     {
         $request->validate([
-            'nik' => 'required|exists:karyawan,nik',
-            'nama_karyawan' => 'required|string|max:255',
             'tanggal' => 'required|date',
             'jam_mulai' => 'required',
             'jam_selesai' => 'required',
@@ -82,8 +65,6 @@ class FormLemburController extends Controller
 
         $formLembur = FormLembur::findOrFail($id);
         $formLembur->update([
-            'nik' => $request->nik,
-            'nama_karyawan' => $request->nama_karyawan,
             'tanggal' => $request->tanggal,
             'jam_mulai' => $request->jam_mulai,
             'jam_selesai' => $request->jam_selesai,
@@ -112,5 +93,87 @@ class FormLemburController extends Controller
         return response()->json([
             'message' => 'Data Lembur Karyawan berhasil dihapus.'
         ]);
+    }
+
+    // KARYAWAN METHODS
+    public function karyawanIndex()
+    {
+        $user = Auth::user();
+        $karyawan = Karyawan::where('email', $user->email)->first();
+        $title = "Form Lembur";
+        if (!$karyawan) {
+            return redirect()->back()->with('error', 'Data karyawan tidak ditemukan.');
+        }
+
+        $formLembur = FormLembur::where('nik', $karyawan->nik)->paginate(10);
+
+        // Array bulan untuk dropdown filter
+        $bulan = [
+            'Januari',
+            'Februari',
+            'Maret',
+            'April',
+            'Mei',
+            'Juni',
+            'Juli',
+            'Agustus',
+            'September',
+            'Oktober',
+            'November',
+            'Desember'
+        ];
+
+        // Pastikan compact mengirim variable bulan
+        return view('dashboard.form-lembur.index', compact('formLembur', 'karyawan', 'bulan', 'title'));
+    }
+
+    public function karyawanStore(Request $request)
+    {
+        $request->validate([
+            'tanggal' => 'required|date',
+            'jam_mulai' => 'required',
+            'jam_selesai' => 'required',
+            'overtime' => 'required|numeric',
+        ]);
+
+        $user = Auth::user();
+        $karyawan = Karyawan::where('email', $user->email)->first();
+
+        if (!$karyawan) {
+            return redirect()->back()->with('error', 'Data karyawan tidak ditemukan.');
+        }
+
+        FormLembur::create([
+            'nik' => $karyawan->nik,
+            'nama_karyawan' => $karyawan->nama_lengkap,
+            'tanggal' => $request->tanggal,
+            'jam_mulai' => $request->jam_mulai,
+            'jam_selesai' => $request->jam_selesai,
+            'overtime' => $request->overtime,
+            'status' => 'pending',
+        ]);
+
+        return redirect()->route('karyawan.form-lembur.index')->with('success', 'Form lembur berhasil diajukan.');
+    }
+    public function karyawanSearch(Request $request)
+    {
+        $user = Auth::user();
+        $karyawan = Karyawan::where('email', $user->email)->first();
+
+        if (!$karyawan) {
+            return view('karyawan.form-lembur.partials.search-results');
+        }
+
+        $query = FormLembur::where('nik', $karyawan->nik);
+
+        // Filter by month and year
+        if ($request->filled('bulan') && $request->filled('tahun')) {
+            $query->whereMonth('tanggal', $request->bulan)
+                ->whereYear('tanggal', $request->tahun);
+        }
+
+        $formLembur = $query->orderBy('tanggal', 'desc')->get();
+
+        return view('karyawan.form-lembur.partials.search-results', compact('formLembur'));
     }
 }

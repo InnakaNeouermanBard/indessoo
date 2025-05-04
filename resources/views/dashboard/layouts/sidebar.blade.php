@@ -12,7 +12,7 @@
             <img src="{{ asset('img/logo-ct.png') }}"
                 class="ease-nav-brand hidden h-full max-h-8 max-w-full transition-all duration-200 dark:inline"
                 alt="main_logo" />
-            <span class="ease-nav-brand ml-1 font-semibold transition-all duration-200">Laravel Presensi</span>
+            <span class="ease-nav-brand ml-1 font-semibold transition-all duration-200">Indesso</span>
         </a>
     </div>
 
@@ -62,6 +62,16 @@
                         <i class="ri-calendar-close-fill relative top-0 text-lg leading-normal text-red-500"></i>
                     </div>
                     <span class="ease pointer-events-none ml-1 opacity-100 duration-300">Izin</span>
+                </a>
+            </li>
+            <li class="mt-0.5 w-full">
+                <a class="py-2.7 ease-nav-brand mx-2 my-0 flex items-center whitespace-nowrap px-4 text-sm transition-colors dark:text-white dark:opacity-80 {{ Request::routeIs(['karyawan.form-lembur.index']) ? 'rounded-lg font text-slate-700 bg-blue-500/13' : '' }}"
+                    href="{{ route('karyawan.form-lembur.index') }}">
+                    <div
+                        class="mr-2 flex h-8 w-8 items-center justify-center rounded-lg bg-center stroke-0 text-center xl:p-2.5">
+                        <i class="ri-calendar-close-fill relative top-0 text-lg leading-normal text-red-500"></i>
+                    </div>
+                    <span class="ease pointer-events-none ml-1 opacity-100 duration-300">Lembur</span>
                 </a>
             </li>
 
