@@ -15,7 +15,7 @@
                     },
                     cache: false,
                     success: function(res) {
-                        // $("#tabelPresensi").remove();
+                        // $("#tabelPresensi").remove(); 
                         $("#searchPresensi").html(res);
                     }
                 });
@@ -60,7 +60,22 @@
                         </div>
                     </div>
 
-                    {{-- Informasi kuota cuti --}}
+                    @php
+                        $kuotaTahunan = 12; // Sesuaikan default kuota cuti per tahun
+                        $cutiTerpakai = \DB::table('pengajuan_presensi')
+                            ->where('nik', auth()->user()->nik) // Pastikan auth user dipakai
+                            ->where('status', 'C')
+                            ->where('status_approved', 2)
+                            ->whereYear('tanggal_mulai', date('Y'))
+                            ->get()
+                            ->sum(function ($cuti) {
+                                $start = \Carbon\Carbon::parse($cuti->tanggal_mulai);
+                                $end = \Carbon\Carbon::parse($cuti->tanggal_selesai);
+                                return $start->diffInDays($end) + 1; // +1 agar inklusif
+                            });
+                        $sisaKuota = $kuotaTahunan - $cutiTerpakai;
+                    @endphp
+
                     <div class="p-4">
                         <div class="bg-blue-50 p-3 rounded-lg mb-4">
                             <div class="flex items-center gap-2">
@@ -78,9 +93,13 @@
                             <div class="md:flex-0 w-full max-w-full shrink-0 px-3 md:w-1/2">
                                 <div class="mb-4">
                                     <label for="bulan"
-                                        class="mb-2 ml-1 inline-block text-xs font-bold text-slate-700 dark:text-white/80">Bulan</label>
+                                        class="mb-2 ml-1 inline-block text-xs font-bold text-slate-700 dark:text
+white/80">Bulan</label>
                                     <select name="bulan" id="bulan"
-                                        class="focus:shadow-primary-outline dark:bg-slate-850 leading-5.6 ease select select-bordered block w-full appearance-none rounded-lg border border-solid border-gray-300 bg-white bg-clip-padding px-3 py-2 text-sm font-normal text-gray-700 outline-none transition-all placeholder:text-gray-500 focus:border-blue-500 focus:outline-none dark:text-white"
+                                        class="focus:shadow-primary-outline dark:bg-slate-850 leading-5.6 ease select 
+select-bordered block w-full appearance-none rounded-lg border border-solid border-gray-300 bg
+white bg-clip-padding px-3 py-2 text-sm font-normal text-gray-700 outline-none transition-all 
+placeholder:text-gray-500 focus:border-blue-500 focus:outline-none dark:text-white"
                                         required>
                                         <option disabled selected>Pilih Bulan!</option>
                                         @foreach ($bulan as $value => $item)
@@ -92,18 +111,19 @@
                             <div class="md:flex-0 w-full max-w-full shrink-0 px-3 md:w-1/2">
                                 <div class="mb-4">
                                     <label for="tahun"
-                                        class="mb-2 ml-1 inline-block text-xs font-bold text-slate-700 dark:text-white/80">Tahun</label>
+                                        class="mb-2 ml-1 inline-block text-xs font-bold text-slate-700 dark:text
+white/80">Tahun</label>
                                     <select name="tahun" id="tahun"
-                                        class="focus:shadow-primary-outline dark:bg-slate-850 leading-5.6 ease select select-bordered block w-full appearance-none rounded-lg border border-solid border-gray-300 bg-white bg-clip-padding px-3 py-2 text-sm font-normal text-gray-700 outline-none transition-all placeholder:text-gray-500 focus:border-blue-500 focus:outline-none dark:text-white"
+                                        class="focus:shadow-primary-outline dark:bg-slate-850 leading-5.6 ease select 
+select-bordered block w-full appearance-none rounded-lg border border-solid border-gray-300 bg
+white bg-clip-padding px-3 py-2 text-sm font-normal text-gray-700 outline-none transition-all 
+placeholder:text-gray-500 focus:border-blue-500 focus:outline-none dark:text-white"
                                         required>
                                         <option disabled selected>Pilih Tahun!</option>
                                         @php
                                             $tahunMulai =
                                                 $riwayatPengajuanPresensi->count() > 0
-                                                    ? date(
-                                                        'Y',
-                                                        strtotime($riwayatPengajuanPresensi[0]->tanggal_pengajuan),
-                                                    )
+                                                    ? date('Y', strtotime($riwayatPengajuanPresensi[0]->tanggal_mulai))
                                                     : date('Y');
                                         @endphp
                                         @for ($tahun = $tahunMulai; $tahun <= date('Y'); $tahun++)
@@ -123,9 +143,10 @@
                                 class="table mb-4 w-full border-collapse items-center border-gray-200 align-top dark:border-white/40">
                                 <thead class="text-sm text-gray-800 dark:text-gray-300">
                                     <tr>
-                                        <th></th>
+                                        <th>No</th>
                                         <th>Hari</th>
-                                        <th>Tanggal</th>
+                                        <th>Tanggal Mulai</th>
+                                        <th>Tanggal Selesai</th>
                                         <th>Status</th>
                                         <th>Status Approval</th>
                                     </tr>
@@ -135,9 +156,14 @@
                                         <tr class="hover">
                                             <td class="font-bold">{{ $value + 1 }}</td>
                                             <td class="text-slate-500 dark:text-slate-300">
-                                                {{ date('l', strtotime($item->tanggal_pengajuan)) }}</td>
+                                                {{ \Carbon\Carbon::parse($item->tanggal_mulai)->translatedFormat('l') }}
+                                            </td>
                                             <td class="text-slate-500 dark:text-slate-300">
-                                                {{ date('d-m-Y', strtotime($item->tanggal_pengajuan)) }}</td>
+                                                {{ \Carbon\Carbon::parse($item->tanggal_mulai)->format('d-m-Y') }}
+                                            </td>
+                                            <td class="text-slate-500 dark:text-slate-300">
+                                                {{ \Carbon\Carbon::parse($item->tanggal_selesai)->format('d-m-Y') }}
+                                            </td>
                                             <td class="text-slate-500 dark:text-slate-300">
                                                 @if ($item->status == 'I')
                                                     Izin
@@ -149,7 +175,8 @@
                                             </td>
                                             <td class="text-slate-500 dark:text-slate-300">
                                                 @if ($item->status_approved == 1)
-                                                    <div class="badge badge-neutral dark:bg-slate-300 dark:text-slate-700">
+                                                    <div class="badge badge-neutral dark:bg-slate-300 dark:text-slate
+700">
                                                         Pending</div>
                                                 @elseif ($item->status_approved == 2)
                                                     <div class="badge badge-success">Disetujui</div>

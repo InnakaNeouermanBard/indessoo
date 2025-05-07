@@ -187,64 +187,25 @@
         // Perbaikan pada fungsi editDay di karyawan-detail.blade.php
         // Perbaikan pada fungsi editDay di karyawan-detail.blade.php
         function editDay(karyawanNik, tanggal) {
-            // Pastikan tanggal hanya dalam format YYYY-MM-DD (tanpa komponen waktu)
-            // untuk menghindari masalah timezone
-            if (tanggal.length > 10) {
-                tanggal = tanggal.substring(0, 10);
-            }
+            // Menentukan apakah tanggal adalah hari kerja atau libur
+            const isLibur = (new Date(tanggal).getDay() === 6 || new Date(tanggal).getDay() === 0); // Sabtu/Minggu
+            const shiftSelector = isLibur ? 'Libur' : 'Pilih Shift';
 
-            console.log("Edit jadwal untuk tanggal:", tanggal);
-
-            // Format tanggal untuk display
-            const displayDate = new Date(tanggal + "T00:00:00").toLocaleDateString('id-ID', {
-                weekday: 'long',
-                day: 'numeric',
-                month: 'long',
-                year: 'numeric'
-            });
-
-            document.getElementById('edit_day_date').textContent = displayDate;
+            // Menyusun form edit berdasarkan pilihan shift atau libur
+            document.getElementById('edit_day_date').textContent = tanggal;
             document.getElementById('edit_karyawan_nik').value = karyawanNik;
             document.getElementById('edit_day_tanggal').value = tanggal;
+            document.getElementById('edit_day_shift_id').disabled = isLibur;
 
-            // Reset form
-            document.getElementById('edit_day_shift_id').value = '';
-            document.getElementById('edit_day_is_libur').checked = false;
+            if (isLibur) {
+                document.getElementById('edit_day_shift_id').value = ''; // Setel shift ke kosong jika libur
+            }
 
-            // Tambahkan parameter khusus untuk debugging
-            const debugParam = new Date().getTime();
-
-            // Fetch existing data if available
-            fetch(
-                    `/admin/jadwal-shift/get-day?karyawan_nik=${encodeURIComponent(karyawanNik)}&tanggal=${encodeURIComponent(tanggal)}&debug=${debugParam}`)
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error('Network response was not ok');
-                    }
-                    return response.json();
-                })
-                .then(data => {
-                    console.log("Data jadwal yang diterima:", data);
-
-                    if (data && data.jadwal) {
-                        document.getElementById('edit_day_shift_id').value = data.jadwal.shift_id || '';
-                        document.getElementById('edit_day_is_libur').checked = !!data.jadwal.is_libur;
-                        console.log("Jadwal ditemukan - Shift ID:", data.jadwal.shift_id, "Libur:", data.jadwal
-                            .is_libur);
-                    } else {
-                        console.log("Tidak ada jadwal untuk tanggal ini");
-                    }
-                })
-                .catch(error => {
-                    console.error('Error fetching data:', error);
-                    alert('Terjadi kesalahan saat mengambil data jadwal');
-                });
-
-            // Open modal
             window.dispatchEvent(new CustomEvent('open-modal', {
                 detail: 'edit_day_modal'
             }));
         }
+
 
         // Perbaikan pada script di karyawan-detail.blade.php
         document.addEventListener('DOMContentLoaded', function() {
@@ -296,7 +257,7 @@
                             // Tampilkan tanggal yang diupdate untuk memastikan tidak ada kesalahan
                             alert(
                                 `Jadwal berhasil diperbarui untuk tanggal ${result.debug_tanggal || formattedTanggal}`
-                                );
+                            );
 
                             // Reload halaman setelah berhasil
                             window.location.reload();

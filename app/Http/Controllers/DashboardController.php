@@ -50,9 +50,9 @@ class DashboardController extends Controller
         // Ambil rekap pengajuan presensi bulan ini
         $rekapPengajuanPresensi = DB::table('pengajuan_presensi')
             ->where('nik', $nik)
-            ->whereMonth('tanggal_pengajuan', date('m'))
-            ->whereYear('tanggal_pengajuan', date('Y'))
-            ->where('status_approved', 2) // Status disetujui
+            ->whereMonth('tanggal_mulai', date('m')) // Ganti tanggal_pengajuan dengan tanggal_mulai 
+            ->whereYear('tanggal_mulai', date('Y')) // Ganti tanggal_pengajuan dengan tanggal_mulai 
+            ->where('status_approved', 2) // Status disetujui 
             ->selectRaw('sum(if(status = "Sakit", 1, 0)) as jml_sakit, sum(if(status = "Izin", 1, 0)) as jml_izin')
             ->first();
 
@@ -90,7 +90,7 @@ class DashboardController extends Controller
         $rekapPengajuanPresensi = DB::table("pengajuan_presensi")
             ->selectRaw("SUM(IF (status = 'I',1,0)) as jml_izin, SUM(IF (status = 'S',1,0)) as jml_sakit")
             ->where('status_approved', 1)
-            ->where('tanggal_pengajuan', $hariIni)
+            ->where('tanggal_mulai', $hariIni)
             ->first();
 
         return view("admin.dashboard", compact("title", "totalKaryawan", "rekapPresensi", "rekapPengajuanPresensi"));

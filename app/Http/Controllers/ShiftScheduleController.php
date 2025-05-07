@@ -174,6 +174,7 @@ class ShiftScheduleController extends Controller
             'rotasi_4_3' => 'Rotasi 4-3 (4 Hari Kerja, 3 Hari Libur)',
             'rotasi_5_2' => 'Rotasi 5-2 (5 Hari Kerja, 2 Hari Libur)',
             'rotasi_6_1' => 'Rotasi 6-1 (6 Hari Kerja, 1 Hari Libur)',
+            'mingguan' => 'Pola Mingguan (Shift berubah per minggu)',
             'custom' => 'Custom Pattern'
         ];
 
@@ -199,32 +200,6 @@ class ShiftScheduleController extends Controller
         $durasi = (int)$request->durasi; // Konversi ke integer
         $patternType = $request->pattern_type;
 
-        // Determine the pattern based on selection
-        $pattern = [];
-
-        if ($patternType === 'custom' && $request->has('custom_pattern')) {
-            // Parse custom pattern from request
-            $customPattern = json_decode($request->custom_pattern, true);
-            if (is_array($customPattern)) {
-                $pattern = $customPattern;
-            }
-        } else {
-            // Use predefined patterns
-            switch ($patternType) {
-                case 'rotasi_4_3':
-                    $pattern = $this->generatePattern($request->shift_pagi, $request->shift_siang, $request->shift_malam, 4, 3);
-                    break;
-                case 'rotasi_5_2':
-                    $pattern = $this->generatePattern($request->shift_pagi, $request->shift_siang, $request->shift_malam, 5, 2);
-                    break;
-                case 'rotasi_6_1':
-                    $pattern = $this->generatePattern($request->shift_pagi, $request->shift_siang, $request->shift_malam, 6, 1);
-                    break;
-                default:
-                    return redirect()->back()->with('error', 'Tipe pattern tidak valid');
-            }
-        }
-
         // Calculate start and end dates - pastikan parameter adalah integer
         $startDate = Carbon::createFromDate($tahunMulai, $bulanMulai, 1);
         $endDate = (clone $startDate)->addMonths($durasi)->subDay();
@@ -234,37 +209,65 @@ class ShiftScheduleController extends Controller
 
         try {
             foreach ($request->karyawan_nik as $nik) {
-                $currentDate = clone $startDate;
-                $patternIndex = 0;
-                $patternLength = count($pattern);
+                if ($patternType === 'mingguan') {
+                    // Gunakan metode khusus untuk jadwal mingguan
+                    $this->generateWeeklySchedule($nik, $startDate, $endDate, $request);
+                } else {
+                    // Logika lain (dipertahankan untuk kompatibilitas)
+                    $pattern = [];
 
-                // Generate schedules for the selected period
-                while ($currentDate <= $endDate) {
-                    $daySchedule = $pattern[$patternIndex % $patternLength];
-
-                    // Check if there's an existing schedule for this employee on this date
-                    $existingSchedule = ShiftSchedule::where('karyawan_nik', $nik)
-                        ->where('tanggal', $currentDate->format('Y-m-d'))
-                        ->first();
-
-                    if ($existingSchedule) {
-                        // Update existing schedule
-                        $existingSchedule->update([
-                            'shift_id' => $daySchedule['shift_id'] ?? null,
-                            'is_libur' => $daySchedule['is_libur'] ?? false,
-                        ]);
-                    } else {
-                        // Create new schedule
-                        ShiftSchedule::create([
-                            'karyawan_nik' => $nik,
-                            'tanggal' => $currentDate->format('Y-m-d'),
-                            'shift_id' => $daySchedule['shift_id'] ?? null,
-                            'is_libur' => $daySchedule['is_libur'] ?? false,
-                        ]);
+                    switch ($patternType) {
+                        case 'rotasi_4_3':
+                            $pattern = $this->generatePattern($request->shift_pagi, $request->shift_siang, $request->shift_malam, 4, 3);
+                            break;
+                        case 'rotasi_5_2':
+                            $pattern = $this->generatePattern($request->shift_pagi, $request->shift_siang, $request->shift_malam, 5, 2);
+                            break;
+                        case 'rotasi_6_1':
+                            $pattern = $this->generatePattern($request->shift_pagi, $request->shift_siang, $request->shift_malam, 6, 1);
+                            break;
+                        case 'custom':
+                            $customPattern = json_decode($request->custom_pattern, true);
+                            if (is_array($customPattern)) {
+                                $pattern = $customPattern;
+                            }
+                            break;
+                        default:
+                            return redirect()->back()->with('error', 'Tipe pattern tidak valid');
                     }
 
-                    $currentDate->addDay();
-                    $patternIndex++;
+                    $currentDate = clone $startDate;
+                    $patternIndex = 0;
+                    $patternLength = count($pattern);
+
+                    // Generate schedules for the selected period
+                    while ($currentDate <= $endDate) {
+                        $daySchedule = $pattern[$patternIndex % $patternLength];
+
+                        // Check if there's an existing schedule for this employee on this date
+                        $existingSchedule = ShiftSchedule::where('karyawan_nik', $nik)
+                            ->where('tanggal', $currentDate->format('Y-m-d'))
+                            ->first();
+
+                        if ($existingSchedule) {
+                            // Update existing schedule
+                            $existingSchedule->update([
+                                'shift_id' => $daySchedule['shift_id'] ?? null,
+                                'is_libur' => $daySchedule['is_libur'] ?? false,
+                            ]);
+                        } else {
+                            // Create new schedule
+                            ShiftSchedule::create([
+                                'karyawan_nik' => $nik,
+                                'tanggal' => $currentDate->format('Y-m-d'),
+                                'shift_id' => $daySchedule['shift_id'] ?? null,
+                                'is_libur' => $daySchedule['is_libur'] ?? false,
+                            ]);
+                        }
+
+                        $currentDate->addDay();
+                        $patternIndex++;
+                    }
                 }
             }
 
@@ -274,6 +277,84 @@ class ShiftScheduleController extends Controller
             DB::rollBack();
             return redirect()->back()->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
         }
+    }
+
+    /**
+     * Generate jadwal mingguan dengan mempertimbangkan Sabtu Minggu libur
+     */
+    private function generateWeeklySchedule($nik, $startDate, $endDate, $request)
+    {
+        $currentDate = clone $startDate;
+
+        // Dapatkan shift untuk setiap minggu
+        $shifts = [
+            1 => $request->shift_minggu1,
+            2 => $request->shift_minggu2,
+            3 => $request->shift_minggu3,
+            4 => $request->shift_minggu4,
+            5 => $request->shift_minggu5,
+        ];
+
+        while ($currentDate <= $endDate) {
+            $dayOfWeek = $currentDate->dayOfWeek; // 0 (Minggu) sampai 6 (Sabtu)
+            $weekOfMonth = ceil($currentDate->day / 7); // Minggu ke berapa dalam bulan (1-5)
+
+            if ($weekOfMonth > 5) $weekOfMonth = 5; // Pastikan tidak melebihi array 5 minggu
+
+            $isWeekend = ($dayOfWeek == 0 || $dayOfWeek == 6); // Sabtu (6) dan Minggu (0)
+
+            // Cek jika ada jadwal yang sudah ada
+            $existingSchedule = ShiftSchedule::where('karyawan_nik', $nik)
+                ->where('tanggal', $currentDate->format('Y-m-d'))
+                ->first();
+
+            // Untuk hari Sabtu dan Minggu selalu libur
+            if ($isWeekend) {
+                if ($existingSchedule) {
+                    $existingSchedule->update([
+                        'shift_id' => null,
+                        'is_libur' => true,
+                    ]);
+                } else {
+                    ShiftSchedule::create([
+                        'karyawan_nik' => $nik,
+                        'tanggal' => $currentDate->format('Y-m-d'),
+                        'shift_id' => null,
+                        'is_libur' => true,
+                    ]);
+                }
+            } else {
+                // Hari kerja (Senin-Jumat), gunakan shift sesuai minggu
+                $shiftId = $shifts[$weekOfMonth] ?? null;
+
+                if ($existingSchedule) {
+                    $existingSchedule->update([
+                        'shift_id' => $shiftId,
+                        'is_libur' => empty($shiftId), // Libur jika tidak ada shift
+                    ]);
+                } else {
+                    ShiftSchedule::create([
+                        'karyawan_nik' => $nik,
+                        'tanggal' => $currentDate->format('Y-m-d'),
+                        'shift_id' => $shiftId,
+                        'is_libur' => empty($shiftId), // Libur jika tidak ada shift
+                    ]);
+                }
+            }
+
+            $currentDate->addDay();
+        }
+    }
+
+    /**
+     * Generate patterns for weekly scheduling
+     */
+    private function generateMingguanPattern($minggu1, $minggu2, $minggu3, $minggu4, $minggu5)
+    {
+        // Metode ini tidak digunakan untuk pola mingguan karena pola mingguan
+        // menggunakan logika yang berbeda di generateWeeklySchedule
+        // Namun tetap disiapkan sebagai placeholder
+        return [];
     }
 
     public function debugCreateMassal()

@@ -30,32 +30,34 @@
                         <input type="text" name="karyawan" placeholder="Nama Karyawan"
                             class="input input-bordered w-full" value="{{ request()->karyawan }}" />
                     </label>
-                    {{-- <label class="form-control w-full max-w-xs">
-                        <div class="label">
-                            <span class="label-text">Departemen</span>
-                        </div>
-                        <select name="departemen" class="select select-bordered">
-                            <option value="0">Semua Departemen</option>
-                            @foreach ($departemen as $item)
-                                <option value="{{ $item->id }}"
-                                    {{ request()->departemen == $item->id ? 'selected' : '' }}>{{ $item->nama }}
-                                </option>
-                            @endforeach
-                        </select>
+                    {{-- <label class="form-control w-full max-w-xs"> 
+                        <div class="label"> 
+                            <span class="label-text">Departemen</span> 
+                        </div> 
+                        <select name="departemen" class="select select-bordered"> 
+                            <option value="0">Semua Departemen</option> 
+                            @foreach ($departemen as $item) 
+                                <option value="{{ $item->id }}" 
+                                    {{ request()->departemen == $item->id ? 'selected' : '' }}>{{ $item->nama }} 
+                                </option> 
+                            @endforeach 
+                        </select> 
                     </label> --}}
-                    {{-- <label class="form-control w-full max-w-xs">
-                        <div class="label">
-                            <span class="label-text">Tanggal Awal</span>
-                        </div>
-                        <input type="date" name="tanggal_awal" class="input input-bordered w-full"
-                            value="{{ request()->tanggal_awal ? request()->tanggal_awal : \Carbon\Carbon::now()->startOfMonth()->format('Y-m-d') }}" />
-                    </label>
-                    <label class="form-control w-full max-w-xs">
-                        <div class="label">
-                            <span class="label-text">Tanggal Akhir</span>
-                        </div>
-                        <input type="date" name="tanggal_akhir" class="input input-bordered w-full"
-                            value="{{ request()->tanggal_akhir ? request()->tanggal_akhir : \Carbon\Carbon::now()->endOfMonth()->format('Y-m-d') }}" />
+                    {{-- <label class="form-control w-full max-w-xs"> 
+                        <div class="label"> 
+                            <span class="label-text">Tanggal Awal</span> 
+                        </div> 
+                        <input type="date" name="tanggal_awal" class="input input-bordered w-full" 
+                            value="{{ request()->tanggal_awal ? request()->tanggal_awal : 
+\Carbon\Carbon::now()->startOfMonth()->format('Y-m-d') }}" /> 
+                    </label> 
+                    <label class="form-control w-full max-w-xs"> 
+                        <div class="label"> 
+                            <span class="label-text">Tanggal Akhir</span> 
+                        </div> 
+                        <input type="date" name="tanggal_akhir" class="input input-bordered w-full" 
+                            value="{{ request()->tanggal_akhir ? request()->tanggal_akhir : 
+\Carbon\Carbon::now()->endOfMonth()->format('Y-m-d') }}" /> 
                     </label> --}}
                     <label class="form-control w-full max-w-xs">
                         <div class="label">
@@ -90,13 +92,14 @@
         </div>
         <div class="w-full overflow-x-auto rounded-md bg-slate-200 px-10">
             <table id="tabelPresensi"
-                class="table mb-4 w-full border-collapse items-center border-gray-200 align-top dark:border-white/40">
+                class="table mb-4 w-full border-collapse items-center border-gray-200 align-top 
+dark:border-white/40">
                 <thead class="text-sm text-black">
                     <tr>
                         <th>No</th>
                         <th>Nama Karyawan / NIK</th>
-                        {{-- <th>Departemen</th> --}}
-                        <th>Tanggal Pengajuan</th>
+                        <th>Tanggal Mulai</th>
+                        <th>Tanggal Selesai</th>
                         <th>Status</th>
                         <th>Keterangan</th>
                         <th>Aksi</th>
@@ -105,35 +108,76 @@
                 <tbody>
                     @foreach ($pengajuan as $value => $item)
                         <tr class="hover">
-                            <td class="font-bold">{{ $value + 1 }}</td>
-                            <td>{{ $item->nama_karyawan }} -
-                                {{ $item->nik }}</td>
-                            {{-- <td>{{ $item->nama_departemen }}</td> --}}
+                            {{-- Kolom No --}}
+                            <td class="font-bold">
+                                {{ $value + 1 }}
+                            </td>
+
+                            {{-- Kolom Nama Karyawan / NIK --}}
                             <td>
-                                {{ \Carbon\Carbon::parse($item->tanggal_pengajuan)->format('l, d-m-Y') }}</td>
+                                {{ $item->nama_karyawan }} - {{ $item->nik }}
+                            </td>
+
+                            {{-- Kolom Tanggal Mulai --}}
+                            <td>
+                                {{ \Carbon\Carbon::parse($item->tanggal_mulai)->translatedFormat('l, d-m-Y') }}
+                            </td>
+
+                            {{-- Kolom Tanggal Selesai --}}
+                            <td>
+                                {{ \Carbon\Carbon::parse($item->tanggal_selesai)->translatedFormat('l, d-m-Y') }}
+                            </td>
+
+                            {{-- Kolom Status --}}
                             <td>
                                 @if ($item->status == 'I')
-                                    <span>Izin</span>
+                                    <span class="text-yellow-700">Izin</span>
                                 @elseif ($item->status == 'S')
-                                    <span>Sakit</span>
+                                    <span class="text-red-700">Sakit</span>
                                 @elseif ($item->status == 'C')
                                     <span class="font-medium text-blue-700">Cuti</span>
                                     @if (isset($item->kuota_cuti))
-                                        <div class="text-xs text-gray-500">(Sisa:
-                                            {{ $item->kuota_cuti - \DB::table('pengajuan_presensi')->where('nik', $item->nik)->where('status', 'C')->where('status_approved', 2)->whereYear('tanggal_pengajuan', date('Y'))->count() }}
-                                            hari)</div>
+                                        <div class="text-xs text-gray-500">
+                                            (Sisa:
+                                            @php
+                                                $cuti_terpakai = \DB::table('pengajuan_presensi')
+                                                    ->where('nik', $item->nik)
+                                                    ->where('status', 'C')
+                                                    ->where('status_approved', 2)
+                                                    ->whereYear('tanggal_mulai', date('Y'))
+                                                    ->get()
+                                                    ->sum(function ($cuti) {
+                                                        $start = \Carbon\Carbon::parse($cuti->tanggal_mulai);
+                                                        $end = \Carbon\Carbon::parse($cuti->tanggal_selesai);
+                                                        return $start->diffInDays($end) + 1; // +1 agar inklusif (misal 12-14 = 3 hari)
+                                                    });
+                                            @endphp
+
+                                            <div class="text-xs text-gray-500">
+                                                (Sisa: {{ $item->kuota_cuti - $cuti_terpakai }} hari)
+                                            </div>
+
+                                        </div>
                                     @endif
                                 @endif
                             </td>
-                            <td>{{ $item->keterangan }}</td>
+
+                            {{-- Kolom Keterangan --}}
+                            <td>
+                                {{ $item->keterangan }}
+                            </td>
+
+                            {{-- Kolom Aksi --}}
                             <td class="flex justify-center gap-2">
                                 @if ($item->status_approved == 1)
-                                    <label class="btn btn-warning btn-sm tooltip flex items-center" data-tip="Diterima"
-                                        onclick="return terima_button('{{ $item->id }}', '{{ $item->nama_karyawan }}', '{{ \Carbon\Carbon::parse($item->tanggal_pengajuan)->format('d-m-Y') }}', 'terima')">
+                                    <label class="btn btn-warning btn-sm tooltip flex items-center" data tip="Diterima"
+                                        onclick="return terima_button('{{ $item->id }}', '{{ $item->nama_karyawan }}', 
+'{{ \Carbon\Carbon::parse($item->tanggal_mulai)->format('d-m-Y') }}', 'terima')">
                                         <i class="ri-checkbox-circle-line"></i>
                                     </label>
                                     <label class="btn btn-error btn-sm tooltip flex items-center" data-tip="Ditolak"
-                                        onclick="return tolak_button('{{ $item->id }}', '{{ $item->nama_karyawan }}', '{{ \Carbon\Carbon::parse($item->tanggal_pengajuan)->format('d-m-Y') }}', 'tolak')">
+                                        onclick="return tolak_button('{{ $item->id }}', '{{ $item->nama_karyawan }}', 
+'{{ \Carbon\Carbon::parse($item->tanggal_mulai)->format('d-m-Y') }}', 'tolak')">
                                         <i class="ri-close-circle-line"></i>
                                     </label>
                                 @elseif ($item->status_approved == 2)
@@ -141,7 +185,8 @@
                                         <div class="badge badge-success">Diterima</div>
                                         <label class="btn btn-error btn-sm tooltip flex items-center"
                                             data-tip="Dibatalkan"
-                                            onclick="return batal_button('{{ $item->id }}', '{{ $item->nama_karyawan }}', '{{ \Carbon\Carbon::parse($item->tanggal_pengajuan)->format('d-m-Y') }}', 'batal')">
+                                            onclick="return batal_button('{{ $item->id }}', '{{ $item->nama_karyawan }}', 
+'{{ \Carbon\Carbon::parse($item->tanggal_mulai)->format('d-m-Y') }}', 'batal')">
                                             <i class="ri-close-circle-line"></i>
                                         </label>
                                     </div>
@@ -150,7 +195,8 @@
                                         <div class="badge badge-error">Ditolak</div>
                                         <label class="btn btn-error btn-sm tooltip flex items-center"
                                             data-tip="Dibatalkan"
-                                            onclick="return batal_button('{{ $item->id }}', '{{ $item->nama_karyawan }}', '{{ \Carbon\Carbon::parse($item->tanggal_pengajuan)->format('d-m-Y') }}', 'batal')">
+                                            onclick="return batal_button('{{ $item->id }}', '{{ $item->nama_karyawan }}', 
+'{{ \Carbon\Carbon::parse($item->tanggal_mulai)->format('d-m-Y') }}', 'batal')">
                                             <i class="ri-close-circle-line"></i>
                                         </label>
                                     </div>
@@ -160,6 +206,8 @@
                     @endforeach
                 </tbody>
             </table>
+
+            {{-- Pagination --}}
             <div class="mx-3 mb-5">
                 {{ $pengajuan->links() }}
             </div>
@@ -189,7 +237,7 @@
 
         function terima_button(id, karyawan, tanggal, ajuan) {
             Swal.fire({
-                title: 'Pengajuan Presensi Diterima',
+                title: 'pengajuan Presensi Diterima',
                 html: "<p>Apakah Anda menerima pengajuan presensi?</p>" +
                     "<div class='divider'></div>" +
                     "<div class='flex flex-col'>" +

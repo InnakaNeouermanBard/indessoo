@@ -55,7 +55,7 @@ class Karyawan extends Authenticatable
             ->where('nik', $this->nik)
             ->where('status', 'C') // Status cuti
             ->where('status_approved', 2) // Yang sudah disetujui
-            ->whereYear('tanggal_pengajuan', date('Y')) // Tahun ini 
+            ->whereYear('tanggal_mulai', date('Y')) // Tahun ini 
             ->count();
 
         return $this->kuota_cuti - $cutiTerpakai;

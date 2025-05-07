@@ -183,7 +183,7 @@ class PresensiController extends Controller
         $title = "Izin Karyawan";
         $riwayatPengajuanPresensi = DB::table("pengajuan_presensi")
             ->where('nik', auth()->guard('karyawan')->user()->nik)
-            ->orderBy("tanggal_pengajuan", "asc")
+            ->orderBy("tanggal_mulai", "asc")
             ->paginate(10);
         $bulan = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
 
@@ -209,47 +209,55 @@ class PresensiController extends Controller
     public function pengajuanPresensiStore(Request $request)
     {
         $nik = auth()->guard('karyawan')->user()->nik;
-        $tanggal_pengajuan = $request->tanggal_pengajuan;
-        $status = $request->status;
-        $keterangan = $request->keterangan;
 
+        $request->validate([
+            'status' => 'required',
+            'tanggal_mulai' => 'required|date',
+            'tanggal_selesai' => 'required|date|after_or_equal:tanggal_mulai',
+            'keterangan' => 'nullable|string',
+        ]);
+
+        // Cek apakah di rentang tanggal sudah pernah mengajukan 
         $cekPengajuan = DB::table('pengajuan_presensi')
-            ->where('nik', auth()->guard('karyawan')->user()->nik)
-            ->whereDate('tanggal_pengajuan', Carbon::make($tanggal_pengajuan)->format('Y-m-d'))
-            ->where(function (Builder $query) {
+            ->where('nik', $nik)
+            ->where(function ($query) use ($request) {
+                $query->whereBetween('tanggal_mulai', [$request->tanggal_mulai, $request->tanggal_selesai])
+                    ->orWhereBetween('tanggal_selesai', [$request->tanggal_mulai, $request->tanggal_selesai]);
+            })
+            ->where(function ($query) {
                 $query->where('status_approved', 0)
                     ->orWhere('status_approved', 1);
             })
             ->first();
 
         if ($cekPengajuan) {
-            return to_route('karyawan.izin')->with("error", "Anda sudah menambahkan pengajuan pada tanggal " . Carbon::make($tanggal_pengajuan)->format('d-m-Y'));
+            return to_route('karyawan.izin')->with("error", "Anda sudah memiliki pengajuan pada rentang 
+tanggal tersebut.");
         }
 
-        // Tambahkan validasi untuk cuti
-        if ($status == 'C') {
+        // Validasi kuota cuti 
+        if ($request->status == 'C') {
             $karyawan = Karyawan::find($nik);
             $sisaKuota = $karyawan->sisaKuotaCuti();
+            $jumlahHari = Carbon::parse($request->tanggal_mulai)->diffInDays(Carbon::parse($request->tanggal_selesai)) + 1;
 
-            if ($sisaKuota <= 0) {
-                return to_route('karyawan.izin')->with("error", "Kuota cuti Anda tahun ini sudah habis");
+            if ($sisaKuota < $jumlahHari) {
+                return to_route('karyawan.izin')->with("error", "Kuota cuti Anda tidak mencukupi untuk 
+rentang tanggal ini ($jumlahHari hari).");
             }
         }
 
-        $store = DB::table('pengajuan_presensi')->insert([
+        DB::table('pengajuan_presensi')->insert([
             'nik' => $nik,
-            'tanggal_pengajuan' => $tanggal_pengajuan,
-            'status' => $status,
-            'keterangan' => $keterangan,
+            'status' => $request->status,
+            'tanggal_mulai' => $request->tanggal_mulai,
+            'tanggal_selesai' => $request->tanggal_selesai,
+            'keterangan' => $request->keterangan,
             'created_at' => Carbon::now(),
             'updated_at' => Carbon::now(),
         ]);
 
-        if ($store) {
-            return to_route('karyawan.izin')->with("success", "Berhasil menambahkan pengajuan");
-        } else {
-            return to_route('karyawan.izin')->with("error", "Gagal menambahkan pengajuan");
-        }
+        return to_route('karyawan.izin')->with("success", "Berhasil menambahkan pengajuan");
     }
 
     public function searchPengajuanHistory(Request $request)
@@ -258,9 +266,9 @@ class PresensiController extends Controller
         $tahun = $request->tahun;
         $data = DB::table('pengajuan_presensi')
             ->where('nik', auth()->guard('karyawan')->user()->nik)
-            ->whereMonth('tanggal_pengajuan', $bulan)
-            ->whereYear('tanggal_pengajuan', $tahun)
-            ->orderBy("tanggal_pengajuan", "asc")
+            ->whereMonth('tanggal_mulai', $bulan)
+            ->whereYear('tanggal_mulai', $tahun)
+            ->orderBy("tanggal_mulai", "asc")
             ->get();
         return view('dashboard.presensi.izin.search-history', compact('data'));
     }
@@ -454,10 +462,10 @@ class PresensiController extends Controller
         $query = DB::table('pengajuan_presensi as p')
             ->join('karyawan as k', 'k.nik', '=', 'p.nik')
             ->join('departemen as d', 'k.departemen_id', '=', 'd.id')
-            ->where('p.tanggal_pengajuan', '>=', Carbon::now()->startOfMonth()->format("Y-m-d"))
-            ->where('p.tanggal_pengajuan', '<=', Carbon::now()->endOfMonth()->format("Y-m-d"))
+            ->where('p.tanggal_mulai', '>=', Carbon::now()->startOfMonth()->format("Y-m-d"))
+            ->where('p.tanggal_mulai', '<=', Carbon::now()->endOfMonth()->format("Y-m-d"))
             ->select('p.*', 'k.nama_lengkap as nama_karyawan', 'd.nama as nama_departemen', 'd.id as id_departemen', 'k.kuota_cuti')
-            ->orderBy('p.tanggal_pengajuan', 'asc');
+            ->orderBy('p.tanggal_mulai', 'asc');
 
         if ($request->nik) {
             $query->where('k.nik', 'LIKE', '%' . $request->nik . '%');
@@ -469,10 +477,10 @@ class PresensiController extends Controller
             $query->where('d.id', $request->departemen);
         }
         if ($request->tanggal_awal) {
-            $query->WhereDate('p.tanggal_pengajuan', '>=', Carbon::parse($request->tanggal_awal)->format('Y-m-d'));
+            $query->WhereDate('p.tanggal_mulai', '>=', Carbon::parse($request->tanggal_awal)->format('Y-m-d'));
         }
         if ($request->tanggal_akhir) {
-            $query->WhereDate('p.tanggal_pengajuan', '<=', Carbon::parse($request->tanggal_akhir)->format('Y-m-d'));
+            $query->WhereDate('p.tanggal_', '<=', Carbon::parse($request->tanggal_akhir)->format('Y-m-d'));
         }
         if ($request->status) {
             $query->Where('p.status', $request->status);

@@ -74,25 +74,31 @@
 
                     <!-- Pola Jadwal -->
                     <div>
-                        <h3 class="text-lg font-semibold mb-2">Pola Jadwal</h3>
-                        <p class="text-sm text-gray-600 mb-4">Pilih pola rotasi shift</p>
+                        <h3 class="text-lg font-semibold mb-2">Pola Jadwal Mingguan</h3>
+                        <p class="text-sm text-gray-600 mb-4">Tentukan shift untuk setiap minggu (Senin-Jumat,
+                            Sabtu-Minggu libur)</p>
 
-                        <div class="mb-4">
-                            <label class="block text-sm font-medium mb-1">Jenis Pola</label>
-                            <select name="pattern_type" id="pattern_type" class="select select-bordered w-full"
-                                required>
-                                @foreach ($patternOptions as $value => $label)
-                                    <option value="{{ $value }}">{{ $label }}</option>
-                                @endforeach
-                            </select>
+                        <!-- Pattern type selector -->
+                        <input type="hidden" name="pattern_type" value="mingguan">
+
+                        <div class="bg-blue-50 p-3 mb-4 rounded border border-blue-200">
+                            <p class="text-sm text-blue-700">
+                                <i class="fas fa-info-circle mr-1"></i>
+                                Jadwal akan dibuat dengan ketentuan:
+                            <ul class="list-disc ml-5 mt-1">
+                                <li>Shift ditentukan berdasarkan minggu dalam bulan</li>
+                                <li>Hari Sabtu dan Minggu selalu libur</li>
+                                <li>Minggu ke-1 dimulai dari hari pertama dalam bulan</li>
+                            </ul>
+                            </p>
                         </div>
 
-                        <div id="shift_selection" class="mt-4">
-                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                <div>
-                                    <label class="block text-sm font-medium mb-1">Shift Pagi</label>
-                                    <select name="shift_pagi" class="select select-bordered w-full">
-                                        <option value="">Tidak Ada</option>
+                        <div id="weekly_pattern" class="mt-4">
+                            <div class="grid grid-cols-1 gap-3">
+                                <div class="border rounded p-3 bg-gray-50">
+                                    <h4 class="font-medium mb-2">Minggu ke-1</h4>
+                                    <select name="shift_minggu1" class="select select-bordered w-full">
+                                        <option value="">Libur</option>
                                         @foreach ($shifts as $s)
                                             <option value="{{ $s->id }}">{{ $s->nama }}
                                                 ({{ $s->waktu_mulai }} - {{ $s->waktu_selesai }})
@@ -100,10 +106,11 @@
                                         @endforeach
                                     </select>
                                 </div>
-                                <div>
-                                    <label class="block text-sm font-medium mb-1">Shift Siang</label>
-                                    <select name="shift_siang" class="select select-bordered w-full">
-                                        <option value="">Tidak Ada</option>
+
+                                <div class="border rounded p-3 bg-gray-50">
+                                    <h4 class="font-medium mb-2">Minggu ke-2</h4>
+                                    <select name="shift_minggu2" class="select select-bordered w-full">
+                                        <option value="">Libur</option>
                                         @foreach ($shifts as $s)
                                             <option value="{{ $s->id }}">{{ $s->nama }}
                                                 ({{ $s->waktu_mulai }} - {{ $s->waktu_selesai }})
@@ -111,10 +118,11 @@
                                         @endforeach
                                     </select>
                                 </div>
-                                <div>
-                                    <label class="block text-sm font-medium mb-1">Shift Malam</label>
-                                    <select name="shift_malam" class="select select-bordered w-full">
-                                        <option value="">Tidak Ada</option>
+
+                                <div class="border rounded p-3 bg-gray-50">
+                                    <h4 class="font-medium mb-2">Minggu ke-3</h4>
+                                    <select name="shift_minggu3" class="select select-bordered w-full">
+                                        <option value="">Libur</option>
                                         @foreach ($shifts as $s)
                                             <option value="{{ $s->id }}">{{ $s->nama }}
                                                 ({{ $s->waktu_mulai }} - {{ $s->waktu_selesai }})
@@ -122,29 +130,30 @@
                                         @endforeach
                                     </select>
                                 </div>
-                            </div>
-                        </div>
 
-                        <div id="custom_pattern" class="hidden mt-4">
-                            <div class="border rounded p-4 bg-gray-50">
-                                <h4 class="font-medium mb-2">Custom Pattern Builder</h4>
-                                <p class="text-sm mb-4">Buat pola kustom dengan menambahkan hari kerja dan hari libur
-                                    secara berurutan.</p>
-
-                                <div id="pattern_container">
-                                    <!-- Pola akan ditampilkan di sini -->
+                                <div class="border rounded p-3 bg-gray-50">
+                                    <h4 class="font-medium mb-2">Minggu ke-4</h4>
+                                    <select name="shift_minggu4" class="select select-bordered w-full">
+                                        <option value="">Libur</option>
+                                        @foreach ($shifts as $s)
+                                            <option value="{{ $s->id }}">{{ $s->nama }}
+                                                ({{ $s->waktu_mulai }} - {{ $s->waktu_selesai }})
+                                            </option>
+                                        @endforeach
+                                    </select>
                                 </div>
 
-                                <div class="flex gap-2 mt-4">
-                                    <button type="button" class="btn btn-sm btn-outline" id="add_work_day">+ Hari
-                                        Kerja</button>
-                                    <button type="button" class="btn btn-sm btn-outline" id="add_off_day">+ Hari
-                                        Libur</button>
-                                    <button type="button" class="btn btn-sm btn-outline btn-error"
-                                        id="reset_pattern">Reset</button>
+                                <div class="border rounded p-3 bg-gray-50">
+                                    <h4 class="font-medium mb-2">Minggu ke-5 (jika ada)</h4>
+                                    <select name="shift_minggu5" class="select select-bordered w-full">
+                                        <option value="">Libur</option>
+                                        @foreach ($shifts as $s)
+                                            <option value="{{ $s->id }}">{{ $s->nama }}
+                                                ({{ $s->waktu_mulai }} - {{ $s->waktu_selesai }})
+                                            </option>
+                                        @endforeach
+                                    </select>
                                 </div>
-
-                                <input type="hidden" name="custom_pattern" id="custom_pattern_input" value="">
                             </div>
                         </div>
                     </div>
@@ -181,135 +190,6 @@
                     selectAll.indeterminate = anyChecked && !allChecked;
                 });
             });
-
-            // Pattern type handling
-            const patternType = document.getElementById('pattern_type');
-            const shiftSelection = document.getElementById('shift_selection');
-            const customPattern = document.getElementById('custom_pattern');
-
-            patternType.addEventListener('change', function() {
-                if (this.value === 'custom') {
-                    shiftSelection.classList.add('hidden');
-                    customPattern.classList.remove('hidden');
-                } else {
-                    shiftSelection.classList.remove('hidden');
-                    customPattern.classList.add('hidden');
-                }
-            });
-
-            // Custom pattern builder
-            const patternContainer = document.getElementById('pattern_container');
-            const addWorkDay = document.getElementById('add_work_day');
-            const addOffDay = document.getElementById('add_off_day');
-            const resetPattern = document.getElementById('reset_pattern');
-            const customPatternInput = document.getElementById('custom_pattern_input');
-
-            let patternData = [];
-
-            function updatePatternUI() {
-                patternContainer.innerHTML = '';
-
-                if (patternData.length === 0) {
-                    patternContainer.innerHTML = '<p class="text-gray-500">Belum ada pola yang ditambahkan</p>';
-                    return;
-                }
-
-                const patternDiv = document.createElement('div');
-                patternDiv.className = 'flex flex-wrap gap-2 mb-2';
-
-                patternData.forEach((item, index) => {
-                    const dayElement = document.createElement('div');
-
-                    if (item.is_libur) {
-                        dayElement.className = 'p-2 bg-red-100 border border-red-300 rounded text-sm';
-                        dayElement.textContent = `Hari ${index + 1}: Libur`;
-                    } else {
-                        dayElement.className = 'p-2 bg-green-100 border border-green-300 rounded text-sm';
-                        const shiftText = item.shift_id ? `Shift ID: ${item.shift_id}` : 'Tanpa Shift';
-                        dayElement.textContent = `Hari ${index + 1}: ${shiftText}`;
-                    }
-
-                    patternDiv.appendChild(dayElement);
-                });
-
-                patternContainer.appendChild(patternDiv);
-                customPatternInput.value = JSON.stringify(patternData);
-            }
-
-            addWorkDay.addEventListener('click', function() {
-                // Buat array shifts untuk digunakan dalam modal
-                const shiftsArray = [];
-                @foreach ($shifts as $s)
-                    shiftsArray.push({
-                        id: "{{ $s->id }}",
-                        nama: "{{ $s->nama }}",
-                        waktu: "{{ $s->waktu_mulai }} - {{ $s->waktu_selesai }}"
-                    });
-                @endforeach
-
-                // Buat modal untuk pemilihan shift
-                const modalDiv = document.createElement('div');
-                modalDiv.className =
-                    'fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center';
-
-                let modalContent = `
-                    <div class="bg-white p-4 rounded shadow-lg max-w-md w-full">
-                        <h3 class="text-lg font-bold mb-4">Pilih Shift untuk Hari Kerja</h3>
-                        <div class="mb-4">
-                            <label class="block text-sm font-medium mb-1">Shift</label>
-                            <select id="shift_select" class="select select-bordered w-full">
-                                <option value="">-- Tanpa Shift --</option>
-                `;
-
-                shiftsArray.forEach(shift => {
-                    modalContent +=
-                        `<option value="${shift.id}">${shift.nama} (${shift.waktu})</option>`;
-                });
-
-                modalContent += `
-                            </select>
-                        </div>
-                        <div class="flex justify-end gap-2">
-                            <button type="button" id="cancel_shift" class="btn btn-outline">Batal</button>
-                            <button type="button" id="confirm_shift" class="btn btn-primary">Tambahkan</button>
-                        </div>
-                    </div>
-                `;
-
-                modalDiv.innerHTML = modalContent;
-                document.body.appendChild(modalDiv);
-
-                // Event handlers untuk modal
-                document.getElementById('cancel_shift').addEventListener('click', function() {
-                    document.body.removeChild(modalDiv);
-                });
-
-                document.getElementById('confirm_shift').addEventListener('click', function() {
-                    const shiftId = document.getElementById('shift_select').value;
-                    patternData.push({
-                        shift_id: shiftId || null,
-                        is_libur: false
-                    });
-                    updatePatternUI();
-                    document.body.removeChild(modalDiv);
-                });
-            });
-
-            addOffDay.addEventListener('click', function() {
-                patternData.push({
-                    shift_id: null,
-                    is_libur: true
-                });
-                updatePatternUI();
-            });
-
-            resetPattern.addEventListener('click', function() {
-                patternData = [];
-                updatePatternUI();
-            });
-
-            // Initialize UI
-            updatePatternUI();
         });
     </script>
 </x-app-layout>

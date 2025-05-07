@@ -94,30 +94,21 @@
                         <label class="form-control w-full">
                             <div class="label">
                                 <span class="label-text font-semibold dark:text-slate-100">
-                                    <p>Tanggal Pengajuan <span class="text-red-500">*</span></p>
+                                    <p>Tanggal Mulai <span class="text-red-500">*</span></p>
                                 </span>
                             </div>
-                            <input type="date" name="tanggal_pengajuan" placeholder="Tanggal Pengajuan"
+                            <input type="date" name="tanggal_mulai"
                                 class="input input-bordered w-full text-blue-700 dark:bg-slate-100" required />
-                            @error('tanggal_pengajuan')
-                                <div class="label">
-                                    <span class="label-text-alt text-sm text-error">{{ $message }}</span>
-                                </div>
-                            @enderror
                         </label>
+
                         <label class="form-control w-full">
                             <div class="label">
                                 <span class="label-text font-semibold dark:text-slate-100">
-                                    <p>Keterangan</p>
+                                    <p>Tanggal Selesai <span class="text-red-500">*</span></p>
                                 </span>
                             </div>
-                            <textarea name="keterangan" placeholder="Keterangan"
-                                class="textarea textarea-bordered w-full text-blue-700 dark:bg-slate-100"></textarea>
-                            @error('keterangan')
-                                <div class="label">
-                                    <span class="label-text-alt text-sm text-error">{{ $message }}</span>
-                                </div>
-                            @enderror
+                            <input type="date" name="tanggal_selesai"
+                                class="input input-bordered w-full text-blue-700 dark:bg-slate-100" required />
                         </label>
 
                         <div class="my-5 flex flex-wrap justify-center gap-2">
