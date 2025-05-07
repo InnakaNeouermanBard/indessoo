@@ -13,12 +13,17 @@ use PhpOffice\PhpSpreadsheet\Writer\Html as HtmlWriter;
 
 class JadwalKerjaController extends Controller
 {
-    //
     public function index()
     {
-        // Ambil daftar file terbaru, 10 per halaman
         $files = ExcelFile::latest()->paginate(10);
         return view('admin.jadwal.index', compact('files'));
+    }
+
+    public function indexKaryawan()
+    {
+        $files = ExcelFile::latest()->paginate(10);
+        $title = 'Jadwal Karyawan';
+        return view('dashboard.jadwal.index', compact('files', 'title'));
     }
 
     public function import(Request $request)
@@ -27,19 +32,14 @@ class JadwalKerjaController extends Controller
             'file' => 'required|mimes:xlsx,xls',
         ]);
 
-        // Simpan file ke storage
         $uploaded = $request->file('file');
-        // Simpan ke storage/app/public/excel_uploads
-        $path = $uploaded->store('excel_uploads', 'public');
+        $path = $uploaded->store('excel_uploads', 'public'); // simpan di storage/app/public
 
-
-        // Simpan metadata ke DB
         ExcelFile::create([
             'original_name' => $uploaded->getClientOriginalName(),
-            'file_path'     => $path,
+            'file_path'     => $path, // contoh: excel_uploads/nama.xlsx
         ]);
 
-        // Redirect supaya refresh tidak duplikat
         return redirect()
             ->route('jadwalkerja.index')
             ->with('success', 'File Excel berhasil di-upload dan disimpan.');
@@ -48,20 +48,39 @@ class JadwalKerjaController extends Controller
     public function download($id)
     {
         $excelFile = ExcelFile::findOrFail($id);
-        return response()->download(
-            Storage::path($excelFile->file_path),
-            $excelFile->original_name
-        );
+
+        // Gunakan disk 'public' sesuai tempat penyimpanan file
+        if (Storage::disk('public')->exists($excelFile->file_path)) {
+            return response()->download(
+                Storage::disk('public')->path($excelFile->file_path),
+                $excelFile->original_name
+            );
+        } else {
+            return redirect()->route('jadwalkerja.index')->with('error', 'File tidak ditemukan.');
+        }
+    }
+
+    public function downloadKaryawan($id)
+    {
+        $excelFile = ExcelFile::findOrFail($id);
+
+        if (Storage::disk('public')->exists($excelFile->file_path)) {
+            return response()->download(
+                Storage::disk('public')->path($excelFile->file_path),
+                $excelFile->original_name
+            );
+        } else {
+            return redirect()->route('karyawan.jadwalkerja.index')->with('error', 'File tidak ditemukan.');
+        }
     }
 
     public function destroy(int $id): RedirectResponse
     {
         $excelFile = ExcelFile::findOrFail($id);
 
-        // Hapus file fisik
-        Storage::delete($excelFile->file_path);
+        // Hapus file dari disk 'public'
+        Storage::disk('public')->delete($excelFile->file_path);
 
-        // Hapus record DB
         $excelFile->delete();
 
         return redirect()

@@ -22,6 +22,7 @@ class Karyawan extends Authenticatable
         'nama_lengkap',
         'email',
         'password',
+        'telepon',
         'jabatan',
         'kuota_cuti', // Tambahkan kuota_cuti
         'departemen_id',

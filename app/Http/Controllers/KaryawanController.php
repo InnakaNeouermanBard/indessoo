@@ -79,7 +79,7 @@ class KaryawanController extends Controller
     {
         $data = $request->validate([
             'nik' => 'required|unique:karyawan,nik',
-            'departemen_id' => 'required',
+            'departemen_id' => ['default' => '1'],
             'nama_lengkap' => 'required|string|max:255',
             'foto' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
             'jabatan' => 'required|string|max:255',
@@ -116,7 +116,7 @@ class KaryawanController extends Controller
         $karyawan = Karyawan::where('nik', $request->nik_lama)->first();
         $data = $request->validate([
             'nik' => ['required', Rule::unique('karyawan')->ignore($karyawan)],
-            'departemen_id' => 'required',
+            // 'departemen_id' => 'required',
             'nama_lengkap' => 'required|string|max:255',
             'foto' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
             'jabatan' => 'required|string|max:255',

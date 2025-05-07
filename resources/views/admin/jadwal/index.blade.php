@@ -1,4 +1,4 @@
-{{-- index.blade.php
+{{-- index.blade.php --}}
 <x-app-layout>
     <x-slot name="header">
         <div class="flex gap-2">
@@ -267,7 +267,7 @@
             });
         });
     </script>
-</x-app-layout> --}}
+</x-app-layout>
 
 <x-app-layout>
     <x-slot name="header">
@@ -324,14 +324,14 @@
                 <table class="min-w-full divide-y divide-gray-200">
                     <thead class="bg-gray-50">
                         <tr>
-                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">#</th>
-                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Nama File</th>
-                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Tanggal Upload
+                            <th>#</th>
+                            <th>Nama File</th>
+                            <th>Tanggal Upload
                             </th>
-                            <th class="px-4 py-2 text-center text-xs font-medium text-gray-500 uppercase">Aksi</th>
+                            <th>Aksi</th>
                         </tr>
                     </thead>
-                    <tbody class="bg-white divide-y divide-gray-100">
+                    <tbody>
                         @forelse($files as $idx => $file)
                             <tr class="hover:bg-gray-50">
                                 <td class="px-4 py-2 whitespace-nowrap">{{ $files->firstItem() + $idx }}</td>
@@ -350,7 +350,8 @@
                                         class="inline-block delete-form">
                                         @csrf
                                         @method('DELETE')
-                                        <button type="submit" class="btn btn-sm btn-outline btn-error" title="Hapus">
+                                        <button type="submit" class="btn btn-sm btn-outline btn-error"
+                                            title="Hapus">
                                             <i class="ri-delete-bin-6-line"></i>
                                         </button>
                                     </form>

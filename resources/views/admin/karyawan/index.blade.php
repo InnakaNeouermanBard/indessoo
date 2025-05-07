@@ -33,7 +33,6 @@
                 <thead class="text-sm text-black">
                     <tr>
                         <th></th>
-                        <th>Departemen</th>
                         <th>Nama Lengkap</th>
                         <th>Foto</th>
                         <th>Jabatan</th>
@@ -46,7 +45,7 @@
                     @foreach ($karyawan as $value => $item)
                         <tr class="hover">
                             <td class="font-bold">{{ $karyawan->firstItem() + $value }}</td>
-                            <td>{{ $item->departemen->kode }}</td>
+                            {{-- <td>{{ $item->departemen->kode }}</td> --}}
                             <td>{{ $item->nama_lengkap }}</td>
                             <td>
                                 <div class="avatar">
@@ -110,7 +109,7 @@
                             </div>
                         @enderror
                     </label>
-                    <label class="form-control w-full">
+                    {{-- <label class="form-control w-full">
                         <div class="label">
                             <span class="label-text font-semibold">
                                 <span class="label-text font-semibold">Departemen<span
@@ -129,7 +128,7 @@
                                 <span class="label-text-alt text-sm text-error">{{ $message }}</span>
                             </div>
                         @enderror
-                    </label>
+                    </label> --}}
                     <label class="form-control w-full">
                         <div class="label">
                             <span class="label-text font-semibold">
@@ -163,13 +162,11 @@
                     <label class="form-control w-full">
                         <div class="label">
                             <span class="label-text font-semibold">
-                                <span class="label-text font-semibold">Telepon<span
-                                        class="text-red-500">*</span></span>
+                                <span class="label-text font-semibold">Telepon<span class="text-red-500">*</span></span>
                             </span>
                         </div>
                         <input type="text" name="telepon" placeholder="Telepon"
-                            class="input input-bordered w-full text-blue-700" value="{{ old('telepon') }}"
-                            required />
+                            class="input input-bordered w-full text-blue-700" value="{{ old('telepon') }}" required />
                         @error('telepon')
                             <div class="label">
                                 <span class="label-text-alt text-sm text-error">{{ $message }}</span>

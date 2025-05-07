@@ -140,6 +140,12 @@ Route::middleware(['auth:karyawan'])->prefix('karyawan')->group(function () {
         Route::get('/', [FormLemburController::class, 'karyawanIndex'])->name('karyawan.form-lembur.index');
         Route::post('/', [FormLemburController::class, 'karyawanStore'])->name('karyawan.form-lembur.store');
     });
+    Route::prefix('jadwal-kerja')->group(function () {
+        Route::get('jadwal-kerja', [JadwalKerjaController::class, 'indexKaryawan'])
+            ->name('karyawan.jadwalkerja.index');
+        Route::get('jadwal-kerja/download/{id}', [JadwalKerjaController::class, 'downloadKaryawan'])
+            ->name('karyawan.jadwalkerja.download');
+    });
 
     Route::prefix('presensi')->group(function () {
         Route::get('/', [PresensiController::class, 'index'])->name('karyawan.presensi');
