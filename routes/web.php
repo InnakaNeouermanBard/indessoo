@@ -53,6 +53,17 @@ Route::middleware(['auth:web'])->prefix('admin')->group(function () {
     Route::post('/admin-management/update', [AdminController::class, 'update'])->name('admin-management.update');
     Route::post('/admin-management/delete', [AdminController::class, 'delete'])->name('admin-management.delete');
 
+    // routes/web.php
+    Route::get('/tukar-jadwal/riwayat', [PresensiController::class, 'riwayatTukarJadwal'])->name('tukar-jadwal.riwayat');
+    Route::get('/tukar-jadwal/detail/{id}', [PresensiController::class, 'detailTukarJadwal'])->name('tukar-jadwal.detail');
+    Route::get('/tukar-jadwal/terima/{id}', [PresensiController::class, 'terimaAjuanTukarJadwal'])->name('tukar-jadwal.terima');
+    Route::get('/tukar-jadwal/tolak/{id}', [PresensiController::class, 'tolakAjuanTukarJadwal'])->name('tukar-jadwal.tolak');
+
+
+
+
+
+
 
     // Update kuota cuti karyawan
     Route::put('/admin/kuota-cuti/{nik}', [PresensiController::class, 'updateKuotaCuti'])->name('admin.kuota-cuti.update');
@@ -150,6 +161,9 @@ Route::middleware(['auth:karyawan'])->prefix('karyawan')->group(function () {
     Route::prefix('presensi')->group(function () {
         Route::get('/', [PresensiController::class, 'index'])->name('karyawan.presensi');
         Route::post('/', [PresensiController::class, 'store'])->name('karyawan.presensi.store');
+        // routes/web.php
+        Route::post('/presensi/tukar-jadwal', [PresensiController::class, 'ajukanTukarJadwal'])->name('presensi.tukar-jadwal');
+
 
         Route::prefix('history')->group(function () {
             Route::get('/', [PresensiController::class, 'history'])->name('karyawan.history');
@@ -167,6 +181,13 @@ Route::middleware(['auth:karyawan'])->prefix('karyawan')->group(function () {
     Route::prefix('profile')->group(function () {
         Route::get('/', [KaryawanController::class, 'index'])->name('karyawan.profile');
         Route::post('/update', [KaryawanController::class, 'update'])->name('karyawan.profile.update');
+    });
+
+    Route::prefix('laporan')->group(function () {
+        Route::get('/', [PresensiController::class, 'laporankaryawan'])->name('karyawan.laporan');
+        Route::get('/laporan/presensi', [PresensiController::class, 'laporankaryawan'])->name('karyawan.laporan.presensi');
+        Route::post('/laporan/presensi/karyawan', [PresensiController::class, 'laporanPresensiKaryawanKaryawan'])->name('karyawan.laporan.presensi.karyawan');
+        Route::post('/laporan/presensi/semua-karyawan', [PresensiController::class, 'laporanPresensiSemuaKaryawanKaryawan'])->name('karyawan.laporan.presensi.semua-karyawan');
     });
 });
 

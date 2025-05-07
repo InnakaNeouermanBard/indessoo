@@ -600,7 +600,7 @@
                 // Tambahkan loading indicator
                 $("#searchPresensi").html(
                     '<div class="flex justify-center my-4"><span class="loading loading-spinner loading-lg"></span></div>'
-                    );
+                );
 
                 $.ajax({
                     type: "POST",
@@ -617,11 +617,105 @@
                     error: function(xhr, status, error) {
                         $("#searchPresensi").html(
                             '<div class="alert alert-error">Terjadi kesalahan saat memuat data</div>'
-                            );
+                        );
                         console.error("AJAX Error:", error);
                     }
                 });
             });
+        });
+    </script>
+
+    <!-- Script untuk Modal Tukar Jadwal -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Elemen-elemen yang diperlukan
+            const modal = document.getElementById('tukarJadwalModal');
+            const openButton = document.getElementById('openTukarJadwalBtn');
+            const closeButton = document.getElementById('closeTukarJadwalBtn');
+
+            // Tambahkan overlay background
+            const modalOverlay = document.createElement('div');
+            modalOverlay.className = 'fixed inset-0 bg-black opacity-50';
+            modalOverlay.style.zIndex = '40';
+            modalOverlay.style.display = 'none';
+            document.body.appendChild(modalOverlay);
+
+            // Buka Modal - tanpa loading
+            openButton.addEventListener('click', function() {
+                modal.style.display = 'block';
+                modalOverlay.style.display = 'block';
+                document.body.style.overflow = 'hidden'; // Mencegah scrolling
+            });
+
+            // Tutup Modal
+            function closeModal() {
+                modal.style.display = 'none';
+                modalOverlay.style.display = 'none';
+                document.body.style.overflow = '';
+            }
+
+            closeButton.addEventListener('click', closeModal);
+
+            // Tutup Modal jika mengklik di luar modal (pada overlay)
+            modalOverlay.addEventListener('click', closeModal);
+
+            // Form submission validation
+            const tukarJadwalForm = document.querySelector('#tukarJadwalModal form');
+            if (tukarJadwalForm) {
+                tukarJadwalForm.addEventListener('submit', function(e) {
+                    const nikPenerima = this.querySelector('select[name="nik_penerima"]').value;
+                    const tanggalPengajuan = this.querySelector('input[name="tanggal_pengajuan"]').value;
+                    const alasan = this.querySelector('textarea[name="alasan"]').value;
+
+                    if (!nikPenerima) {
+                        e.preventDefault();
+                        Swal.fire({
+                            title: "Peringatan",
+                            text: "Silakan pilih karyawan tujuan terlebih dahulu",
+                            icon: "warning",
+                            confirmButtonText: "OK"
+                        });
+                        return false;
+                    }
+
+                    if (!tanggalPengajuan) {
+                        e.preventDefault();
+                        Swal.fire({
+                            title: "Peringatan",
+                            text: "Silakan pilih tanggal pertukaran terlebih dahulu",
+                            icon: "warning",
+                            confirmButtonText: "OK"
+                        });
+                        return false;
+                    }
+
+                    if (!alasan.trim()) {
+                        e.preventDefault();
+                        Swal.fire({
+                            title: "Peringatan",
+                            text: "Silakan berikan alasan pertukaran jadwal",
+                            icon: "warning",
+                            confirmButtonText: "OK"
+                        });
+                        return false;
+                    }
+
+                    // Konfirmasi sebelum submit
+                    e.preventDefault();
+                    Swal.fire({
+                        title: "Konfirmasi",
+                        text: "Apakah Anda yakin ingin mengajukan pertukaran jadwal ini? Pastikan karyawan tujuan sudah mengetahui dan menyetujui pertukaran ini.",
+                        icon: "question",
+                        showCancelButton: true,
+                        confirmButtonText: "Ya, Ajukan",
+                        cancelButtonText: "Batal"
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            this.submit();
+                        }
+                    });
+                });
+            }
         });
     </script>
 @endsection
@@ -639,6 +733,109 @@
         <audio id="notifikasi_presensi_gagal_radius" preload="auto">
             <source src="{{ asset('audio/notifikasi_presensi_gagal_radius.mp3') }}" type="audio/mpeg">
         </audio>
+
+
+        <!-- Notifikasi sukses/error -->
+        @if (session('success'))
+            <div class="alert alert-success shadow-lg mb-4">
+                <div class="flex items-center">
+                    <i class="ri-checkbox-circle-line mr-2 text-2xl"></i>
+                    <span>{{ session('success') }}</span>
+                </div>
+            </div>
+        @endif
+
+        @if (session('error'))
+            <div class="alert alert-error shadow-lg mb-4">
+                <div class="flex items-center">
+                    <i class="ri-error-warning-line mr-2 text-2xl"></i>
+                    <span>{{ session('error') }}</span>
+                </div>
+            </div>
+        @endif
+
+        <!-- Tombol Ajukan Tukar Jadwal -->
+        <div class="mb-6">
+            <button id="openTukarJadwalBtn" class="btn btn-warning text-white">
+                <i class="ri-exchange-line text-lg mr-1"></i> Ajukan Tukar Jadwal
+            </button>
+        </div>
+
+        <!-- Modal Tukar Jadwal (tersembunyi secara default) -->
+        <div id="tukarJadwalModal" style="display: none;" class="fixed inset-0 z-50 overflow-auto">
+            <div class="flex items-center justify-center min-h-screen px-4">
+                <div class="bg-white rounded-lg w-full max-w-lg relative mx-auto">
+                    <!-- Header Modal dengan close button -->
+                    <div class="flex items-center justify-between p-4 border-b">
+                        <h2 class="text-xl font-semibold">Ajukan Tukar Jadwal</h2>
+                        <button id="closeTukarJadwalBtn" class="text-gray-500 hover:text-gray-800">
+                            <i class="ri-close-line text-2xl"></i>
+                        </button>
+                    </div>
+
+                    <!-- Form Tukar Jadwal - Direct Submit tanpa JavaScript processing -->
+                    <div class="p-4">
+                        <form action="{{ route('presensi.tukar-jadwal') }}" method="POST">
+                            @csrf
+
+                            <!-- Karyawan Tujuan -->
+                            <div class="mb-4">
+                                <label class="block mb-2 font-medium">Karyawan Tujuan:</label>
+                                <select name="nik_penerima" class="w-full p-2 border border-gray-300 rounded-md bg-white"
+                                    required>
+                                    <option value="" selected disabled>Pilih karyawan untuk tukar jadwal</option>
+                                    @foreach ($karyawan as $karyawanItem)
+                                        @if ($karyawanItem->nik != auth()->guard('karyawan')->user()->nik)
+                                            <option value="{{ $karyawanItem->nik }}">{{ $karyawanItem->nama_lengkap }}
+                                            </option>
+                                        @endif
+                                    @endforeach
+                                </select>
+                            </div>
+
+                            <!-- Tanggal Tukar Jadwal -->
+                            <div class="mb-4">
+                                <label class="block mb-2 font-medium">Tanggal Tukar Jadwal:</label>
+                                <div class="relative">
+                                    <input type="date" name="tanggal_pengajuan"
+                                        class="w-full p-2 border border-gray-300 rounded-md" min="{{ date('Y-m-d') }}"
+                                        required>
+                                    <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                                        <i class="ri-calendar-line text-gray-500"></i>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Alasan -->
+                            <div class="mb-4">
+                                <label class="block mb-2 font-medium">Alasan:</label>
+                                <textarea name="alasan" rows="4" class="w-full p-2 border border-gray-300 rounded-md"
+                                    placeholder="Berikan alasan pertukaran jadwal" required></textarea>
+                            </div>
+
+                            <!-- Informasi Penting -->
+                            <div class="bg-blue-50 p-4 rounded-lg mb-4">
+                                <div class="flex items-center mb-2 text-blue-700">
+                                    <i class="ri-information-line mr-2 text-xl"></i>
+                                    <span class="font-medium">Informasi Penting</span>
+                                </div>
+                                <ul class="text-blue-700 list-disc pl-6 space-y-1">
+                                    <li>Pertukaran jadwal akan langsung diproses tanpa persetujuan admin</li>
+                                    <li>Pastikan karyawan yang dituju sudah mengetahui dan menyetujui pertukaran ini</li>
+                                    <li>Jadwal yang berhasil ditukar tidak dapat dibatalkan</li>
+                                </ul>
+                            </div>
+
+                            <!-- Submit Button - Direct Submit -->
+                            <button type="submit"
+                                class="w-full bg-blue-500 text-white py-3 rounded-md hover:bg-blue-600 transition-colors">
+                                Ajukan & Proses Tukar Jadwal
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
 
         <div class="-mx-3 flex flex-wrap">
             <div class="mb-6 w-full max-w-full px-3 sm:flex-none">

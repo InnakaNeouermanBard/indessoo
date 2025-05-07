@@ -187,38 +187,6 @@
                         </template>
                     </button>
                 </li>
-                <li class="flex items-center pl-4 xl:pr-4">
-                    <a href="{{ route('karyawan.profile') }}"
-                        class="ease-nav-brand block px-0 py-2 text-sm font-semibold text-white transition-all">
-                        @if (Auth::guard('karyawan')->user()->foto)
-                            <div class="avatar">
-                                <div class="w-6 rounded-full">
-                                    <img
-                                        src="{{ asset('storage/unggah/karyawan/' . Auth::guard('karyawan')->user()->foto) }}" />
-                                </div>
-                            </div>
-                        @else
-                            <i class="ri-user-3-fill sm:mr-1"></i>
-                        @endif
-                        <span class="hidden sm:inline">{{ Auth::guard('karyawan')->user()->nama_lengkap }}</span>
-                    </a>
-                </li>
-                <li class="flex items-center px-4 xl:hidden">
-                    <a href="javascript:;" class="ease-nav-brand block p-0 text-sm text-white transition-all"
-                        sidenav-trigger>
-                        <div class="w-4.5 overflow-hidden">
-                            <i class="ease mb-0.75 relative block h-0.5 rounded-sm bg-white transition-all"></i>
-                            <i class="ease mb-0.75 relative block h-0.5 rounded-sm bg-white transition-all"></i>
-                            <i class="ease relative block h-0.5 rounded-sm bg-white transition-all"></i>
-                        </div>
-                    </a>
-                </li>
-                {{-- <li class="flex items-center px-4">
-                    <a href="javascript:;" class="ease-nav-brand p-0 text-sm text-white transition-all">
-                        <i fixed-plugin-button-nav class="ri-settings-3-fill text-base cursor-pointer"></i>
-                    </a>
-                </li> --}}
-
                 <!-- notifications -->
                 <li class="relative flex items-center pr-2">
                     <p class="transform-dropdown-show hidden"></p>
@@ -311,6 +279,134 @@
                         </li>
                     </ul>
                 </li>
+
+                <li class="relative flex items-center pl-4 xl:pr-4">
+                    <div class="relative group">
+                        <button class="flex items-center text-sm font-semibold text-white focus:outline-none"
+                            id="profileDropdownToggle">
+                            @if (Auth::guard('karyawan')->user()->foto)
+                                <div class="avatar">
+                                    <div class="w-6 rounded-full">
+                                        <img
+                                            src="{{ asset('storage/unggah/karyawan/' . Auth::guard('karyawan')->user()->foto) }}" />
+                                    </div>
+                                </div>
+                            @else
+                                <i class="ri-user-3-fill sm:mr-1"></i>
+                            @endif
+                            <span
+                                class="hidden sm:inline ml-1">{{ Auth::guard('karyawan')->user()->nama_lengkap }}</span>
+                        </button>
+
+                        <!-- Dropdown menu -->
+                        <div class="absolute right-0 z-50 mt-2 hidden min-w-[180px] bg-white dark:bg-slate-800 rounded-md shadow-lg"
+                            id="profileDropdownMenu">
+                            <a href="{{ route('karyawan.profile') }}"
+                                class="block px-4 py-2 text-sm text-gray-700 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700">
+                                <i class="ri-user-line mr-2"></i> Profil
+                            </a>
+                            <button type="button" onclick="openLogoutModal()"
+                                class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/30">
+                                <i class="ri-logout-box-line mr-2"></i> Logout
+                            </button>
+                        </div>
+                    </div>
+                </li>
+
+                <!-- Modal Logout -->
+                <form id="logout-form" method="POST" action="{{ route('logout') }}">
+                    @csrf
+                </form>
+
+                <div id="logoutModal" class="fixed inset-0 z-[9999] hidden overflow-y-auto overflow-x-hidden">
+                    <div class="fixed inset-0 bg-black bg-opacity-50 transition-opacity duration-300 ease-in-out"
+                        id="modalOverlay"></div>
+                    <div class="flex items-center justify-center min-h-screen p-4">
+                        <div class="relative opacity-0 translate-y-10 transition-all duration-300 ease-in-out transform bg-white dark:bg-slate-800 rounded-lg shadow-xl w-full max-w-md mx-auto"
+                            id="modalContent">
+                            <div class="p-5 border-b border-gray-200 dark:border-gray-700 flex items-center">
+                                <div class="bg-red-100 dark:bg-red-900/30 rounded-full p-3 mr-3">
+                                    <i class="ri-logout-box-line text-2xl text-red-500"></i>
+                                </div>
+                                <h3 class="text-xl font-semibold text-gray-900 dark:text-white">
+                                    Konfirmasi Logout
+                                </h3>
+                                <button type="button"
+                                    class="absolute top-4 right-4 text-gray-400 hover:text-gray-500 dark:hover:text-gray-300"
+                                    onclick="closeLogoutModal()">
+                                    <i class="ri-close-line text-2xl"></i>
+                                </button>
+                            </div>
+                            <div class="p-5">
+                                <p class="text-gray-600 dark:text-gray-300 mb-6">
+                                    Apakah Anda yakin ingin keluar dari sistem presensi? Semua sesi yang sedang berjalan
+                                    akan berakhir.
+                                </p>
+                                <div class="flex space-x-3 justify-end">
+                                    <button type="button" onclick="closeLogoutModal()"
+                                        class="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-lg dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-white">
+                                        <i class="ri-close-line mr-1"></i> Batal
+                                    </button>
+                                    <button type="button" onclick="confirmLogout()"
+                                        class="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg">
+                                        <i class="ri-logout-box-line mr-1"></i> Ya, Logout
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <script>
+                    function openLogoutModal() {
+                        const modal = document.getElementById('logoutModal');
+                        const modalContent = document.getElementById('modalContent');
+                        const modalOverlay = document.getElementById('modalOverlay');
+                        modal.classList.remove('hidden');
+                        setTimeout(() => {
+                            modalOverlay.classList.add('opacity-100');
+                            modalContent.classList.remove('opacity-0', 'translate-y-10');
+                            modalContent.classList.add('opacity-100', 'translate-y-0');
+                        }, 10);
+                    }
+
+                    function closeLogoutModal() {
+                        const modal = document.getElementById('logoutModal');
+                        const modalContent = document.getElementById('modalContent');
+                        const modalOverlay = document.getElementById('modalOverlay');
+                        modalContent.classList.remove('opacity-100', 'translate-y-0');
+                        modalContent.classList.add('opacity-0', 'translate-y-10');
+                        modalOverlay.classList.remove('opacity-100');
+                        setTimeout(() => {
+                            modal.classList.add('hidden');
+                        }, 300);
+                    }
+
+                    function confirmLogout() {
+                        const logoutButton = document.querySelector('[onclick="confirmLogout()"]');
+                        logoutButton.innerHTML = '<i class="ri-loader-4-line animate-spin mr-1"></i> Logging out...';
+                        logoutButton.disabled = true;
+                        setTimeout(() => {
+                            document.getElementById('logout-form').submit();
+                        }, 500);
+                    }
+
+                    // Optional: Hide dropdown on click outside
+                    window.addEventListener('click', function(e) {
+                        const dropdown = document.getElementById('profileDropdownMenu');
+                        const toggle = document.getElementById('profileDropdownToggle');
+                        if (!toggle.contains(e.target) && !dropdown.contains(e.target)) {
+                            dropdown.classList.add('hidden');
+                        }
+                    });
+
+                    document.getElementById('profileDropdownToggle').addEventListener('click', function(e) {
+                        e.stopPropagation();
+                        const dropdown = document.getElementById('profileDropdownMenu');
+                        dropdown.classList.toggle('hidden');
+                    });
+                </script>
+
             </ul>
         </div>
     </div>

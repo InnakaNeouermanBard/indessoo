@@ -2,14 +2,17 @@
 // presensi controller 
 namespace App\Http\Controllers;
 
+
 use Carbon\Carbon;
 use App\Models\Karyawan;
 use App\Models\Departemen;
+use App\Models\TukarJadwal;
 use App\Models\LokasiKantor;
 use Illuminate\Http\Request;
 use App\Models\ShiftSchedule;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use App\Enums\StatusPengajuanPresensi;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Facades\Storage;
@@ -19,6 +22,7 @@ class PresensiController extends Controller
     // Metode yang sudah ada tetap sama
     public function index()
     {
+        $karyawan = Karyawan::all();
         $riwayatPresensi = DB::table("presensi")
             ->where('nik', auth()->guard('karyawan')->user()->nik)
             ->orderBy("tanggal_presensi", "desc")
@@ -41,7 +45,7 @@ class PresensiController extends Controller
             ->with('shift')
             ->first();
 
-        return view('dashboard.presensi.index', compact('title', 'presensiKaryawan', 'lokasiKantor', 'bulan', 'riwayatPresensi', 'jadwalHariIni'));
+        return view('dashboard.presensi.index', compact('title', 'presensiKaryawan', 'lokasiKantor', 'bulan', 'riwayatPresensi', 'jadwalHariIni', 'karyawan'));
     }
 
     public function store(Request $request)
@@ -280,7 +284,13 @@ class PresensiController extends Controller
 
         $lokasiKantor = LokasiKantor::where('is_used', true)->first();
 
-        return view('admin.monitoring-presensi.index', compact('monitoring', 'lokasiKantor'));
+        // Tambahkan data untuk notifikasi
+        $recentExchanges = TukarJadwal::with(['pengaju', 'penerima'])
+            ->orderBy('created_at', 'desc')
+            ->take(5)
+            ->get();
+
+        return view('admin.monitoring-presensi.index', compact('monitoring', 'lokasiKantor', 'recentExchanges'));
     }
 
     // Tambahkan metode baru untuk mengelola kuota cuti karyawan (admin)
@@ -323,6 +333,36 @@ class PresensiController extends Controller
         $bulan = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
         $karyawan = Karyawan::orderBy('nama_lengkap', 'asc')->get();
         return view('admin.laporan.presensi', compact('bulan', 'karyawan'));
+    }
+
+    public function laporankaryawan(Request $request)
+    {
+        $bulan = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+        $karyawan = Karyawan::orderBy('nama_lengkap', 'asc')->get();
+        $title = "laporan";
+        return view('dashboard.laporan.presensi', compact('bulan', 'karyawan', 'title'));
+    }
+
+
+    public function laporanPresensiKaryawanKaryawan(Request $request)
+    {
+        $request->validate([
+            'bulan' => 'required|date_format:Y-m',
+        ]);
+
+        $title = 'Laporan Presensi Karyawan';
+        $bulan = $request->bulan;
+
+        $karyawan = auth()->guard('karyawan')->user(); // hanya karyawan yang login
+        $riwayatPresensi = DB::table("presensi")
+            ->where('nik', $karyawan->nik)
+            ->whereMonth('tanggal_presensi', Carbon::make($bulan)->format('m'))
+            ->whereYear('tanggal_presensi', Carbon::make($bulan)->format('Y'))
+            ->orderBy("tanggal_presensi", "asc")
+            ->get();
+
+        $pdf = Pdf::loadView('dashboard.laporan.pdf.presensi-karyawan', compact('title', 'bulan', 'karyawan', 'riwayatPresensi'));
+        return $pdf->stream($title . ' ' . $karyawan->nama_lengkap . '.pdf');
     }
 
     public function laporanPresensiKaryawan(Request $request)
@@ -372,6 +412,36 @@ class PresensiController extends Controller
 
         // return view('admin.laporan.pdf.presensi-semua-karyawan', compact('title', 'bulan', 'riwayatPresensi'));
         $pdf = Pdf::loadView('admin.laporan.pdf.presensi-semua-karyawan', compact('title', 'bulan', 'riwayatPresensi'));
+        return $pdf->stream($title . '.pdf');
+    }
+
+    public function laporanPresensiSemuaKaryawanKaryawan(Request $request)
+    {
+        $title = 'Laporan Presensi Semua Karyawan';
+        $bulan = $request->bulan;
+        $riwayatPresensi = DB::table("presensi as p")
+            ->join('karyawan as k', 'p.nik', '=', 'k.nik')
+            ->join('departemen as d', 'k.departemen_id', '=', 'd.id')
+            ->whereMonth('tanggal_presensi', Carbon::make($bulan)->format('m'))
+            ->whereYear('tanggal_presensi', Carbon::make($bulan)->format('Y'))
+            ->select(
+                'p.nik',
+                'k.nama_lengkap as nama_karyawan',
+                'k.jabatan as jabatan_karyawan',
+                'd.nama as nama_departemen'
+            )
+            ->selectRaw("COUNT(p.nik) as total_kehadiran, SUM(IF (jam_masuk > '08:00',1,0)) as total_terlambat")
+            ->groupBy(
+                'p.nik',
+                'k.nama_lengkap',
+                'k.jabatan',
+                'd.nama'
+            )
+            ->orderBy("tanggal_presensi", "asc")
+            ->get();
+
+        // return view('admin.laporan.pdf.presensi-semua-karyawan', compact('title', 'bulan', 'riwayatPresensi'));
+        $pdf = Pdf::loadView('dashboard.laporan.pdf.presensi-semua-karyawan', compact('title', 'bulan', 'riwayatPresensi'));
         return $pdf->stream($title . '.pdf');
     }
 
@@ -446,5 +516,284 @@ class PresensiController extends Controller
                 return response()->json(['success' => false, 'message' => 'Pengajuan presensi gagal dibatalkan']);
             }
         }
+    }
+
+    public function ajukanTukarJadwal(Request $request)
+    {
+        // Validasi input
+        $request->validate([
+            'nik_penerima' => 'required|exists:karyawan,nik',
+            'tanggal_pengajuan' => 'required|date',
+            'alasan' => 'required|string|max:255',
+        ]);
+
+        // Pastikan pengaju tidak mengajukan pertukaran jadwal dengan dirinya sendiri
+        if ($request->nik_penerima == auth()->guard('karyawan')->user()->nik) {
+            return redirect()->back()
+                ->with('error', 'Anda tidak dapat mengajukan pertukaran jadwal dengan diri Anda sendiri.')
+                ->withInput();
+        }
+
+        // Ambil data karyawan
+        $nikPengaju = auth()->guard('karyawan')->user()->nik;
+        $nikPenerima = $request->nik_penerima;
+        $tanggalPengajuan = Carbon::parse($request->tanggal_pengajuan);
+
+        // Cek jadwal shift untuk kedua karyawan pada tanggal tersebut
+        $jadwalPengaju = ShiftSchedule::where('karyawan_nik', $nikPengaju)
+            ->where('tanggal', $tanggalPengajuan->format('Y-m-d'))
+            ->first();
+
+        $jadwalPenerima = ShiftSchedule::where('karyawan_nik', $nikPenerima)
+            ->where('tanggal', $tanggalPengajuan->format('Y-m-d'))
+            ->first();
+
+        // Ambil nama karyawan untuk pesan yang lebih informatif
+        $namaPenerima = Karyawan::where('nik', $nikPenerima)->value('nama_lengkap');
+
+        // Validasi: pastikan kedua karyawan memiliki jadwal pada tanggal tersebut
+        if (!$jadwalPengaju) {
+            return redirect()->back()
+                ->with('error', 'Anda tidak memiliki jadwal pada tanggal tersebut.')
+                ->withInput();
+        }
+
+        if (!$jadwalPenerima) {
+            return redirect()->back()
+                ->with('error', $namaPenerima . ' tidak memiliki jadwal pada tanggal tersebut.')
+                ->withInput();
+        }
+
+        // Proses pertukaran jadwal menggunakan transaksi database
+        try {
+            DB::beginTransaction();
+
+            // Simpan data sementara jadwal pengaju
+            $pengajuShiftId = $jadwalPengaju->shift_id;
+            $pengajuIsLibur = $jadwalPengaju->is_libur;
+
+            // Tukar jadwal
+            $jadwalPengaju->shift_id = $jadwalPenerima->shift_id;
+            $jadwalPengaju->is_libur = $jadwalPenerima->is_libur;
+            $jadwalPengaju->save();
+
+            $jadwalPenerima->shift_id = $pengajuShiftId;
+            $jadwalPenerima->is_libur = $pengajuIsLibur;
+            $jadwalPenerima->save();
+
+            // Simpan catatan pertukaran jadwal
+            TukarJadwal::create([
+                'nik_pengaju' => $nikPengaju,
+                'nik_penerima' => $nikPenerima,
+                'tanggal_pengajuan' => $tanggalPengajuan,
+                'status' => 'approved', // Langsung disetujui
+                'alasan' => $request->alasan,
+            ]);
+
+            DB::commit();
+
+            // Tampilkan detail jadwal yang berhasil ditukar dalam pesan sukses
+            $namaPengaju = auth()->guard('karyawan')->user()->nama_lengkap;
+            $tanggalFormatted = $tanggalPengajuan->format('d-m-Y');
+
+            return redirect()->route('karyawan.presensi')
+                ->with('success', "Pertukaran jadwal dengan {$namaPenerima} pada tanggal {$tanggalFormatted} berhasil dilakukan!");
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            // Log error untuk debugging
+            Log::error('Tukar Jadwal Error: ' . $e->getMessage());
+
+            return redirect()->back()
+                ->with('error', 'Terjadi kesalahan saat memproses pertukaran jadwal. Silakan coba lagi.')
+                ->withInput();
+        }
+    }
+
+    /**
+     * Fungsi untuk memproses pertukaran jadwal (untuk single date)
+     */
+    private function prosessTukarJadwal($nikPengaju, $nikPenerima, $tanggalPengajuan)
+    {
+        // Ambil jadwal shift untuk pengaju dan penerima pada tanggal tersebut
+        $jadwalPengaju = ShiftSchedule::where('karyawan_nik', $nikPengaju)
+            ->where('tanggal', $tanggalPengajuan->format('Y-m-d'))
+            ->first();
+
+        $jadwalPenerima = ShiftSchedule::where('karyawan_nik', $nikPenerima)
+            ->where('tanggal', $tanggalPengajuan->format('Y-m-d'))
+            ->first();
+
+        // Validasi: pastikan kedua karyawan memiliki jadwal pada tanggal tersebut
+        if (!$jadwalPengaju || !$jadwalPenerima) {
+            return false;
+        }
+
+        // Mulai transaksi database untuk memastikan integritas data
+        DB::beginTransaction();
+
+        try {
+            // Simpan data sementara
+            $pengajuShiftId = $jadwalPengaju->shift_id;
+            $pengajuIsLibur = $jadwalPengaju->is_libur;
+
+            // Tukar jadwal pengaju dengan penerima
+            $jadwalPengaju->shift_id = $jadwalPenerima->shift_id;
+            $jadwalPengaju->is_libur = $jadwalPenerima->is_libur;
+            $jadwalPengaju->save();
+
+            // Tukar jadwal penerima dengan pengaju
+            $jadwalPenerima->shift_id = $pengajuShiftId;
+            $jadwalPenerima->is_libur = $pengajuIsLibur;
+            $jadwalPenerima->save();
+
+            // Commit transaksi jika semua berhasil
+            DB::commit();
+            return true;
+        } catch (\Exception $e) {
+            // Rollback transaksi jika terjadi error
+            DB::rollback();
+            return false;
+        }
+    }
+
+    /**
+     * Untuk admin melihat riwayat tukar jadwal
+     */
+    public function riwayatTukarJadwal(Request $request)
+    {
+        $title = 'Riwayat Pertukaran Jadwal';
+
+        // Query dasar
+        $query = TukarJadwal::with(['pengaju', 'penerima']);
+
+        // Filter berdasarkan search
+        if ($request->has('search') && !empty($request->search)) {
+            $search = $request->search;
+            $query->whereHas('pengaju', function ($q) use ($search) {
+                $q->where('nama_lengkap', 'like', "%{$search}%")
+                    ->orWhere('nik', 'like', "%{$search}%");
+            })->orWhereHas('penerima', function ($q) use ($search) {
+                $q->where('nama_lengkap', 'like', "%{$search}%")
+                    ->orWhere('nik', 'like', "%{$search}%");
+            });
+        }
+
+        // Filter berdasarkan tanggal pengajuan
+        if ($request->has('tanggal_awal') && !empty($request->tanggal_awal)) {
+            $query->whereDate('tanggal_pengajuan', '>=', $request->tanggal_awal);
+        }
+
+        if ($request->has('tanggal_akhir') && !empty($request->tanggal_akhir)) {
+            $query->whereDate('tanggal_pengajuan', '<=', $request->tanggal_akhir);
+        }
+
+        // Urutkan berdasarkan waktu pembuatan (terbaru di atas)
+        $tukarJadwal = $query->orderBy('created_at', 'desc')->paginate(15);
+
+        // Data untuk notifikasi
+        $countTukarJadwalToday = TukarJadwal::whereDate('created_at', Carbon::today())->count();
+        $recentExchanges = TukarJadwal::with(['pengaju', 'penerima'])
+            ->orderBy('created_at', 'desc')
+            ->take(5)
+            ->get();
+
+        return view('admin.jadwal.riwayat-tukar-jadwal', compact('title', 'tukarJadwal', 'countTukarJadwalToday', 'recentExchanges'));
+    }
+
+    /**
+     * Mendapatkan detail tukar jadwal untuk ditampilkan di modal
+     */
+    public function detailTukarJadwal($id)
+    {
+        $tukarJadwal = TukarJadwal::with(['pengaju.departemen', 'penerima.departemen'])
+            ->findOrFail($id);
+
+        // Ambil tanggal pertukaran
+        $tanggalPengajuan = Carbon::parse($tukarJadwal->tanggal_pengajuan);
+
+        // Ambil jadwal shift untuk kedua karyawan pada tanggal ini
+        $jadwalPengaju = ShiftSchedule::with('shift')
+            ->where('karyawan_nik', $tukarJadwal->nik_pengaju)
+            ->where('tanggal', $tanggalPengajuan->format('Y-m-d'))
+            ->first();
+
+        $jadwalPenerima = ShiftSchedule::with('shift')
+            ->where('karyawan_nik', $tukarJadwal->nik_penerima)
+            ->where('tanggal', $tanggalPengajuan->format('Y-m-d'))
+            ->first();
+
+        // Untuk tampilan di modal
+        $jadwalDisplay = null;
+        if ($jadwalPengaju && $jadwalPenerima) {
+            $jadwalDisplay = [
+                'tanggal' => $tanggalPengajuan->format('Y-m-d'),
+                'hari' => $tanggalPengajuan->format('l'),
+                'jadwal_pengaju' => $jadwalPengaju->is_libur ? 'Libur' : ($jadwalPengaju->shift ? $jadwalPengaju->shift->nama . ' (' .
+                    Carbon::parse($jadwalPengaju->shift->waktu_mulai)->format('H:i') . '-' .
+                    Carbon::parse($jadwalPengaju->shift->waktu_selesai)->format('H:i') . ')' : 'Regular'),
+                'jadwal_penerima' => $jadwalPenerima->is_libur ? 'Libur' : ($jadwalPenerima->shift ? $jadwalPenerima->shift->nama . ' (' .
+                    Carbon::parse($jadwalPenerima->shift->waktu_mulai)->format('H:i') . '-' .
+                    Carbon::parse($jadwalPenerima->shift->waktu_selesai)->format('H:i') . ')' : 'Regular'),
+            ];
+        }
+
+        // Return data dalam format JSON
+        return response()->json([
+            'success' => true,
+            'pengaju' => $tukarJadwal->pengaju,
+            'penerima' => $tukarJadwal->penerima,
+            'tanggal_pengajuan' => $tukarJadwal->tanggal_pengajuan,
+            'alasan' => $tukarJadwal->alasan,
+            'waktu_pengajuan' => Carbon::parse($tukarJadwal->created_at)->format('d M Y H:i'),
+            'jadwal' => $jadwalDisplay ? [$jadwalDisplay] : [],
+        ]);
+    }
+
+    /**
+     * Menerima pengajuan tukar jadwal (untuk fitur admin approval jika dibutuhkan)
+     */
+    public function terimaAjuanTukarJadwal($id)
+    {
+        $tukarJadwal = TukarJadwal::findOrFail($id);
+
+        // Jika sudah approved, tidak perlu diproses lagi
+        if ($tukarJadwal->status == 'approved') {
+            return redirect()->back()->with('info', 'Pertukaran jadwal ini sudah disetujui sebelumnya.');
+        }
+
+        $tanggalPengajuan = Carbon::parse($tukarJadwal->tanggal_pengajuan);
+
+        $berhasil = $this->prosessTukarJadwal(
+            $tukarJadwal->nik_pengaju,
+            $tukarJadwal->nik_penerima,
+            $tanggalPengajuan
+        );
+
+        if (!$berhasil) {
+            return redirect()->back()->with('error', 'Gagal menukar jadwal. Pastikan kedua karyawan memiliki jadwal pada tanggal tersebut.');
+        }
+
+        $tukarJadwal->status = 'approved';
+        $tukarJadwal->save();
+
+        return redirect()->back()->with('success', 'Pertukaran jadwal berhasil disetujui dan diproses!');
+    }
+
+    /**
+     * Menolak pengajuan tukar jadwal (untuk fitur admin approval jika dibutuhkan)
+     */
+    public function tolakAjuanTukarJadwal($id)
+    {
+        $tukarJadwal = TukarJadwal::findOrFail($id);
+
+        if ($tukarJadwal->status == 'approved') {
+            return redirect()->back()->with('error', 'Pertukaran jadwal ini sudah disetujui dan tidak dapat ditolak.');
+        }
+
+        $tukarJadwal->status = 'rejected';
+        $tukarJadwal->save();
+
+        return redirect()->back()->with('success', 'Pertukaran jadwal berhasil ditolak.');
     }
 }

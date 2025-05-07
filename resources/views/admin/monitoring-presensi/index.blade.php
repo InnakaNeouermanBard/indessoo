@@ -1,15 +1,107 @@
 <x-app-layout>
+    {{-- index admin presensi  --}}
     <x-slot name="header">
         <div class="flex items-center justify-between">
             <h2 class="text-xl font-semibold leading-tight text-gray-800">
                 {{ __('Monitoring Presensi') }}
             </h2>
         </div>
-
     </x-slot>
 
     <div class="container mx-auto px-5 pt-5">
         <div>
+            <!-- admin/tukar-jadwal.blade.php -->
+
+            @php
+                // Hitung jumlah tukar jadwal hari ini
+                $countTukarJadwalToday = \App\Models\TukarJadwal::whereDate(
+                    'created_at',
+                    \Carbon\Carbon::today(),
+                )->count();
+
+                // Definisikan $recentExchanges jika belum tersedia
+                if (!isset($recentExchanges)) {
+                    $recentExchanges = \App\Models\TukarJadwal::with(['pengaju', 'penerima'])
+                        ->orderBy('created_at', 'desc')
+                        ->take(5)
+                        ->get();
+                }
+            @endphp
+
+            <!-- Tombol Notifikasi -->
+            {{-- Notification Component (dapat dimasukkan ke file partials atau komponen) --}}
+
+            <div class="dropdown dropdown-end">
+                <label tabindex="0" class="btn btn-ghost btn-circle relative">
+                    <div class="indicator">
+                        <i class="ri-notification-3-line text-xl"></i>
+                        @if ($countTukarJadwalToday > 0)
+                            <span
+                                class="absolute top-0 right-0 h-5 w-5 rounded-full bg-red-500 flex items-center justify-center text-white text-xs font-bold">
+                                {{ $countTukarJadwalToday }}
+                            </span>
+                        @endif
+                    </div>
+                </label>
+                <div tabindex="0"
+                    class="dropdown-content menu p-0 mt-2 shadow-lg bg-base-100 rounded-box w-80 max-h-[80vh] overflow-y-auto">
+                    <div class="bg-primary text-white px-4 py-3 flex items-center justify-between">
+                        <h3 class="font-bold text-lg">Notifikasi</h3>
+                        <span class="badge badge-sm">{{ $countTukarJadwalToday }} baru</span>
+                    </div>
+
+                    <div class="divide-y divide-gray-200">
+                        @if ($recentExchanges->count() > 0)
+                            @foreach ($recentExchanges as $exchange)
+                                <div class="p-4 {{ $exchange->created_at->isToday() ? 'bg-blue-50' : '' }}">
+                                    <div class="flex items-start">
+                                        <div class="flex-shrink-0 mr-3">
+                                            <div
+                                                class="h-10 w-10 rounded-full bg-primary-100 flex items-center justify-center">
+                                                <i class="ri-exchange-line text-lg text-primary"></i>
+                                            </div>
+                                        </div>
+                                        <div class="flex-1">
+                                            <p class="text-sm font-medium text-gray-900">
+                                                {{ $exchange->pengaju->nama_lengkap }} ↔
+                                                {{ $exchange->penerima->nama_lengkap }}
+                                            </p>
+                                            <p class="text-xs text-gray-500">
+                                                Tanggal pertukaran:
+                                                {{ \Carbon\Carbon::parse($exchange->tanggal_pengajuan)->format('d M Y') }}
+                                            </p>
+                                            <p class="text-xs text-gray-500">
+                                                {{ $exchange->created_at->diffForHumans() }}
+                                            </p>
+                                        </div>
+                                        <a href="#" class="btn-detail text-blue-600 hover:text-blue-800"
+                                            data-id="{{ $exchange->id }}">
+                                            {{-- <i class="ri-eye-line"></i> --}}
+                                        </a>
+                                    </div>
+                                </div>
+                            @endforeach
+                        @else
+                            <div class="p-6 text-center text-gray-500">
+                                <div
+                                    class="bg-gray-100 rounded-full mx-auto mb-4 flex items-center justify-center h-12 w-12">
+                                    <i class="ri-inbox-line text-xl text-gray-400"></i>
+                                </div>
+                                <p>Tidak ada notifikasi baru</p>
+                            </div>
+                        @endif
+                    </div>
+
+                    <div class="p-3 bg-gray-50 border-t">
+                        <a href="{{ route('tukar-jadwal.riwayat') }}" class="btn btn-primary btn-block btn-sm">
+                            Lihat Semua Riwayat
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+
+
             <form action="{{ route('admin.monitoring-presensi') }}" method="get" enctype="multipart/form-data"
                 class="my-3">
                 <div class="flex w-full flex-wrap gap-2 md:flex-nowrap">
@@ -251,8 +343,98 @@
 
                     let lokasi = items[0].split(",");
                     maps(lokasi[0], lokasi[1]);
+                },
+                error: function(xhr, status, error) {
+                    // Tambahkan error handling
+                    $("#loading_edit1").html("");
+                    Swal.fire({
+                        title: "Error",
+                        text: "Gagal memuat data lokasi. Silakan coba lagi.",
+                        icon: "error",
+                        confirmButtonColor: '#6419E6',
+                    });
                 }
             });
         }
     </script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const detailButtons = document.querySelectorAll('.dropdown-content .btn-detail');
+
+            detailButtons.forEach(button => {
+                button.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation(); // Prevent dropdown from closing
+                    const id = this.getAttribute('data-id');
+
+                    // Show the details of the notification
+                    showDetailModal(id);
+                });
+            });
+        });
+
+        function showDetailModal(id) {
+            // Fetch the details dynamically (if needed)
+            fetch(`/admin/tukar-jadwal/detail/${id}`)
+                .then(response => response.json())
+                .then(data => {
+                    // Populate modal content
+                    alert(`Detail: ${data.pengaju} ↔ ${data.penerima}`); // Replace with modal code
+                });
+        }
+    </script>
+
+    <!-- Modal -->
+    <div id="detailModal" class="modal">
+        <div class="modal-box relative">
+            <h2 class="text-xl font-bold mb-4" id="modalTitle">Detail Notifikasi</h2>
+            <div id="modalContent"></div>
+            <div class="modal-action">
+                <button class="btn" onclick="closeModal()">Tutup</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function closeModal() {
+            document.getElementById('detailModal').classList.remove('modal-open');
+        }
+    </script>
+
+    <style>
+        /* Dropdown yang posisinya selalu di tengah */
+        .dropdown-content {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            /* Menjaga posisi di tengah */
+            z-index: 9999;
+            /* Pastikan di atas elemen lain */
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 9999;
+            background-color: rgba(0, 0, 0, 0.5);
+            /* Transparan hitam untuk latar belakang */
+            width: 80%;
+            max-width: 500px;
+        }
+
+        .modal-open {
+            display: block;
+        }
+
+        .modal-box {
+            background-color: white;
+            padding: 2rem;
+            border-radius: 8px;
+        }
+    </style>
 </x-app-layout>

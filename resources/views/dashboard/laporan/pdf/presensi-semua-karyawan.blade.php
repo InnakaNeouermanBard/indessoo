@@ -146,15 +146,6 @@
                         <td>
                             {{ $item->total_terlambat }}
                         </td>
-                        <td>
-                            {{ $item->total_terlambat }}
-                        </td>
-                        <td>
-                            {{ $item->total_terlambat }}
-                        </td>
-                        <td>
-                            {{ $item->total_terlambat }}
-                        </td>
                     </tr>
                 @endforeach
             </tbody>

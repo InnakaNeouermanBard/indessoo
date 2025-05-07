@@ -6,15 +6,16 @@
             sidenav-close></i>
         <a class="m-0 block whitespace-nowrap px-8 py-6 text-sm text-slate-700 dark:text-white"
             href="{{ route('karyawan.dashboard') }}">
-            <img src="{{ asset('img/logo-ct-dark.png') }}"
-                class="ease-nav-brand inline h-full max-h-8 max-w-full transition-all duration-200 dark:hidden"
-                alt="main_logo" />
-            <img src="{{ asset('img/logo-ct.png') }}"
-                class="ease-nav-brand hidden h-full max-h-8 max-w-full transition-all duration-200 dark:inline"
-                alt="main_logo" />
-            <span class="ease-nav-brand ml-1 font-semibold transition-all duration-200">Indesso</span>
+            <!-- Logo untuk mode terang -->
+            <img src="{{ asset('img/logo-fix.png') }}"
+                class="ease-nav-brand inline max-h-12 w-auto transition-all duration-200 dark:hidden" alt="main_logo" />
+            <!-- Logo untuk mode gelap -->
+            <img src="{{ asset('img/logo-fix.png') }}"
+                class="ease-nav-brand hidden max-h-12 w-auto transition-all duration-200 dark:inline" alt="main_logo" />
         </a>
     </div>
+
+
 
     <hr
         class="mt-0 h-px bg-transparent bg-gradient-to-r from-transparent via-black/40 to-transparent dark:bg-gradient-to-r dark:from-transparent dark:via-white dark:to-transparent" />
@@ -96,7 +97,19 @@
                 </a>
             </li>
 
+
             <li class="mt-0.5 w-full">
+                <a class="py-2.7 ease-nav-brand mx-2 my-0 flex items-center whitespace-nowrap px-4 text-sm transition-colors dark:text-white dark:opacity-80 {{ Request::routeIs(['karyawan.profile']) ? 'rounded-lg font text-slate-700 bg-blue-500/13' : '' }}"
+                    href="{{ route('karyawan.laporan') }}">
+                    <div
+                        class="mr-2 flex h-8 w-8 items-center justify-center rounded-lg bg-center stroke-0 text-center xl:p-2.5">
+                        <i class="ri-user-3-fill relative top-0 text-lg leading-normal text-blue-500"></i>
+                    </div>
+                    <span class="ease pointer-events-none ml-1 opacity-100 duration-300">Laporan</span>
+                </a>
+            </li>
+
+            {{-- <li class="mt-0.5 w-full">
                 <form id="logout-form" method="POST" action="{{ route('logout') }}">
                     @csrf
                     <button type="button" onclick="openLogoutModal()"
@@ -108,7 +121,7 @@
                         <span class="ease pointer-events-none ml-1 opacity-100 duration-300">Logout</span>
                     </button>
                 </form>
-            </li>
+            </li> --}}
         </ul>
     </div>
 </aside>
