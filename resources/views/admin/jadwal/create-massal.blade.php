@@ -86,9 +86,12 @@
                                 <i class="fas fa-info-circle mr-1"></i>
                                 Jadwal akan dibuat dengan ketentuan:
                             <ul class="list-disc ml-5 mt-1">
-                                <li>Shift ditentukan berdasarkan minggu dalam bulan</li>
+                                <li>Jadwal dimulai dari hari Senin pertama dalam bulan</li>
+                                <li>Jadwal dibuat untuk semua hari kerja (Senin-Jumat) dalam bulan</li>
                                 <li>Hari Sabtu dan Minggu selalu libur</li>
-                                <li>Minggu ke-1 dimulai dari hari pertama dalam bulan</li>
+                                <li>Jika bulan berakhir di tengah minggu (Senin-Kamis), jadwal akan dilanjutkan ke bulan
+                                    berikutnya sampai Jumat</li>
+                                <li>Hari di bulan berikutnya tersebut akan menggunakan input minggu ke-5 (opsional)</li>
                             </ul>
                             </p>
                         </div>
@@ -144,7 +147,7 @@
                                 </div>
 
                                 <div class="border rounded p-3 bg-gray-50">
-                                    <h4 class="font-medium mb-2">Minggu ke-5 (jika ada)</h4>
+                                    <h4 class="font-medium mb-2">Minggu ke-5 (opsional)</h4>
                                     <select name="shift_minggu5" class="select select-bordered w-full">
                                         <option value="">Libur</option>
                                         @foreach ($shifts as $s)
@@ -153,6 +156,8 @@
                                             </option>
                                         @endforeach
                                     </select>
+                                    <p class="text-xs text-gray-500 mt-1">Digunakan untuk hari kerja lanjutan di bulan
+                                        berikutnya jika bulan berakhir di tengah minggu kerja</p>
                                 </div>
                             </div>
                         </div>

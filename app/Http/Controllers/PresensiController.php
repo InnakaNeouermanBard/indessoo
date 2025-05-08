@@ -210,6 +210,7 @@ class PresensiController extends Controller
     {
         $nik = auth()->guard('karyawan')->user()->nik;
 
+        // Validasi input
         $request->validate([
             'status' => 'required',
             'tanggal_mulai' => 'required|date',
@@ -217,7 +218,7 @@ class PresensiController extends Controller
             'keterangan' => 'nullable|string',
         ]);
 
-        // Cek apakah di rentang tanggal sudah pernah mengajukan 
+        // Cek apakah di rentang tanggal sudah pernah mengajukan
         $cekPengajuan = DB::table('pengajuan_presensi')
             ->where('nik', $nik)
             ->where(function ($query) use ($request) {
@@ -231,22 +232,26 @@ class PresensiController extends Controller
             ->first();
 
         if ($cekPengajuan) {
-            return to_route('karyawan.izin')->with("error", "Anda sudah memiliki pengajuan pada rentang 
-tanggal tersebut.");
+            return to_route('karyawan.izin')->with("error", "Anda sudah memiliki pengajuan pada rentang tanggal tersebut.");
         }
 
-        // Validasi kuota cuti 
+        // *Cek status pengajuan, hanya kurangi kuota jika statusnya Cuti*
         if ($request->status == 'C') {
             $karyawan = Karyawan::find($nik);
             $sisaKuota = $karyawan->sisaKuotaCuti();
-            $jumlahHari = Carbon::parse($request->tanggal_mulai)->diffInDays(Carbon::parse($request->tanggal_selesai)) + 1;
+            $jumlahHari = Carbon::parse($request->tanggal_mulai)->diffInDays(Carbon::parse($request->tanggal_selesai));
 
+            // Pastikan kuota cukup
             if ($sisaKuota < $jumlahHari) {
-                return to_route('karyawan.izin')->with("error", "Kuota cuti Anda tidak mencukupi untuk 
-rentang tanggal ini ($jumlahHari hari).");
+                return to_route('karyawan.izin')->with("error", "Kuota cuti Anda tidak mencukupi untuk rentang tanggal ini ($jumlahHari hari).");
             }
+
+            // Jika status Cuti, kurangi kuota cuti
+            $karyawan->kuota_cuti -= $jumlahHari;
+            $karyawan->save();
         }
 
+        // Simpan pengajuan presensi
         DB::table('pengajuan_presensi')->insert([
             'nik' => $nik,
             'status' => $request->status,
@@ -257,7 +262,7 @@ rentang tanggal ini ($jumlahHari hari).");
             'updated_at' => Carbon::now(),
         ]);
 
-        return to_route('karyawan.izin')->with("success", "Berhasil menambahkan pengajuan");
+        return to_route('karyawan.izin')->with("success", "Berhasil menambahkan pengajuan");
     }
 
     public function searchPengajuanHistory(Request $request)
@@ -377,10 +382,9 @@ rentang tanggal ini ($jumlahHari hari).");
     {
         $title = 'Laporan Presensi Karyawan';
         $bulan = $request->bulan;
-        $karyawan = Karyawan::query()
-            ->with('departemen')
-            ->where('nik', $request->karyawan)
-            ->first();
+        $karyawan = Karyawan::find($request->karyawan); // Ambil data karyawan berdasarkan NIK
+
+        // Ambil riwayat presensi karyawan
         $riwayatPresensi = DB::table("presensi")
             ->where('nik', $request->karyawan)
             ->whereMonth('tanggal_presensi', Carbon::make($bulan)->format('m'))
@@ -388,8 +392,56 @@ rentang tanggal ini ($jumlahHari hari).");
             ->orderBy("tanggal_presensi", "asc")
             ->get();
 
-        // return view('admin.laporan.pdf.presensi-karyawan', compact('title', 'bulan', 'karyawan', 'riwayatPresensi'));
-        $pdf = Pdf::loadView('admin.laporan.pdf.presensi-karyawan', compact('title', 'bulan', 'karyawan', 'riwayatPresensi'));
+        // Ambil data pengajuan presensi (Izin, Sakit, Cuti)
+        $izin = DB::table('pengajuan_presensi')
+            ->where('nik', $request->karyawan)
+            ->where('status', 'I')
+            ->whereMonth('tanggal_mulai', Carbon::make($bulan)->format('m'))
+            ->whereYear('tanggal_mulai', Carbon::make($bulan)->format('Y'))
+            ->count();
+
+        $sakit = DB::table('pengajuan_presensi')
+            ->where('nik', $request->karyawan)
+            ->where('status', 'S')
+            ->whereMonth('tanggal_mulai', Carbon::make($bulan)->format('m'))
+            ->whereYear('tanggal_mulai', Carbon::make($bulan)->format('Y'))
+            ->count();
+
+        $cuti = DB::table('pengajuan_presensi')
+            ->where('nik', $request->karyawan) // Filter berdasarkan NIK karyawan
+            ->where('status', 'C') // Status Cuti
+            ->whereMonth('tanggal_mulai', Carbon::make($bulan)->format('m')) // Bulan yang dipilih
+            ->whereYear('tanggal_mulai', Carbon::make($bulan)->format('Y')) // Tahun yang dipilih
+            ->get(); // Ambil semua pengajuan cuti
+
+        $totalCuti = 0;
+
+        // Loop melalui semua pengajuan cuti untuk menghitung total hari cuti
+        foreach ($cuti as $item) {
+            // Hitung jumlah hari cuti untuk setiap pengajuan
+            $totalCuti += Carbon::parse($item->tanggal_mulai)->diffInDays(Carbon::parse($item->tanggal_selesai)) + 1;
+        }
+
+        // Ambil data lembur
+        $lembur = DB::table('form_lemburs')
+            ->where('nik', $request->karyawan)
+            ->whereMonth('tanggal', Carbon::make($bulan)->format('m'))
+            ->whereYear('tanggal', Carbon::make($bulan)->format('Y'))
+            ->sum('overtime');
+
+        // Kirimkan data ke view dan PDF
+        $pdf = Pdf::loadView('admin.laporan.pdf.presensi-karyawan', compact(
+            'title',
+            'bulan',
+            'karyawan',
+            'riwayatPresensi',
+            'izin',
+            'sakit',
+            'totalCuti',
+            'lembur'
+        ));
+
+        // Streaming PDF ke browser
         return $pdf->stream($title . ' ' . $karyawan->nama_lengkap . '.pdf');
     }
 

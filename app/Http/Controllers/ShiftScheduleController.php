@@ -280,69 +280,125 @@ class ShiftScheduleController extends Controller
     }
 
     /**
-     * Generate jadwal mingguan dengan mempertimbangkan Sabtu Minggu libur
+     * Generate jadwal mingguan dengan mempertimbangkan hanya Senin-Jumat
+     * dan mengatur jadwal berdasarkan minggu dalam bulan
      */
     private function generateWeeklySchedule($nik, $startDate, $endDate, $request)
     {
-        $currentDate = clone $startDate;
-
-        // Dapatkan shift untuk setiap minggu
+        // Dapatkan shift untuk setiap minggu (hanya 4 minggu)
         $shifts = [
             1 => $request->shift_minggu1,
             2 => $request->shift_minggu2,
             3 => $request->shift_minggu3,
-            4 => $request->shift_minggu4,
-            5 => $request->shift_minggu5,
+            4 => $request->shift_minggu4
         ];
 
-        while ($currentDate <= $endDate) {
-            $dayOfWeek = $currentDate->dayOfWeek; // 0 (Minggu) sampai 6 (Sabtu)
-            $weekOfMonth = ceil($currentDate->day / 7); // Minggu ke berapa dalam bulan (1-5)
+        // Log untuk debugging shift yang dipilih
+        Log::debug("Shifts yang dipilih untuk jadwal: " . json_encode($shifts));
 
-            if ($weekOfMonth > 5) $weekOfMonth = 5; // Pastikan tidak melebihi array 5 minggu
+        // Loop untuk setiap bulan dalam rentang jadwal
+        $period = new \DatePeriod(
+            $startDate,
+            new \DateInterval('P1M'), // Interval 1 bulan
+            $endDate->addDay() // +1 hari untuk memastikan bulan terakhir juga diproses
+        );
 
-            $isWeekend = ($dayOfWeek == 0 || $dayOfWeek == 6); // Sabtu (6) dan Minggu (0)
+        foreach ($period as $currentMonth) {
+            $bulanIni = $currentMonth->format('m');
+            $tahunIni = $currentMonth->format('Y');
 
-            // Cek jika ada jadwal yang sudah ada
-            $existingSchedule = ShiftSchedule::where('karyawan_nik', $nik)
-                ->where('tanggal', $currentDate->format('Y-m-d'))
-                ->first();
+            Log::debug("Memproses bulan: {$bulanIni}/{$tahunIni}");
 
-            // Untuk hari Sabtu dan Minggu selalu libur
-            if ($isWeekend) {
-                if ($existingSchedule) {
-                    $existingSchedule->update([
-                        'shift_id' => null,
-                        'is_libur' => true,
-                    ]);
-                } else {
-                    ShiftSchedule::create([
-                        'karyawan_nik' => $nik,
-                        'tanggal' => $currentDate->format('Y-m-d'),
-                        'shift_id' => null,
-                        'is_libur' => true,
-                    ]);
-                }
-            } else {
-                // Hari kerja (Senin-Jumat), gunakan shift sesuai minggu
-                $shiftId = $shifts[$weekOfMonth] ?? null;
+            // Menemukan Senin pertama dalam bulan
+            $firstDayOfMonth = Carbon::createFromDate($tahunIni, $bulanIni, 1);
+            $firstMonday = clone $firstDayOfMonth;
 
-                if ($existingSchedule) {
-                    $existingSchedule->update([
-                        'shift_id' => $shiftId,
-                        'is_libur' => empty($shiftId), // Libur jika tidak ada shift
-                    ]);
-                } else {
-                    ShiftSchedule::create([
-                        'karyawan_nik' => $nik,
-                        'tanggal' => $currentDate->format('Y-m-d'),
-                        'shift_id' => $shiftId,
-                        'is_libur' => empty($shiftId), // Libur jika tidak ada shift
-                    ]);
-                }
+            // Jika tanggal 1 bukan hari Senin, maju ke Senin berikutnya
+            if ($firstDayOfMonth->dayOfWeek != Carbon::MONDAY) {
+                $firstMonday->next(Carbon::MONDAY);
             }
 
-            $currentDate->addDay();
+            Log::debug("Senin pertama dalam bulan: {$firstMonday->format('Y-m-d')}");
+
+            // Tanggal mulai jadwal: mana yang lebih besar antara Senin pertama atau startDate
+            $scheduleStartDate = $firstMonday->gt($startDate) ? clone $firstMonday : clone $startDate;
+
+            // Mendapatkan 4 minggu penuh dari tanggal mulai (28 hari)
+            $tempEndDate = (clone $scheduleStartDate)->addDays(27);
+            $scheduleEndDate = $tempEndDate->lt($endDate) ? clone $tempEndDate : clone $endDate;
+
+            Log::debug("Tanggal mulai jadwal: {$scheduleStartDate->format('Y-m-d')}, Tanggal akhir jadwal: {$scheduleEndDate->format('Y-m-d')}");
+
+            // Jika rentang jadwal valid, buat jadwal
+            if ($scheduleStartDate->lte($scheduleEndDate)) {
+                $currentDate = clone $scheduleStartDate;
+                $dayCount = 0; // Counter untuk menentukan minggu
+
+                while ($currentDate->lte($scheduleEndDate)) {
+                    $dayCount++;
+                    $weekNumber = ceil($dayCount / 7); // Minggu ke berapa (1-4)
+
+                    // Pastikan weekNumber tidak melebihi 4
+                    $weekNumber = min($weekNumber, 4);
+
+                    // Dapatkan hari dalam minggu (1 = Senin, 7 = Minggu)
+                    $dayOfWeek = $currentDate->dayOfWeek;
+
+                    // Cek apakah hari weekend (Sabtu atau Minggu)
+                    $isWeekend = ($dayOfWeek == Carbon::SATURDAY || $dayOfWeek == Carbon::SUNDAY);
+
+                    // Cek apakah ada jadwal yang sudah ada
+                    $existingSchedule = ShiftSchedule::where('karyawan_nik', $nik)
+                        ->where('tanggal', $currentDate->format('Y-m-d'))
+                        ->first();
+
+                    if ($isWeekend) {
+                        // Weekend selalu libur
+                        if ($existingSchedule) {
+                            $existingSchedule->update([
+                                'shift_id' => null,
+                                'is_libur' => true,
+                            ]);
+                        } else {
+                            ShiftSchedule::create([
+                                'karyawan_nik' => $nik,
+                                'tanggal' => $currentDate->format('Y-m-d'),
+                                'shift_id' => null,
+                                'is_libur' => true,
+                            ]);
+                        }
+
+                        Log::debug("Tanggal {$currentDate->format('Y-m-d')} (Weekend): Libur");
+                    } else {
+                        // Hari kerja (Senin-Jumat), ambil shift sesuai minggu
+                        $shiftId = isset($shifts[$weekNumber]) ? $shifts[$weekNumber] : null;
+
+                        // Hanya dianggap libur jika shiftId benar-benar kosong
+                        $isLibur = empty($shiftId) || $shiftId === "0";
+
+                        Log::debug("Tanggal {$currentDate->format('Y-m-d')} (Minggu ke-{$weekNumber}): ShiftId={$shiftId}, isLibur={$isLibur}");
+
+                        if ($existingSchedule) {
+                            $existingSchedule->update([
+                                'shift_id' => $shiftId,
+                                'is_libur' => $isLibur,
+                            ]);
+                        } else {
+                            ShiftSchedule::create([
+                                'karyawan_nik' => $nik,
+                                'tanggal' => $currentDate->format('Y-m-d'),
+                                'shift_id' => $shiftId,
+                                'is_libur' => $isLibur,
+                            ]);
+                        }
+                    }
+
+                    // Pindah ke hari berikutnya
+                    $currentDate->addDay();
+                }
+            } else {
+                Log::debug("Melewati bulan ini karena rentang jadwal tidak valid");
+            }
         }
     }
 

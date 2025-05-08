@@ -116,17 +116,6 @@
 
 
         <table class="identitas-karyawan">
-            {{-- <tr>
-                <td rowspan="7">
-                    @if ($karyawan->foto)
-                        <img src="{{ public_path("storage/unggah/karyawan/$karyawan->foto") }}" alt="foto-karyawan"
-                            width="100" height="150" style="border-radius: 0.5rem" />
-                    @else
-                        <img src="{{ public_path('img/team-2.jpg') }}" alt="foto-karyawan" width="100" height="150"
-                            style="border-radius: 0.5rem" />
-                    @endif
-                </td>
-            </tr> --}}
             <tr>
                 <td>NIK</td>
                 <td>:</td>
@@ -142,17 +131,13 @@
                 <td>:</td>
                 <td>{{ $karyawan->jabatan }}</td>
             </tr>
-            {{-- <tr>
-                <td>Departemen</td>
-                <td>:</td>
-                <td>{{ $karyawan->departemen->nama }}</td>
-            </tr> --}}
             <tr>
                 <td>Email / Telepon</td>
                 <td>:</td>
                 <td>{{ $karyawan->email }} / {{ $karyawan->telepon }}</td>
             </tr>
         </table>
+
 
         <table class="presensi-karyawan">
             <thead>
@@ -173,37 +158,14 @@
             <tbody>
                 @foreach ($riwayatPresensi as $value => $item)
                     <tr>
-                        <td>
-                            {{ $value + 1 . '.' }}
-                        </td>
-                        <td>
-                            {{ \Carbon\Carbon::make($item->tanggal_presensi)->format('d-m-Y') }}
-                        </td>
-                        <td>
-                            {{ \Carbon\Carbon::make($item->jam_masuk)->format('H:i') }}
-                        </td>
-                        <td>
-                            <img src="{{ public_path("storage/unggah/presensi/$item->foto_masuk") }}"
-                                alt="{{ $item->foto_masuk }}" width="50" height="50"
-                                style="border-radius: 0.5rem" />
-                        </td>
-                        <td>
-                            @if ($item->jam_keluar)
-                                {{ \Carbon\Carbon::make($item->jam_keluar)->format('H:i') }}
-                            @else
-                                <div>Belum Presensi</div>
-                            @endif
-                        </td>
-                        <td>
-                            @if ($item->foto_keluar)
-                                <img src="{{ public_path("storage/unggah/presensi/$item->foto_keluar") }}"
-                                    alt="{{ $item->foto_keluar }}" width="50" height="50"
-                                    style="border-radius: 0.5rem" />
-                            @else
-                                <img src="{{ public_path('img/bruce-mars.jpg') }}" alt="{{ $item->foto_keluar }}"
-                                    width="50" height="50" style="border-radius: 0.5rem" />
-                            @endif
-                        </td>
+                        <td>{{ $value + 1 }}</td>
+                        <td>{{ \Carbon\Carbon::make($item->tanggal_presensi)->format('d-m-Y') }}</td>
+                        <td>{{ \Carbon\Carbon::make($item->jam_masuk)->format('H:i') }}</td>
+                        <td><img src="{{ public_path("storage/unggah/presensi/$item->foto_masuk") }}" width="50"
+                                height="50" /></td>
+                        <td>{{ \Carbon\Carbon::make($item->jam_keluar)->format('H:i') ?? 'Belum Presensi' }}</td>
+                        <td><img src="{{ public_path("storage/unggah/presensi/$item->foto_keluar") }}" width="50"
+                                height="50" /></td>
                         <td>
                             @if ($item->jam_masuk > Carbon\Carbon::make('08:00:00')->format('H:i:s'))
                                 @php
@@ -221,46 +183,12 @@
                                 <div>Tepat Waktu</div>
                             @endif
                         </td>
-                        <td>
-                            @if ($item->foto_keluar)
-                                <img src="{{ public_path("storage/unggah/presensi/$item->foto_keluar") }}"
-                                    alt="{{ $item->foto_keluar }}" width="50" height="50"
-                                    style="border-radius: 0.5rem" />
-                            @else
-                                <img src="{{ public_path('img/bruce-mars.jpg') }}" alt="{{ $item->foto_keluar }}"
-                                    width="50" height="50" style="border-radius: 0.5rem" />
-                            @endif
-                        </td>
-                        <td>
-                            @if ($item->foto_keluar)
-                                <img src="{{ public_path("storage/unggah/presensi/$item->foto_keluar") }}"
-                                    alt="{{ $item->foto_keluar }}" width="50" height="50"
-                                    style="border-radius: 0.5rem" />
-                            @else
-                                <img src="{{ public_path('img/bruce-mars.jpg') }}" alt="{{ $item->foto_keluar }}"
-                                    width="50" height="50" style="border-radius: 0.5rem" />
-                            @endif
-                        </td>
-                        <td>
-                            @if ($item->foto_keluar)
-                                <img src="{{ public_path("storage/unggah/presensi/$item->foto_keluar") }}"
-                                    alt="{{ $item->foto_keluar }}" width="50" height="50"
-                                    style="border-radius: 0.5rem" />
-                            @else
-                                <img src="{{ public_path('img/bruce-mars.jpg') }}" alt="{{ $item->foto_keluar }}"
-                                    width="50" height="50" style="border-radius: 0.5rem" />
-                            @endif
-                        </td>
-                        <td>
-                            @if ($item->foto_keluar)
-                                <img src="{{ public_path("storage/unggah/presensi/$item->foto_keluar") }}"
-                                    alt="{{ $item->foto_keluar }}" width="50" height="50"
-                                    style="border-radius: 0.5rem" />
-                            @else
-                                <img src="{{ public_path('img/bruce-mars.jpg') }}" alt="{{ $item->foto_keluar }}"
-                                    width="50" height="50" style="border-radius: 0.5rem" />
-                            @endif
-                        </td>
+
+                        <!-- Hanya tampilkan jumlah lembur, izin, sakit, dan cuti -->
+                        <td>{{ $lembur }} jam</td>
+                        <td>{{ $izin }} hari</td>
+                        <td>{{ $sakit }} hari</td>
+                        <td>{{ $totalCuti }} hari</td>
                     </tr>
                 @endforeach
             </tbody>
