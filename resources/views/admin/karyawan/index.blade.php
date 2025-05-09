@@ -1,12 +1,17 @@
 <x-app-layout>
     <x-slot name="header">
-        <div class="flex items-center justify-between">
+    <div class="flex items-center justify-between">
+        <div>
             <h2 class="text-xl font-semibold leading-tight text-gray-800">
                 {{ __('Data Karyawan') }}
             </h2>
-            <label class="btn btn-primary btn-sm" for="create_modal">Tambah Data</label>
+            <h3 class="text-lg text-gray-600 mt-2"> <!-- Subjudul di bawah judul utama -->
+                Karyawan Outsourcing
+            </h3>
         </div>
-    </x-slot>
+        <label class="btn btn-primary btn-sm" for="create_modal">Tambah Data</label>
+    </div>
+</x-slot>
 
     <div class="container mx-auto px-5 pt-5">
         <div>

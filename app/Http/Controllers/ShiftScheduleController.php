@@ -51,7 +51,7 @@ class ShiftScheduleController extends Controller
         })
         ->orderBy('karyawan_nik')
         ->orderBy('tanggal')
-        ->get();
+        ->paginate(20);
 
     $shifts = Shift::all();
     $karyawan = Karyawan::all();

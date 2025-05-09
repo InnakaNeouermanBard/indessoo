@@ -1,13 +1,18 @@
 <x-app-layout>
     <x-slot name="header">
         <div class="flex items-center justify-between">
-            <h2 class="text-xl font-semibold leading-tight text-gray-800">
-                {{ __('Form Perizinan') }}
-            </h2>
-            <a href="{{ route('admin.kuota-cuti') }}" class="btn btn-primary flex items-center gap-2">
-                <i class="ri-calendar-check-line"></i>
-                <span>Manajemen Kuota Cuti</span>
-            </a>
+            <div>
+                <h2 class="text-xl font-semibold leading-tight text-gray-800">
+                    {{ __('Form Perizinan') }}
+                </h2>
+                <h2 class="text-sm text-gray-600 mt-2"> <!-- Teks tambahan di bawah -->
+                    Karyawan Outsorcing
+                </h2>
+            </div>
+                <a href="{{ route('admin.kuota-cuti') }}" class="btn btn-primary flex items-center gap-2">
+                    <i class="ri-calendar-check-line"></i>
+                    <span>Manajemen Kuota Cuti</span>
+                </a>
         </div>
     </x-slot>
 
@@ -349,7 +354,7 @@ dark:border-white/40">
                 showCancelButton: true,
                 confirmButtonColor: '#6419E6',
                 cancelButtonColor: '#F87272',
-                confirmButtonText: 'Batalkan',
+                confirmButtonText: 'Ya',
                 cancelButtonText: 'Cancel',
             }).then((result) => {
                 if (result.isConfirmed) {
@@ -386,4 +391,15 @@ dark:border-white/40">
             })
         }
     </script>
+    <style>
+        .swal2-confirm {
+    background-color: #007bff !important; /* Warna biru untuk tombol OK */
+    color: white !important; /* Teks tombol OK menjadi putih */
+}
+.swal2-cancel {
+    background-color: #007bff !important; /* Warna biru untuk tombol OK */
+    color: white !important; /* Teks tombol OK menjadi putih */
+    border-color: #007bff !important; /* Border tombol OK menjadi biru */
+}
+</style>
 </x-app-layout>

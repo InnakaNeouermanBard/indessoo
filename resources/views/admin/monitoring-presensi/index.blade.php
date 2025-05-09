@@ -1,12 +1,14 @@
 <x-app-layout>
     {{-- index admin presensi  --}}
     <x-slot name="header">
-        <div class="flex items-center justify-between">
-            <h2 class="text-xl font-semibold leading-tight text-gray-800">
-                {{ __('Monitoring Presensi') }}
-            </h2>
-        </div>
-    </x-slot>
+    <div class="flex items-center justify-start"> <!-- Ganti justify-between dengan justify-start -->
+        <h2 class="text-xl font-semibold leading-tight text-gray-800">
+            {{ __('Absensi') }}
+        </h2> <hr>
+    </div>
+    <h3> Karyawan Outsorcing <h3>
+</x-slot>
+
 
     <div class="container mx-auto px-5 pt-5">
         <div>

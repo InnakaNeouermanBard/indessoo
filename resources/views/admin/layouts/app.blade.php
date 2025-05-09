@@ -40,6 +40,40 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"
         integrity="sha512-v2CJ7UaYy4JwqLDIrZUI/4hqeoQieOmAZNXBeQyjo21dadnwR+8ZaIJVT8EE2iyI61OV8e6M8PP2/4hpQINQ/g=="
         crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+        <script>
+        // Function to update date and time
+        function updateDateTime() {
+            const date = new Date();
+            
+            // Format the date (example: Monday, 10 May 2025)
+            const dateString = date.toLocaleDateString('id-ID', {
+                weekday: 'long', // Day of the week (example: Monday)
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+            });
+
+            // Format the time (example: 15:30:45)
+            const timeString = date.toLocaleTimeString('id-ID', {
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+            });
+
+            // Combine date and time
+            const dateTimeString = `${dateString}, ${timeString}`;
+
+            // Set the element with ID 'date-time' to the value of dateTimeString
+            document.getElementById('date-time').textContent = dateTimeString;
+        }
+
+        // Update time every second
+        setInterval(updateDateTime, 1000);
+
+        // Call once to show the time immediately when the page loads
+        updateDateTime();
+    </script>
 </body>
 
 </html>

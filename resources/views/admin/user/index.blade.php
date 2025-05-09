@@ -2,9 +2,14 @@
 <x-app-layout>
     <x-slot name="header">
         <div class="flex items-center justify-between">
-            <h2 class="text-xl font-semibold leading-tight text-gray-800">
-                {{ __('Data Admin') }}
-            </h2>
+            <div>
+                <h2 class="text-xl font-semibold leading-tight text-gray-800">
+                    {{ __('Data Admin') }}
+                </h2>
+                <h3 class="text-lg text-gray-600 mt-2"> <!-- Menambahkan subjudul dengan h3 -->
+                    Karyawan Outsorcing
+                </h3>
+            </div>
             <label class="btn btn-primary btn-sm" for="create_modal">Tambah Admin</label>
         </div>
     </x-slot>

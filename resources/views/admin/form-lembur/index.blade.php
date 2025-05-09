@@ -1,13 +1,19 @@
 {{-- form-lembur index --}}
 <x-app-layout>
-    <x-slot name="header">
-        <div class="flex items-center justify-between">
+<x-slot name="header">
+    <div class="flex items-center justify-between">
+        <div>
             <h2 class="text-xl font-semibold leading-tight text-gray-800">
                 {{ __('Form Lembur') }}
             </h2>
-            <label class="btn btn-primary btn-sm" for="create_modal">Tambah</label>
+            <h3 class="text-lg text-gray-600 mt-2"> <!-- Menambahkan subjudul dengan h3 -->
+                Karyawan Outsourcing
+            </h3>
         </div>
-    </x-slot>
+        <label class="btn btn-primary btn-sm" for="create_modal">Tambah</label>
+    </div>
+</x-slot>
+
 
     <div class="container mx-auto px-5 pt-5">
         <form action="{{ route('form-lembur.index') }}" method="get" class="my-3">

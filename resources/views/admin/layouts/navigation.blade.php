@@ -69,6 +69,11 @@
 
                         {{-- Settings Dropdown --}}
                         <div class="flex items-center ml-auto">
+                            <!-- Tanggal dan Jam -->
+                            <div class="text-sm text-gray-600" id="date-time">
+                                <!-- Jam dan Tanggal akan dimasukkan di sini oleh JavaScript -->
+                            </div>
+
                             <x-dropdown align="right" width="48">
                                 <x-slot name="trigger">
                                     <button
