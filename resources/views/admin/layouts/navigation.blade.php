@@ -1,58 +1,46 @@
-{{-- Sidebar Navigation with fixed left positioning --}}
 <div x-data="{ open: false, showLogoutConfirm: false }">
     <div class="flex min-h-screen bg-gray-100">
-        {{-- Desktop Sidebar - Fixed Left --}}
-        <div class="hidden sm:block w-64 bg-blue-800 text-white fixed inset-y-0 left-0 z-30 overflow-y-auto">
+
+        {{-- Sidebar Navigation (for both Desktop & Mobile) --}}
+        <div :class="{'w-64': !open, 'w-16': open}" class="fixed inset-y-0 left-0 bg-blue-800 text-white z-30 transition-all duration-300">
             {{-- Logo --}}
-            <div class="flex items-center justify-center h-20 border-b border-gray-700">
+            <div class="flex items-center justify-center h-32 border-b border-gray-700">
                 <a href="{{ route('admin.dashboard') }}">
-                    <x-application-logo class="w-auto h-20 fill-current text-gray-500" />
+                    <x-application-logo class="w-auto h-32 fill-current text-gray-500" />
                 </a>
             </div>
-
-            {{-- Admin Title --}}
-            {{-- <div class="px-4 py-3 border-b border-gray-700">
-                <h2 class="text-lg font-bold text-center text-white">Admin Panel</h2>
-            </div> --}}
 
             {{-- Navigation Links --}}
             <div class="py-4 space-y-1">
                 <x-sidebar-link :href="route('admin.monitoring-presensi')" :active="request()->routeIs('admin.monitoring-presensi')">
-                    <i></i> {{ __('Absensi') }}
+                    <i class="ri-check-line mr-2"></i> {{ __('Absensi') }}
                 </x-sidebar-link>
-                {{-- <x-sidebar-link :href="route('admin.dashboard')" :active="request()->routeIs('admin.dashboard')">
-                    <i class="ri-dashboard-line mr-2"></i> {{ __('Dashboard') }}
-                </x-sidebar-link> --}}
                 <x-sidebar-link :href="route('admin.administrasi-presensi')" :active="request()->routeIs('admin.administrasi-presensi')">
-                    <i></i> {{ __('Form Perizinan') }}
+                    <i class="ri-file-list-3-line mr-2"></i> {{ __('Form Perizinan') }}
                 </x-sidebar-link>
                 <x-sidebar-link :href="route('form-lembur.index')" :active="request()->routeIs('form-lembur.index')">
-                    <i></i> {{ __('Form Lembur') }}
+                    <i class="ri-time-line mr-2"></i> {{ __('Form Lembur') }}
                 </x-sidebar-link>
                 <x-sidebar-link :href="route('admin-management')" :active="request()->routeIs('admin-management')">
-                    <i></i> {{ __('Data Admin') }}
+                    <i class="ri-user-settings-line mr-2"></i> {{ __('Data Admin') }}
                 </x-sidebar-link>
-
                 <x-sidebar-link :href="route('admin.karyawan')" :active="request()->routeIs('admin.karyawan')">
-                    <i></i> {{ __('Data Karyawan') }}
+                    <i class="ri-group-line mr-2"></i> {{ __('Data Karyawan') }}
                 </x-sidebar-link>
                 <x-sidebar-link :href="route('jadwal-shift.index')" :active="request()->routeIs('admin.jadwal')">
-                    <i></i> {{ __('Jadwal Kerja') }}
+                    <i class="ri-calendar-line mr-2"></i> {{ __('Jadwal Kerja') }}
                 </x-sidebar-link>
                 <x-sidebar-link :href="route('admin.laporan.presensi')" :active="request()->routeIs('admin.laporan.presensi')">
-                    <i></i> {{ __('Laporan') }}
+                    <i class="ri-file-chart-line mr-2"></i> {{ __('Laporan') }}
                 </x-sidebar-link>
-                {{-- <x-sidebar-link :href="route('admin.departemen')" :active="request()->routeIs('admin.departemen')">
-                    <i class="ri-building-line mr-2"></i> {{ __('Data Departemen') }}
-                </x-sidebar-link> --}}
                 <x-sidebar-link :href="route('admin.lokasi-kantor')" :active="request()->routeIs('admin.lokasi-kantor')">
-                    <i></i> {{ __('Lokasi Kantor') }}
+                    <i class="ri-map-pin-line mr-2"></i> {{ __('Lokasi Kantor') }}
                 </x-sidebar-link>
             </div>
         </div>
 
-        {{-- Main Content Area with left margin for sidebar --}}
-        <div class="flex-1 sm:ml-64">
+        {{-- Main Content Area --}}
+        <div :class="{'ml-64': !open, 'ml-16': open}" class="flex-1">
             {{-- Top Navigation Bar (Mobile & User Profile) --}}
             <div class="bg-white border-b border-gray-100 sticky top-0 z-20">
                 <div class="px-4 sm:px-6 lg:px-8">

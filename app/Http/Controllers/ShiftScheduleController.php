@@ -14,77 +14,83 @@ use Illuminate\Support\Facades\Log;
 class ShiftScheduleController extends Controller
 {
     public function index(Request $request)
-    {
-        // Filter berdasarkan bulan dan tahun
-        $bulan = $request->bulan ?? date('m');
-        $tahun = $request->tahun ?? date('Y');
-        $cari_nik = $request->cari_nik ?? '';
+{
+    $bulan = $request->bulan ?? date('m');
+    $tahun = $request->tahun ?? date('Y');
+    $cari_nik = $request->cari_nik ?? '';
 
-        // Dapatkan karyawan yang memiliki jadwal di bulan tersebut
-        $karyawanWithSchedules = ShiftSchedule::selectRaw('DISTINCT karyawan_nik')
-            ->when($bulan && $tahun, function ($query) use ($bulan, $tahun) {
-                return $query->whereYear('tanggal', $tahun)
-                    ->whereMonth('tanggal', $bulan);
-            })
-            ->when($cari_nik, function ($query) use ($cari_nik) {
-                return $query->where('karyawan_nik', 'like', '%' . $cari_nik . '%');
-            })
-            ->with(['karyawan' => function ($query) {
-                $query->select('nik', 'nama_lengkap', 'departemen_id');
-            }])
-            ->get()
-            ->pluck('karyawan');
+    // Dapatkan karyawan yang memiliki jadwal di bulan tersebut
+    $karyawanWithSchedules = ShiftSchedule::selectRaw('DISTINCT karyawan_nik')
+        ->when($bulan && $tahun, function ($query) use ($bulan, $tahun) {
+            return $query->whereYear('tanggal', $tahun)
+                ->whereMonth('tanggal', $bulan);
+        })
+        ->when($cari_nik, function ($query) use ($cari_nik) {
+            return $query->where('karyawan_nik', 'like', '%' . $cari_nik . '%')
+                         ->orWhereHas('karyawan', function ($query) use ($cari_nik) {
+                             $query->where('nama_lengkap', 'like', '%' . $cari_nik . '%');
+                         });
+        })
+        ->with(['karyawan' => function ($query) {
+            $query->select('nik', 'nama_lengkap', 'departemen_id');
+        }])
+        ->get()
+        ->pluck('karyawan');
 
-        // Dapatkan jadwal lengkap
-        $jadwal = ShiftSchedule::with(['karyawan', 'shift'])
-            ->when($cari_nik, function ($query) use ($cari_nik) {
-                return $query->where('karyawan_nik', 'like', '%' . $cari_nik . '%');
-            })
-            ->when($bulan && $tahun, function ($query) use ($bulan, $tahun) {
-                return $query->whereYear('tanggal', $tahun)
-                    ->whereMonth('tanggal', $bulan);
-            })
-            ->orderBy('karyawan_nik')
-            ->orderBy('tanggal')
-            ->get();
+    // Dapatkan jadwal lengkap
+    $jadwal = ShiftSchedule::with(['karyawan', 'shift'])
+        ->when($cari_nik, function ($query) use ($cari_nik) {
+            return $query->where('karyawan_nik', 'like', '%' . $cari_nik . '%')
+                         ->orWhereHas('karyawan', function ($query) use ($cari_nik) {
+                             $query->where('nama_lengkap', 'like', '%' . $cari_nik . '%');
+                         });
+        })
+        ->when($bulan && $tahun, function ($query) use ($bulan, $tahun) {
+            return $query->whereYear('tanggal', $tahun)
+                ->whereMonth('tanggal', $bulan);
+        })
+        ->orderBy('karyawan_nik')
+        ->orderBy('tanggal')
+        ->get();
 
-        $shifts = Shift::all();
-        $karyawan = Karyawan::all();
+    $shifts = Shift::all();
+    $karyawan = Karyawan::all();
 
-        // Menyiapkan data untuk dropdown bulan dan tahun
-        $bulanList = [
-            '01' => 'Januari',
-            '02' => 'Februari',
-            '03' => 'Maret',
-            '04' => 'April',
-            '05' => 'Mei',
-            '06' => 'Juni',
-            '07' => 'Juli',
-            '08' => 'Agustus',
-            '09' => 'September',
-            '10' => 'Oktober',
-            '11' => 'November',
-            '12' => 'Desember'
-        ];
+    // Menyiapkan data untuk dropdown bulan dan tahun
+    $bulanList = [
+        '01' => 'Januari',
+        '02' => 'Februari',
+        '03' => 'Maret',
+        '04' => 'April',
+        '05' => 'Mei',
+        '06' => 'Juni',
+        '07' => 'Juli',
+        '08' => 'Agustus',
+        '09' => 'September',
+        '10' => 'Oktober',
+        '11' => 'November',
+        '12' => 'Desember'
+    ];
 
-        $tahunList = [];
-        $tahunSekarang = date('Y');
-        for ($i = $tahunSekarang - 2; $i <= $tahunSekarang + 2; $i++) {
-            $tahunList[$i] = $i;
-        }
-
-        return view('admin.jadwal.index', compact(
-            'jadwal',
-            'shifts',
-            'karyawan',
-            'karyawanWithSchedules',
-            'bulanList',
-            'tahunList',
-            'bulan',
-            'tahun',
-            'cari_nik'
-        ));
+    $tahunList = [];
+    $tahunSekarang = date('Y');
+    for ($i = $tahunSekarang - 2; $i <= $tahunSekarang + 2; $i++) {
+        $tahunList[$i] = $i;
     }
+
+    return view('admin.jadwal.index', compact(
+        'jadwal',
+        'shifts',
+        'karyawan',
+        'karyawanWithSchedules',
+        'bulanList',
+        'tahunList',
+        'bulan',
+        'tahun',
+        'cari_nik'
+    ));
+}
+
     public function show($id)
     {
         // Karena kita tidak memerlukan halaman detail individu,

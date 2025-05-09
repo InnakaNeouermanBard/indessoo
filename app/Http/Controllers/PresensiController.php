@@ -446,34 +446,90 @@ class PresensiController extends Controller
     }
 
     public function laporanPresensiSemuaKaryawan(Request $request)
-    {
-        $title = 'Laporan Presensi Semua Karyawan';
-        $bulan = $request->bulan;
-        $riwayatPresensi = DB::table("presensi as p")
-            ->join('karyawan as k', 'p.nik', '=', 'k.nik')
-            ->join('departemen as d', 'k.departemen_id', '=', 'd.id')
-            ->whereMonth('tanggal_presensi', Carbon::make($bulan)->format('m'))
-            ->whereYear('tanggal_presensi', Carbon::make($bulan)->format('Y'))
-            ->select(
-                'p.nik',
-                'k.nama_lengkap as nama_karyawan',
-                'k.jabatan as jabatan_karyawan',
-                'd.nama as nama_departemen'
-            )
-            ->selectRaw("COUNT(p.nik) as total_kehadiran, SUM(IF (jam_masuk > '08:00',1,0)) as total_terlambat")
-            ->groupBy(
-                'p.nik',
-                'k.nama_lengkap',
-                'k.jabatan',
-                'd.nama'
-            )
-            ->orderBy("tanggal_presensi", "asc")
+{
+    $title = 'Laporan Presensi Semua Karyawan';
+    $bulan = $request->bulan;
+
+    // Ambil riwayat presensi semua karyawan
+    $riwayatPresensi = DB::table("presensi as p")
+        ->join('karyawan as k', 'p.nik', '=', 'k.nik')
+        ->join('departemen as d', 'k.departemen_id', '=', 'd.id')
+        ->whereMonth('tanggal_presensi', Carbon::make($bulan)->format('m'))
+        ->whereYear('tanggal_presensi', Carbon::make($bulan)->format('Y'))
+        ->select(
+            'p.nik',
+            'k.nama_lengkap as nama_karyawan',
+            'k.jabatan as jabatan_karyawan',
+            'd.nama as nama_departemen'
+        )
+        ->selectRaw("COUNT(p.nik) as total_kehadiran, SUM(IF (jam_masuk > '08:00',1,0)) as total_terlambat")
+        ->groupBy(
+            'p.nik',
+            'k.nama_lengkap',
+            'k.jabatan',
+            'd.nama'
+        )
+        ->orderBy("tanggal_presensi", "asc")
+        ->get();
+
+    // Ambil data izin, sakit, cuti dan lembur untuk setiap karyawan
+    $riwayatPresensi = $riwayatPresensi->map(function ($item) use ($bulan) {
+
+        // Mengambil data Izin
+        $izin = DB::table('pengajuan_presensi')
+            ->where('nik', $item->nik)
+            ->where('status', 'I')
+            ->whereMonth('tanggal_mulai', Carbon::make($bulan)->format('m'))
+            ->whereYear('tanggal_mulai', Carbon::make($bulan)->format('Y'))
+            ->count();
+
+        // Mengambil data Sakit
+        $sakit = DB::table('pengajuan_presensi')
+            ->where('nik', $item->nik)
+            ->where('status', 'S')
+            ->whereMonth('tanggal_mulai', Carbon::make($bulan)->format('m'))
+            ->whereYear('tanggal_mulai', Carbon::make($bulan)->format('Y'))
+            ->count();
+
+        // Mengambil data Cuti
+        $cuti = DB::table('pengajuan_presensi')
+            ->where('nik', $item->nik)
+            ->where('status', 'C')
+            ->whereMonth('tanggal_mulai', Carbon::make($bulan)->format('m'))
+            ->whereYear('tanggal_mulai', Carbon::make($bulan)->format('Y'))
             ->get();
 
-        // return view('admin.laporan.pdf.presensi-semua-karyawan', compact('title', 'bulan', 'riwayatPresensi'));
-        $pdf = Pdf::loadView('admin.laporan.pdf.presensi-semua-karyawan', compact('title', 'bulan', 'riwayatPresensi'));
-        return $pdf->stream($title . '.pdf');
-    }
+        $totalCuti = 0;
+        foreach ($cuti as $itemCuti) {
+            $totalCuti += Carbon::parse($itemCuti->tanggal_mulai)->diffInDays(Carbon::parse($itemCuti->tanggal_selesai)) + 1;
+        }
+
+        // Mengambil data Lembur
+        $lembur = DB::table('form_lemburs')
+            ->where('nik', $item->nik)
+            ->whereMonth('tanggal', Carbon::make($bulan)->format('m'))
+            ->whereYear('tanggal', Carbon::make($bulan)->format('Y'))
+            ->sum('overtime');
+
+        // Menambahkan data izin, sakit, cuti, dan lembur ke dalam item
+        $item->total_izin = $izin;
+        $item->total_sakit = $sakit;
+        $item->total_cuti = $totalCuti;
+        $item->total_lembur = $lembur;
+
+        return $item;
+    });
+
+    // Generate PDF
+    $pdf = Pdf::loadView('admin.laporan.pdf.presensi-semua-karyawan', compact(
+        'title',
+        'bulan',
+        'riwayatPresensi'
+    ));
+
+    return $pdf->stream($title . '.pdf');
+}
+
 
     public function laporanPresensiSemuaKaryawanKaryawan(Request $request)
     {

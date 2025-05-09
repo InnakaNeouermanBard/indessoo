@@ -309,121 +309,128 @@
     {{-- Akhir Modal Edit --}}
 
     <script>
-        @if (session()->has('success'))
-            Swal.fire({
-                title: 'Berhasil',
-                text: '{{ session('success') }}',
-                icon: 'success',
-                confirmButtonColor: '#6419E6',
-                confirmButtonText: 'OK',
-            });
-        @endif
+    @if (session()->has('success'))
+        Swal.fire({
+            title: 'Berhasil',
+            text: '{{ session('success') }}',
+            icon: 'success',
+            confirmButtonColor: '#007bff', // Warna biru untuk tombol OK
+            confirmButtonText: 'OK',
+        });
+    @endif
 
-        @if (session()->has('error'))
-            Swal.fire({
-                title: 'Gagal',
-                text: '{{ session('error') }}',
-                icon: 'error',
-                confirmButtonColor: '#6419E6',
-                confirmButtonText: 'OK',
-            });
-        @endif
+    @if (session()->has('error'))
+        Swal.fire({
+            title: 'Gagal',
+            text: '{{ session('error') }}',
+            icon: 'error',
+            confirmButtonColor: '#007bff', // Warna biru untuk tombol OK
+            confirmButtonText: 'OK',
+        });
+    @endif
 
-        function edit_button(id) {
-            // Loading effect start
-            let loading = `<span class="loading loading-dots loading-md text-purple-600"></span>`;
-            $("#loading_edit1").html(loading);
-            $("#loading_edit2").html(loading);
-            $("#loading_edit3").html(loading);
-            $("#loading_edit4").html(loading);
-            $("#loading_edit5").html(loading);
-            $("#loading_edit6").html(loading);
+    function edit_button(id) {
+        // Loading effect start
+        let loading = `<span class="loading loading-dots loading-md text-purple-600"></span>`;
+        $("#loading_edit1").html(loading);
+        $("#loading_edit2").html(loading);
+        $("#loading_edit3").html(loading);
+        $("#loading_edit4").html(loading);
+        $("#loading_edit5").html(loading);
+        $("#loading_edit6").html(loading);
 
-            $.ajax({
-                type: "get",
-                url: "{{ route('admin.lokasi-kantor.edit') }}",
-                data: {
-                    "_token": "{{ csrf_token() }}",
-                    "id": id
-                },
-                success: function(data) {
-                    // console.log(data);
-                    let items = [];
-                    $.each(data, function(key, val) {
-                        items.push(val);
-                    });
+        $.ajax({
+            type: "get",
+            url: "{{ route('admin.lokasi-kantor.edit') }}",
+            data: {
+                "_token": "{{ csrf_token() }}",
+                "id": id
+            },
+            success: function(data) {
+                // console.log(data);
+                let items = [];
+                $.each(data, function(key, val) {
+                    items.push(val);
+                });
 
-                    $("input[name='id']").val(items[0]);
-                    $("input[name='kota']").val(items[1]);
-                    $("textarea[name='alamat']").html(items[2]);
-                    $("input[name='latitude']").val(items[3]);
-                    $("input[name='longitude']").val(items[4]);
-                    $("input[name='radius']").val(items[5]);
-                    if (items[6] == 1) {
-                        $("input[name='is_used'][value='1']").prop('checked', true);
-                    } else if (items[6] == 0) {
-                        $("input[name='is_used'][value='0']").prop('checked', true);
+                $("input[name='id']").val(items[0]);
+                $("input[name='kota']").val(items[1]);
+                $("textarea[name='alamat']").html(items[2]);
+                $("input[name='latitude']").val(items[3]);
+                $("input[name='longitude']").val(items[4]);
+                $("input[name='radius']").val(items[5]);
+                if (items[6] == 1) {
+                    $("input[name='is_used'][value='1']").prop('checked', true);
+                } else if (items[6] == 0) {
+                    $("input[name='is_used'][value='0']").prop('checked', true);
+                }
+
+                // Loading effect end
+                loading = "";
+                $("#loading_edit1").html(loading);
+                $("#loading_edit2").html(loading);
+                $("#loading_edit3").html(loading);
+                $("#loading_edit4").html(loading);
+                $("#loading_edit5").html(loading);
+                $("#loading_edit6").html(loading);
+            }
+        });
+    }
+
+    function delete_button(id, nama) {
+        Swal.fire({
+            title: 'Apakah Anda yakin?',
+            html: "<p>Data yang dihapus tidak dapat dipulihkan kembali!</p>" +
+                "<div class='divider'></div>" +
+                "<div class='flex flex-col'>" +
+                "<b>Karyawan: " + nama + "</b>" +
+                "</div>",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#007bff', // Warna biru untuk tombol OK
+            cancelButtonColor: '#F87272',
+            confirmButtonText: 'Hapus',
+            cancelButtonText: 'Batal',
+        }).then((result) => {
+            if (result.isConfirmed) {
+                $.ajax({
+                    type: "post",
+                    url: "{{ route('admin.lokasi-kantor.delete') }}",
+                    data: {
+                        "_token": "{{ csrf_token() }}",
+                        "id": id
+                    },
+                    success: function(response) {
+                        Swal.fire({
+                            title: 'Berhasil',
+                            text: response.message,
+                            icon: 'success',
+                            confirmButtonColor: '#007bff', // Warna biru untuk tombol OK
+                            confirmButtonText: 'OK'
+                        }).then((result) => {
+                            if (result.isConfirmed) {
+                                location.reload();
+                            }
+                        });
+                    },
+                    error: function(response) {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Gagal',
+                            text: response.responseJSON.message
+                        })
                     }
+                });
+            }
+        })
+    }
+</script>
 
-
-                    // Loading effect end
-                    loading = "";
-                    $("#loading_edit1").html(loading);
-                    $("#loading_edit2").html(loading);
-                    $("#loading_edit3").html(loading);
-                    $("#loading_edit4").html(loading);
-                    $("#loading_edit5").html(loading);
-                    $("#loading_edit6").html(loading);
-                }
-            });
-        }
-
-        function delete_button(id, nama) {
-            Swal.fire({
-                title: 'Apakah Anda yakin?',
-                html: "<p>Data yang dihapus tidak dapat dipulihkan kembali!</p>" +
-                    "<div class='divider'></div>" +
-                    "<div class='flex flex-col'>" +
-                    "<b>Karyawan: " + nama + "</b>" +
-                    "</div>",
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#6419E6',
-                cancelButtonColor: '#F87272',
-                confirmButtonText: 'Hapus',
-                cancelButtonText: 'Batal',
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    $.ajax({
-                        type: "post",
-                        url: "{{ route('admin.lokasi-kantor.delete') }}",
-                        data: {
-                            "_token": "{{ csrf_token() }}",
-                            "id": id
-                        },
-                        success: function(response) {
-                            Swal.fire({
-                                title: 'Berhasil',
-                                text: response.message,
-                                icon: 'success',
-                                confirmButtonColor: '#6419E6',
-                                confirmButtonText: 'OK'
-                            }).then((result) => {
-                                if (result.isConfirmed) {
-                                    location.reload();
-                                }
-                            });
-                        },
-                        error: function(response) {
-                            Swal.fire({
-                                icon: 'error',
-                                title: 'Gagal',
-                                text: response.responseJSON.message
-                            })
-                        }
-                    });
-                }
-            })
-        }
-    </script>
+<style>
+.swal2-confirm {
+    background-color: #007bff !important; /* Warna biru untuk tombol OK */
+    color: white !important; /* Teks tombol OK menjadi putih */
+    border-color: #007bff !important; /* Border tombol OK menjadi biru */
+}
+</style>
 </x-app-layout>

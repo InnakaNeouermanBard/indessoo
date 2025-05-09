@@ -115,50 +115,42 @@
         </table>
 
         <table class="presensi-karyawan">
-            <thead>
-                <tr>
-                    <th>No.</th>
-                    <th>Nama Karyawan / NIK</th>
-                    {{-- <th>Jabatan / Departemen</th> --}}
-                    <th>Jumlah Kehadiran</th>
-                    <th>Jumlah Terlambat</th>
-                    <th>Jumlah Lembur</th>
-                    <th>Jumlah Izin</th>
-                    <th>Jumlah Sakit</th>
-                    <th>Jumlah Cuti</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach ($riwayatPresensi as $value => $item)
-                    <tr>
-                        <td>
-                            {{ $value + 1 . '.' }}
-                        </td>
-                        <td>
-                            {{ $item->nama_karyawan }} - {{ $item->nik }}
-                        </td>
-                        <td>
-                            {{ $item->jabatan_karyawan }} - {{ $item->nama_departemen }}
-                        </td>
-                        <td>
-                            {{ $item->total_kehadiran }}
-                        </td>
-                        <td>
-                            {{ $item->total_terlambat }}
-                        </td>
-                        <td>
-                            {{ $item->total_terlambat }}
-                        </td>
-                        <td>
-                            {{ $item->total_terlambat }}
-                        </td>
-                        <td>
-                            {{ $item->total_terlambat }}
-                        </td>
-                    </tr>
-                @endforeach
-            </tbody>
-        </table>
+    <thead>
+        <tr>
+            <th>No.</th>
+            <th>Nama Karyawan / NIK</th>
+            {{-- <th>Jabatan / Departemen</th> --}}
+            <th>Departemen</th>
+            <th>Jumlah Kehadiran</th>
+            <th>Jumlah Lembur</th>
+            <th>Jumlah Izin</th>
+            <th>Jumlah Sakit</th>
+            <th>Jumlah Cuti</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach ($riwayatPresensi as $value => $item)
+            <tr>
+                <td>
+                    {{ $value + 1 . '.' }}
+                </td>
+                <td>
+                    {{ $item->nama_karyawan }} - {{ $item->nik }}
+                </td>
+                <td>
+                    {{ $item->nama_departemen }}
+                </td>
+                <td>
+                    {{ $item->total_kehadiran }}
+                </td>
+                <td>{{ $item->total_lembur }} jam</td>
+                <td>{{ $item->total_izin }} hari</td>
+                <td>{{ $item->total_sakit }} hari</td>
+                <td>{{ $item->total_cuti }} hari</td>
+            </tr>
+        @endforeach
+    </tbody>
+</table>
 
         <table class="pengesahan-atasan">
             <tr class="tempat">
