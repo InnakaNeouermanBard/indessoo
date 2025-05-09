@@ -138,10 +138,10 @@ dark:border-white/40">
                                     <span class="font-medium text-blue-700">Cuti</span>
                                     @if (isset($item->kuota_cuti))
                                         <div class="text-xs text-gray-500">
-                                            (Sisa:
                                             @php
-                                                $cuti_terpakai = \DB::table('pengajuan_presensi')
-                                                    ->where('nik', $item->nik)
+                                                $kuotaTahunan = 12; // Sesuaikan default kuota cuti per tahun
+                                                $cutiTerpakai = \DB::table('pengajuan_presensi')
+                                                    ->where('nik', auth()->user()->nik) // Pastikan auth user dipakai
                                                     ->where('status', 'C')
                                                     ->where('status_approved', 2)
                                                     ->whereYear('tanggal_mulai', date('Y'))
@@ -149,12 +149,13 @@ dark:border-white/40">
                                                     ->sum(function ($cuti) {
                                                         $start = \Carbon\Carbon::parse($cuti->tanggal_mulai);
                                                         $end = \Carbon\Carbon::parse($cuti->tanggal_selesai);
-                                                        return $start->diffInDays($end) + 1; // +1 agar inklusif (misal 12-14 = 3 hari)
+                                                        return $start->diffInDays($end) + 1; // +1 agar inklusif
                                                     });
+                                                $sisaKuota = $kuotaTahunan - $cutiTerpakai;
                                             @endphp
 
                                             <div class="text-xs text-gray-500">
-                                                (Sisa: {{ $item->kuota_cuti - $cuti_terpakai }} hari)
+                                                (Sisa: {{ $sisaKuota }} hari)
                                             </div>
 
                                         </div>

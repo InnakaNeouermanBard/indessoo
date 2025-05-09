@@ -152,8 +152,8 @@ Route::middleware(['auth:karyawan'])->prefix('karyawan')->group(function () {
         Route::post('/', [FormLemburController::class, 'karyawanStore'])->name('karyawan.form-lembur.store');
     });
     Route::prefix('jadwal-kerja')->group(function () {
-        Route::get('jadwal-kerja', [JadwalKerjaController::class, 'indexKaryawan'])
-            ->name('karyawan.jadwalkerja.index');
+        Route::get('jadwal-kerja', [ShiftScheduleController::class, 'jadwalKaryawan'])
+            ->name('karyawan.jadwalkerja.index');  // Menampilkan jadwal kazryawan dengan filter bulan dan tahun
         Route::get('jadwal-kerja/download/{id}', [JadwalKerjaController::class, 'downloadKaryawan'])
             ->name('karyawan.jadwalkerja.download');
     });

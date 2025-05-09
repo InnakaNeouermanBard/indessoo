@@ -85,7 +85,7 @@ class PresensiController extends Controller
         $longtitudeUser = $lokasiUser[1];
 
         $jarak = round($this->validation_radius_presensi($langtitudeKantor, $longtitudeKantor, $langtitudeUser, $longtitudeUser), 2);
-        if ($jarak > 10000) {
+        if ($jarak > 10000000) {
             return response()->json([
                 'status' => 500,
                 'success' => false,

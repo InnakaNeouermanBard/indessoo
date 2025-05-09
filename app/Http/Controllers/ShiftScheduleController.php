@@ -660,4 +660,44 @@ class ShiftScheduleController extends Controller
             'debug_tanggal' => $formattedDate, // Mengembalikan tanggal yang diformat
         ]);
     }
+
+      public function jadwalKaryawan(Request $request)
+    {
+        $title = "Jadwal Karyawan";
+
+        $karyawan = auth()->guard('karyawan')->user(); // Ambil data karyawan yang sedang login
+        $bulan = $request->bulan ?? date('m'); // Default bulan saat ini
+        $tahun = $request->tahun ?? date('Y'); // Default tahun saat ini
+
+        // Ambil jadwal karyawan untuk bulan dan tahun yang dipilih
+        $jadwal = ShiftSchedule::with('shift')
+            ->where('karyawan_nik', $karyawan->nik) // Pastikan hanya jadwal karyawan yang login
+            ->whereYear('tanggal', $tahun)
+            ->whereMonth('tanggal', $bulan)
+            ->get();
+
+        // Daftar bulan untuk dropdown
+        $bulanList = [
+            '01' => 'Januari',
+            '02' => 'Februari',
+            '03' => 'Maret',
+            '04' => 'April',
+            '05' => 'Mei',
+            '06' => 'Juni',
+            '07' => 'Juli',
+            '08' => 'Agustus',
+            '09' => 'September',
+            '10' => 'Oktober',
+            '11' => 'November',
+            '12' => 'Desember'
+        ];
+
+        $tahunList = [];
+        $tahunSekarang = date('Y');
+        for ($i = $tahunSekarang - 2; $i <= $tahunSekarang + 2; $i++) {
+            $tahunList[$i] = $i;
+        }
+        
+        return view('dashboard.jadwal.index', compact('title', 'jadwal', 'bulanList', 'bulan', 'tahun', 'tahunList'));
+    }
 }

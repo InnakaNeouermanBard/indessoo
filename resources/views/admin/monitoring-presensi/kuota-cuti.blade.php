@@ -34,7 +34,7 @@
                                 ->where('nik', $item->nik)
                                 ->where('status', 'C')
                                 ->where('status_approved', 2)
-                                ->whereYear('tanggal_pengajuan', date('Y'))
+                                ->whereYear('tanggal_mulai', date('Y'))
                                 ->count();
 
                             $sisaKuota = $item->kuota_cuti - $cutiTerpakai;
@@ -53,8 +53,11 @@
                                 </span>
                             </td>
                             <td class="px-4 py-3 text-center">
-                                <button class="edit-kuota-btn btn btn-info btn-sm" data-nik="{{ $item->nik }}"
-                                    data-nama="{{ $item->nama_lengkap }}" data-kuota="{{ $item->kuota_cuti }}">
+                                <!-- Tombol Edit Kuota dengan data atribut -->
+                                <button class="edit-kuota-btn btn btn-info btn-sm"
+                                    data-nik="{{ $item->nik }}"
+                                    data-nama="{{ $item->nama_lengkap }}"
+                                    data-kuota="{{ $item->kuota_cuti }}">
                                     Edit Kuota
                                 </button>
                             </td>
@@ -107,6 +110,7 @@
                     const nama = $(this).data('nama');
                     const kuota = $(this).data('kuota');
 
+                    // Isi data ke modal
                     $("#edit-nik").val(nik);
                     $("#edit-nama").text(nama);
                     $("#edit-kuota").val(kuota);
@@ -114,6 +118,7 @@
                     // Update action URL form
                     $("#formEditKuota").attr('action', `/admin/kuota-cuti/${nik}`);
 
+                    // Tampilkan modal
                     $("#editKuotaModal").addClass("modal-open");
                 });
 
@@ -121,7 +126,51 @@
                 $(".close-modal").click(function() {
                     $("#editKuotaModal").removeClass("modal-open");
                 });
+
+                // Menutup modal ketika klik di luar modal-box
+                $(document).click(function(event) {
+                    if ($(event.target).is("#editKuotaModal")) {
+                        $("#editKuotaModal").removeClass("modal-open");
+                    }
+                });
             });
         </script>
+        <style>
+        .modal {
+    display: none;
+}
+
+.modal-open {
+    display: block;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5); /* Overlay */
+    z-index: 1000;
+}
+
+.modal-box {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.modal-backdrop {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5); /* Untuk area di luar modal */
+    z-index: 999;
+}
+</style>
     @endpush
 </x-app-layout>

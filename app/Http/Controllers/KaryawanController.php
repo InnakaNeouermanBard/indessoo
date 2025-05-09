@@ -79,7 +79,7 @@ class KaryawanController extends Controller
     {
         $data = $request->validate([
             'nik' => 'required|unique:karyawan,nik',
-            'departemen_id' => ['default' => '1'],
+            'departemen_id' => 'required',
             'nama_lengkap' => 'required|string|max:255',
             'foto' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
             'jabatan' => 'required|string|max:255',

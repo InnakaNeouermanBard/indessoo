@@ -111,6 +111,16 @@
                                 class="input input-bordered w-full text-blue-700 dark:bg-slate-100" required />
                         </label>
 
+                        <label class="form-control w-full">
+                            <div class="label">
+                                <span class="label-text font-semibold dark:text-slate-100">
+                                    <p>Keterangan <span class="text-red-500">*</span></p>
+                                </span>
+                            </div>
+                            <input type="input" name="keterangan"
+                                class="input input-bordered w-full text-blue-700 dark:bg-slate-100"/>
+                        </label>
+
                         <div class="my-5 flex flex-wrap justify-center gap-2">
                             <button type="submit" class="btn btn-success w-full text-white">Simpan Pengajuan</button>
                         </div>

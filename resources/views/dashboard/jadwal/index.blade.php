@@ -1,72 +1,101 @@
 @extends('dashboard.layouts.main')
+
 @section('js')
 @endsection
+
 @section('container')
     <div class="container mx-auto px-4 py-6 space-y-6">
 
-        {{-- Fallback jika $files belum ada --}}
-        @php
-            if (!isset($files)) {
-                $files = \App\Models\ExcelFile::latest()->paginate(10);
-            }
-        @endphp
-
-        {{-- Modal Import --}}
-        <input type="checkbox" id="import_modal" class="modal-toggle" />
-        <div class="modal">
-            <div class="modal-box relative">
-                <label for="import_modal" class="btn btn-sm btn-circle absolute right-2 top-2">✕</label>
-                <h3 class="text-lg font-semibold mb-4">Upload File Excel</h3>
-
+        {{-- Filter berdasarkan bulan dan tahun --}}
+        <form action="{{ route('karyawan.jadwalkerja.index') }}" method="get" class="mb-4 bg-white p-4 rounded shadow">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div>
+                    <label class="block text-sm font-medium">Bulan</label>
+                    <select name="bulan" class="select select-bordered w-full mt-1">
+                        @foreach ($bulanList as $key => $nama)
+                            <option value="{{ $key }}" {{ $bulan == $key ? 'selected' : '' }}>
+                                {{ $nama }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium">Tahun</label>
+                    <select name="tahun" class="select select-bordered w-full mt-1">
+                        @foreach ($tahunList as $key => $nama)
+                            <option value="{{ $key }}" {{ $tahun == $key ? 'selected' : '' }}>
+                                {{ $nama }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="flex items-end">
+                    <button class="btn btn-success w-full">Filter</button>
+                </div>
             </div>
-        </div>
+        </form>
 
-        {{-- Daftar File --}}
-        <div class="bg-white shadow rounded-lg overflow-hidden">
-            <div class="px-6 py-4 border-b">
-                <h3 class="text-lg font-semibold">Uploaded Files</h3>
-            </div>
-            <div class="overflow-x-auto">
-                <table class="min-w-full divide-y divide-gray-200">
-                    <thead class="bg-gray-50">
-                        <tr>
-                            <th>#</th>
-                            <th>Nama File</th>
-                            <th>Tanggal Upload
-                            </th>
-                            <th>Aksi</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @forelse($files as $idx => $file)
-                            <tr class="hover:bg-gray-50">
-                                <td class="px-4 py-2 whitespace-nowrap">{{ $files->firstItem() + $idx }}</td>
-                                <td class="px-4 py-2 whitespace-nowrap">{{ $file->original_name }}</td>
-                                <td class="px-4 py-2 whitespace-nowrap">{{ $file->created_at->format('Y-m-d H:i') }}
-                                </td>
-                                <td class="px-4 py-2 whitespace-nowrap text-center space-x-2">
-                                    {{-- Download --}}
-                                    <a href="{{ route('karyawan.jadwalkerja.download', $file->id) }}"
-                                        class="btn btn-sm btn-outline btn-info" title="Download">
-                                        <i class="ri-download-2-line"></i>
-                                    </a>
+        @if (session('success'))
+            <div class="alert alert-success mb-4">{{ session('success') }}</div>
+        @endif
 
-                                    {{-- Delete --}}
-                                </td>
-                            </tr>
-                        @empty
+        @if (session('error'))
+            <div class="alert alert-error mb-4">{{ session('error') }}</div>
+        @endif
+
+        <!-- Tampilan Jadwal Karyawan -->
+        <div id="jadwalTableContainer" class="bg-white rounded shadow p-4 mb-6">
+            <h3 class="text-lg font-semibold mb-4 text-center">
+                Jadwal Bulan {{ $bulanList[$bulan] }} {{ $tahun }}
+            </h3>
+
+            @if (isset($jadwal) && count($jadwal) > 0)
+                <div class="overflow-x-auto">
+                    <table class="table w-full table-striped">
+                        <thead>
                             <tr>
-                                <td colspan="4" class="px-4 py-6 text-center text-gray-500">
-                                    Belum ada file di-upload.
-                                </td>
+                                <th>No</th>
+                                <th>NIK</th>
+                                <th>Nama</th>
+                                <th>Tanggal</th>
+                                <th>Shift</th>
+                                <th>Libur?</th>
                             </tr>
-                        @endforelse
-                    </tbody>
-                </table>
-            </div>
-            <div class="px-6 py-3 bg-gray-50">
-                {{ $files->links() }}
-            </div>
+                        </thead>
+                        <tbody>
+                            @foreach ($jadwal as $i => $item)
+                                <tr>
+                                    <td>{{ $loop->iteration }}</td>
+                                    <td>
+                                        <a href="{{ route('jadwal-shift.karyawan-detail', $item->karyawan_nik) }}?bulan={{ $bulan }}&tahun={{ $tahun }}"
+                                            class="text-blue-600 hover:underline">
+                                            {{ $item->karyawan_nik }}
+                                        </a>
+                                    </td>
+                                    <td>{{ $item->karyawan->nama_lengkap }}</td>
+                                    <td>{{ \Carbon\Carbon::parse($item->tanggal)->format('d-m-Y') }}</td>
+                                    <td>
+                                        @if ($item->shift)
+                                            {{ $item->shift->nama }} ({{ $item->shift->waktu_mulai }} - {{ $item->shift->waktu_selesai }})
+                                        @else
+                                            - 
+                                        @endif
+                                    </td>
+                                    <td>
+                                        <span class="badge {{ $item->is_libur ? 'badge-error' : 'badge-success' }}">
+                                            {{ $item->is_libur ? 'Ya' : 'Tidak' }}
+                                        </span>
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            @else
+                <div class="text-center py-8 text-gray-500">
+                    Tidak ada data jadwal untuk periode ini
+                </div>
+            @endif
         </div>
     </div>
 @endsection

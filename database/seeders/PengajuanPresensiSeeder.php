@@ -15,12 +15,14 @@ class PengajuanPresensiSeeder extends Seeder
     public function run(): void
     {
         for ($i = 1; $i <= 5; $i++) {
+            // Gunakan Carbon untuk menangani tanggal
+            $tanggalMulai = Carbon::create(2024, Carbon::now()->month, $i); // Membuat tanggal mulai
+            $tanggalSelesai = $tanggalMulai->copy()->addDay(); // Tanggal selesai 1 hari setelah tanggal mulai
+
             DB::table('pengajuan_presensi')->insert([
                 "nik" => "12345",
-                "tanggal_mulai" => date_create("2024-" . Carbon::now()->format('m') . "-" . $i)->format("Y-m
-d"),
-                "tanggal_selesai" => date_create("2024-" . Carbon::now()->format('m') . "-" . ($i + 1))
-                    ->format("Y-m-d"), // Menambahkan tanggal_selesai 
+                "tanggal_mulai" => $tanggalMulai->format("Y-m-d"), // Format yang benar
+                "tanggal_selesai" => $tanggalSelesai->format("Y-m-d"), // Format yang benar
                 "status" => fake()->randomElement([
                     StatusPengajuanPresensi::IZIN,
                     StatusPengajuanPresensi::SAKIT
@@ -33,10 +35,8 @@ d"),
 
             DB::table('pengajuan_presensi')->insert([
                 "nik" => "12346",
-                "tanggal_mulai" => date_create("2024-" . Carbon::now()->format('m') . "-" . $i)->format("Y-m
-d"),
-                "tanggal_selesai" => date_create("2024-" . Carbon::now()->format('m') . "-" . ($i + 1))
-                    ->format("Y-m-d"), // Menambahkan tanggal_selesai 
+                "tanggal_mulai" => $tanggalMulai->format("Y-m-d"),
+                "tanggal_selesai" => $tanggalSelesai->format("Y-m-d"),
                 "status" => fake()->randomElement([
                     StatusPengajuanPresensi::IZIN,
                     StatusPengajuanPresensi::SAKIT
