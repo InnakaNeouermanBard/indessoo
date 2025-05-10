@@ -158,11 +158,6 @@ dark:border-white/40">
                                                     });
                                                 $sisaKuota = $kuotaTahunan - $cutiTerpakai;
                                             @endphp
-
-                                            <div class="text-xs text-gray-500">
-                                                (Sisa: {{ $sisaKuota }} hari)
-                                            </div>
-
                                         </div>
                                     @endif
                                 @endif

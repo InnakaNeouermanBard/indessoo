@@ -15,12 +15,12 @@
     <!-- Set also "landscape" if you need -->
     <style>
         @page {
-            size: A4
+            size: A4;
         }
 
         .title {
             font-family: Arial, Helvetica, sans-serif;
-            font-size: 16px;
+            font-size: 18px; /* Make the title font slightly larger */
             font-weight: 800;
             line-height: 1.5rem;
         }
@@ -62,7 +62,7 @@
         .presensi-karyawan>thead>tr>th,
         .presensi-karyawan>tbody>tr>td {
             border: 1px solid black;
-            padding: 0.5rem
+            padding: 0.5rem;
         }
 
         .pengesahan-atasan {
@@ -79,36 +79,47 @@
         .tempat td {
             text-align: right;
         }
+
+        /* Adjust the logo and text layout */
+        .header-logo {
+            width: 120px; /* Increased logo size */
+            height: 120px;
+            border-radius: 21px;
+        }
+
+        .header-text {
+            text-align: center;
+            vertical-align: middle;
+            padding: 1rem;
+        }
+
+        .header-title {
+            font-size: 22px; /* Larger font size for title */
+        }
     </style>
 </head>
 
-<!-- Set "A5", "A4" or "A3" for class name -->
-<!-- Set also "landscape" if you need -->
-
 <body class="A4">
 
-    <!-- Each sheet element should have the class "sheet" -->
-    <!-- "padding-**mm" is optional: you can set 10, 15, 20 or 25 -->
     <section class="sheet padding-10mm">
         <table style="width: 100%; height: 150px; border-collapse: collapse;">
             <tr>
                 <td style="width: 180px; text-align: center; vertical-align: middle;">
-                    <img src="{{ public_path('img/logo-fix.png') }}" alt="logo" width="100" height="100"
-                        style="border-radius: 21px" />
+                    <img src="{{ public_path('img/logo-fix.png') }}" alt="logo" class="header-logo" />
                 </td>
-                <td style="text-align: center; vertical-align: middle; padding: 1rem;">
-                    <span class="title" style="display: block; margin-bottom: 5px;">
+                <td class="header-text">
+                    <span class="title header-title" style="display: block; margin-bottom: 5px;">
                         {{ strtoupper($title) }} <br>
                     </span>
-                    <span class="title" style="display: block; margin-bottom: 5px;">
+                    <span class="title header-title" style="display: block; margin-bottom: 5px;">
                         PERIODE {{ strtoupper(\Carbon\Carbon::make($bulan)->format('F')) }} TAHUN
                         {{ \Carbon\Carbon::make($bulan)->format('Y') }} <br>
                     </span>
-                    <span class="title" style="display: block; margin-bottom: 5px;">
-                        PT ABCD DEFG <br>
+                    <span class="title header-title" style="display: block; margin-bottom: 5px;">
+                        PT INDESSO AROMA BATURRADEN<br>
                     </span>
                     <span style="display: block; margin-top: 10px;">
-                        <i>Lorem ipsum, dolor sit amet consectetur adipisicing elit. Accusantium, vero.</i>
+                        <i>Jl. Raya Baturaden KM.10, Dusun III, Karangtengah, Kec. Baturaden, Kabupaten Banyumas, Jawa Tengah 53151.</i>
                     </span>
                 </td>
             </tr>
@@ -167,11 +178,21 @@
                         <td><img src="{{ public_path("storage/unggah/presensi/$item->foto_keluar") }}" width="50"
                                 height="50" /></td>
                         <td>
-                            @if ($item->jam_masuk > Carbon\Carbon::make('08:00:00')->format('H:i:s'))
+                            @php
+                                // Ambil shift berdasarkan nik
+                                $shift = DB::table('shifts')
+                                    ->join('shift_schedules', 'shift_schedules.shift_id', '=', 'shifts.id')
+                                    ->where('shift_schedules.karyawan_nik', $item->nik) // Sesuaikan dengan kolom nik
+                                    ->first();
+
+                                // Ambil waktu mulai shift
+                                $waktuMulaiShift = Carbon\Carbon::make($shift->waktu_mulai);
+                                $masuk = Carbon\Carbon::make($item->jam_masuk); // Waktu masuk karyawan
+                            @endphp
+
+                            @if ($masuk->gt($waktuMulaiShift))  <!-- Jika waktu masuk lebih besar dari waktu mulai shift -->
                                 @php
-                                    $masuk = Carbon\Carbon::make($item->jam_masuk);
-                                    $batas = Carbon\Carbon::make('08:00:00');
-                                    $diff = $masuk->diff($batas);
+                                    $diff = $masuk->diff($waktuMulaiShift);  // Hitung selisih antara jam masuk dan waktu mulai shift
                                     if ($diff->format('%h') != 0) {
                                         $selisih = $diff->format('%h jam %I menit');
                                     } else {
@@ -192,24 +213,6 @@
                     </tr>
                 @endforeach
             </tbody>
-        </table>
-
-        <table class="pengesahan-atasan">
-            <tr class="tempat">
-                <td colspan="2">
-                    Tenetur Nostrum, {{ \Carbon\Carbon::now()->format('d F Y') }}
-                </td>
-            </tr>
-            <tr class="atasan">
-                <td>
-                    <u>Lorem Ipsum Dolor</u> <br>
-                    <i><b>HRD Manager</b></i>
-                </td>
-                <td>
-                    <u>Adipisicing Elit Unde</u> <br>
-                    <i><b>Direktur</b></i>
-                </td>
-            </tr>
         </table>
     </section>
 

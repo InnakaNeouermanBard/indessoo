@@ -162,24 +162,33 @@
                                     <div class="w-fit rounded-md bg-error p-1 text-white">Belum Presensi</div>
                                 @endif
                             </td>
-                            <td class="text-slate-500 dark:text-slate-300">
-                                @if ($item->jam_masuk > Carbon\Carbon::make('08:00:00')->format('H:i:s'))
-                                    @php
-                                        $masuk = Carbon\Carbon::make($item->jam_masuk);
-                                        $batas = Carbon\Carbon::make('08:00:00');
-                                        $diff = $masuk->diff($batas);
-                                        if ($diff->format('%h') != 0) {
-                                            $selisih = $diff->format('%h jam %I menit');
-                                        } else {
-                                            $selisih = $diff->format('%I menit');
-                                        }
-                                    @endphp
-                                    <div class="w-fit rounded-md bg-error p-1 text-white">Terlambat {{ $selisih }}
-                                    </div>
-                                @else
-                                    <div class="w-fit rounded-md bg-success p-1 text-white">Tepat Waktu</div>
-                                @endif
-                            </td>
+                            <td>
+                            @php
+                                // Ambil shift berdasarkan nik
+                                $shift = DB::table('shifts')
+                                    ->join('shift_schedules', 'shift_schedules.shift_id', '=', 'shifts.id')
+                                    ->where('shift_schedules.karyawan_nik', $item->nik) // Sesuaikan dengan kolom nik
+                                    ->first();
+
+                                // Ambil waktu mulai shift
+                                $waktuMulaiShift = Carbon\Carbon::make($shift->waktu_mulai);
+                                $masuk = Carbon\Carbon::make($item->jam_masuk); // Waktu masuk karyawan
+                            @endphp
+
+                            @if ($masuk->gt($waktuMulaiShift))  <!-- Jika waktu masuk lebih besar dari waktu mulai shift -->
+                                @php
+                                    $diff = $masuk->diff($waktuMulaiShift);  // Hitung selisih antara jam masuk dan waktu mulai shift
+                                    if ($diff->format('%h') != 0) {
+                                        $selisih = $diff->format('%h jam %I menit');
+                                    } else {
+                                        $selisih = $diff->format('%I menit');
+                                    }
+                                @endphp
+                                <div>Terlambat <br> {{ $selisih }}</div>
+                            @else
+                                <div>Tepat Waktu</div>
+                            @endif
+                        </td>
                             <td>
                                 <label for="detail_modal_{{ $item->nik }}" class="btn btn-primary btn-sm">
                                     Detail

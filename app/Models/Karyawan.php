@@ -48,6 +48,10 @@ class Karyawan extends Authenticatable
     {
         return $this->hasMany(ShiftSchedule::class, 'karyawan_nik', 'nik');
     }
+        public function shift()
+    {
+        return $this->hasOneThrough(Shift::class, ShiftSchedule::class, 'karyawan_nik', 'id', 'nik', 'shift_id');
+    }
     public function sisaKuotaCuti()
     {
         // Hitung jumlah cuti yang sudah disetujui tahun ini

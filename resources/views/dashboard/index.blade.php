@@ -23,7 +23,7 @@
                                             {{ \Carbon\Carbon::parse($jadwalHariIni->shift->waktu_mulai)->format('H:i') }}
                                             WIB
                                         @else
-                                            08:00 WIB
+                                            07:00 WIB
                                         @endif
                                     </h5>
                                 </div>

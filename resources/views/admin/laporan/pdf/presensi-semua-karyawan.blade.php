@@ -105,10 +105,10 @@
                         {{ \Carbon\Carbon::make($bulan)->format('Y') }} <br>
                     </span>
                     <span class="title" style="display: block; margin-bottom: 5px;">
-                        PT ABCD DEFG <br>
+                        PT INDESSO AROMA BATURRADEN <br>
                     </span>
                     <span style="display: block; margin-top: 10px;">
-                        <i>Lorem ipsum, dolor sit amet consectetur adipisicing elit. Accusantium, vero.</i>
+                        <i>Jl. Raya Baturaden KM.10, Dusun III, Karangtengah, Kec. Baturaden, Kabupaten Banyumas, Jawa Tengah 53151</i>
                     </span>
                 </td>
             </tr>
@@ -118,7 +118,8 @@
     <thead>
         <tr>
             <th>No.</th>
-            <th>Nama Karyawan / NIK</th>
+            <th>Nama Karyawan</th>
+            <th>NIK</th>
             {{-- <th>Jabatan / Departemen</th> --}}
             <th>Departemen</th>
             <th>Jumlah Kehadiran</th>
@@ -135,7 +136,10 @@
                     {{ $value + 1 . '.' }}
                 </td>
                 <td>
-                    {{ $item->nama_karyawan }} - {{ $item->nik }}
+                    {{ $item->nama_karyawan }}
+                </td>
+                <td>
+                    {{ $item->nik }}
                 </td>
                 <td>
                     {{ $item->nama_departemen }}
@@ -152,23 +156,6 @@
     </tbody>
 </table>
 
-        <table class="pengesahan-atasan">
-            <tr class="tempat">
-                <td colspan="2">
-                    Tenetur Nostrum, {{ \Carbon\Carbon::now()->format('d F Y') }}
-                </td>
-            </tr>
-            <tr class="atasan">
-                <td>
-                    <u>Lorem Ipsum Dolor</u> <br>
-                    <i><b>HRD Manager</b></i>
-                </td>
-                <td>
-                    <u>Adipisicing Elit Unde</u> <br>
-                    <i><b>Direktur</b></i>
-                </td>
-            </tr>
-        </table>
     </section>
 
 </body>

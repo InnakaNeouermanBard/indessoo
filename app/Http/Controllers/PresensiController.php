@@ -392,6 +392,8 @@ class PresensiController extends Controller
             ->orderBy("tanggal_presensi", "asc")
             ->get();
 
+        $shift = $karyawan->shift;  // Mengambil shift karyawan melalui relasi shift()
+
         // Ambil data pengajuan presensi (Izin, Sakit, Cuti)
         $izin = DB::table('pengajuan_presensi')
             ->where('nik', $request->karyawan)
@@ -438,7 +440,8 @@ class PresensiController extends Controller
             'izin',
             'sakit',
             'totalCuti',
-            'lembur'
+            'lembur',
+            'shift',
         ));
 
         // Streaming PDF ke browser
