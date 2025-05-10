@@ -16,6 +16,7 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
     <script>
+        // Set theme based on localStorage or media preference
         if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia(
                 '(prefers-color-scheme: dark)').matches)) {
             document.documentElement.classList.add('dark')
@@ -26,8 +27,9 @@
 </head>
 
 <body
-    class="leading-default m-0 bg-gray-50 font-sans text-base font-normal text-slate-500 antialiased dark:bg-slate-900">
-    <div class="min-h-75 absolute w-full bg-slate-850 top-0"></div>
+    class="leading-default m-0 bg-gray-50 font-sans text-base font-normal text-slate-500 antialiased dark:bg-blue-800 dark:text-white">
+    <!-- Body with light mode white and dark mode blue -->
+    <div class="min-h-75 absolute w-full bg-white dark:bg-blue-800 top-0"></div>
 
     @include('dashboard.layouts.sidebar')
 
@@ -39,6 +41,11 @@
             @include('dashboard.layouts.footer')
         </div>
     </main>
+
+    <!-- Footer and other sections will also change based on theme -->
+    <footer class="bg-white dark:bg-blue-800">
+        @include('dashboard.layouts.footer')
+    </footer>
 
     @include('dashboard.layouts.script')
     @yield('js')

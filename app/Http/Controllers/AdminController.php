@@ -16,15 +16,28 @@ class AdminController extends Controller
      * @return \Illuminate\Http\Response
      */
     public function index(Request $request)
-    {
-        $cari = $request->cari_admin;
+{
+    // Menangkap parameter pencarian
+    $cari = $request->cari_admin;
 
-        $admins = User::all();
+    // Membuat query untuk mencari admin
+    $query = User::query();
 
-        $title = 'Admin';
-
-        return view('admin.user.index', compact('admins', 'title'));
+    // Filter berdasarkan nama admin jika pencarian ada
+    if ($cari) {
+        $query->where('name', 'like', '%' . $cari . '%');
     }
+
+    // Ambil data admin yang sudah difilter
+    $admins = $query->get();
+
+    // Judul untuk halaman
+    $title = 'Admin';
+
+    // Mengembalikan tampilan dengan data admin
+    return view('admin.user.index', compact('admins', 'title'));
+}
+
 
     /**
      * Store a newly created admin in storage.

@@ -17,14 +17,22 @@
 
     <div class="container mx-auto px-5 pt-5">
         <form action="{{ route('form-lembur.index') }}" method="get" class="my-3">
-            <div class="flex w-full flex-wrap gap-2 md:flex-nowrap">
-                <input type="text" name="cari_nik" placeholder="Cari NIK" class="input input-bordered w-full"
-                    value="{{ request()->cari_nik }}" />
-                <button type="submit" class="btn btn-success w-full md:w-14">
-                    <i class="ri-search-2-line text-lg text-white"></i>
-                </button>
-            </div>
-        </form>
+    <div class="flex w-full flex-wrap gap-2 md:flex-nowrap">
+        <!-- Input untuk NIK -->
+        <input type="text" name="cari_nik" placeholder="Cari NIK" class="input input-bordered w-32 md:w-48"
+            value="{{ request()->cari_nik }}" />
+        
+        <!-- Input untuk Nama Karyawan -->
+        <input type="text" name="cari_nama" placeholder="Cari Nama Karyawan" class="input input-bordered w-32 md:w-48"
+       value="{{ request()->cari_nama }}" />
+
+        <!-- Tombol Submit -->
+        <button type="submit" class="btn btn-success w-14">
+            <i class="ri-search-2-line text-lg text-white"></i>
+        </button>
+    </div>
+</form>
+
 
         <div class="w-full overflow-x-auto rounded-md bg-slate-200 px-10">
             <table class="table mb-4 w-full text-dark">

@@ -17,14 +17,18 @@
     <div class="container mx-auto px-5 pt-5">
         <div>
             <form action="{{ route('admin-management') }}" method="get" enctype="multipart/form-data" class="my-3">
-                <div class="flex w-full flex-wrap gap-2 md:flex-nowrap">
-                    <input type="text" name="cari_admin" placeholder="Pencarian" class="input input-bordered w-full"
-                        value="{{ request()->cari_admin }}" />
-                    <button type="submit" class="btn btn-success w-full md:w-14">
-                        <i class="ri-search-2-line text-lg text-white"></i>
-                    </button>
-                </div>
-            </form>
+    <div class="flex w-full flex-wrap gap-2 md:flex-nowrap">
+        <!-- Input untuk Pencarian Admin -->
+        <input type="text" name="cari_admin" placeholder="Pencarian Admin" class="input input-bordered w-full md:w-48"
+            value="{{ request()->cari_admin }}" />
+
+        <!-- Tombol Submit dengan ukuran kecil -->
+        <button type="submit" class="btn btn-success w-full md:w-12">
+            <i class="ri-search-2-line text-lg text-white"></i>
+        </button>
+    </div>
+</form>
+
         </div>
         <div class="w-full overflow-x-auto rounded-md bg-slate-200 px-10">
             <table id="tabelAdmin"

@@ -5,17 +5,17 @@
             <!-- breadcrumb -->
             <ol class="mr-12 flex flex-wrap rounded-lg bg-transparent pt-1 sm:mr-16">
                 <li class="text-sm leading-normal">
-                    <a class="text-white opacity-50" href="javascript:;">Pages</a>
+                    <a class="text-black dark:text-white opacity-50" href="javascript:;">Pages</a>
                 </li>
-                <li class="pl-2 text-sm capitalize leading-normal text-white before:float-left before:pr-2 before:text-white before:content-['/']"
+                <li class="pl-2 text-sm capitalize leading-normal text-black dark:text-white before:float-left before:pr-2 before:text-black dark:text-white before:content-['/']"
                     aria-current="page">{{ $title }}</li>
             </ol>
-            <h6 class="mb-0 font-bold capitalize text-white">{{ $title }}</h6>
+            <h6 class="mb-0 font-bold capitalize text-black">{{ $title }}</h6>
         </nav>
 
         <div class="mt-2 flex grow items-center sm:mr-6 sm:mt-0 md:mr-0 lg:flex lg:basis-auto">
             <div class="flex items-center md:ml-auto md:pr-4">
-                <div class="text-sm text-white" id="date-time">
+                <div class="text-sm text-black dark:text-white" id="date-time">
                                 bjnklsf
                             </div>
             </div>
@@ -26,7 +26,7 @@
                     <button class="focus:shadow-outline-purple h-8 w-8 rounded-full focus:outline-none"
                         @click="toggleTheme" aria-label="Toggle color mode">
                         <template x-if="!dark">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="mx-auto text-yellow-300" width="20"
+                            <svg xmlns="http://www.w3.org/2000/svg" class="mx-auto text-black" width="20"
                                 height="20" viewBox="0 0 24 24">
                                 <rect x="0" y="0" width="24" height="24" fill="rgba(255, 255, 255, 0)" />
                                 <g fill="none" stroke="currentColor" stroke-dasharray="2" stroke-dashoffset="2"
@@ -184,7 +184,7 @@
                 <!-- notifications -->
                 <li class="relative flex items-center pr-2">
                     <p class="transform-dropdown-show hidden"></p>
-                    <a href="javascript:;" class="ease-nav-brand block p-0 text-sm text-white transition-all"
+                    <a href="javascript:;" class="ease-nav-brand block p-0 text-sm text-black dark:text-white transition-all"
                         dropdown-trigger aria-expanded="false">
                         <i class="ri-notification-3-fill cursor-pointer"></i>
                     </a>
@@ -276,7 +276,7 @@
 
                 <li class="relative flex items-center pl-4 xl:pr-4">
                     <div class="relative group">
-                        <button class="flex items-center text-sm font-semibold text-white focus:outline-none"
+                        <button class="flex items-center text-sm font-semibold text-black dark:text-white focus:outline-none"
                             id="profileDropdownToggle">
                             @if (Auth::guard('karyawan')->user()->foto)
                                 <div class="avatar">

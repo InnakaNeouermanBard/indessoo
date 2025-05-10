@@ -10,17 +10,24 @@ use Illuminate\Support\Facades\Auth;
 class FormLemburController extends Controller
 {
     public function index(Request $request)
-    {
-        $query = FormLembur::query();
+{
+    $query = FormLembur::query();
 
-        if ($request->has('cari_nik') && !empty($request->cari_nik)) {
-            $query->where('nik', 'like', '%' . $request->cari_nik . '%');
-        }
-
-        $karyawan = $query->get();
-        $niks = Karyawan::all();
-        return view('admin.form-lembur.index', compact('karyawan', 'niks'));
+    // Filter berdasarkan NIK
+    if ($request->has('cari_nik') && !empty($request->cari_nik)) {
+        $query->where('nik', 'like', '%' . $request->cari_nik . '%');
     }
+
+    // Filter berdasarkan Nama Karyawan
+    if ($request->has('cari_nama') && !empty($request->cari_nama)) {
+        $query->where('nama_karyawan', 'like', '%' . $request->cari_nama . '%');
+    }
+
+    $karyawan = $query->get();
+    $niks = Karyawan::all();
+    return view('admin.form-lembur.index', compact('karyawan', 'niks'));
+}
+
 
     public function store(Request $request)
     {
