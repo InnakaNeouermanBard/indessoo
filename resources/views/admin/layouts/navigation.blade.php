@@ -73,7 +73,65 @@
                             <div class="text-sm text-gray-600" id="date-time">
                                 <!-- Jam dan Tanggal akan dimasukkan di sini oleh JavaScript -->
                             </div>
+                            <!-- Tombol Notifikasi -->
+                        <div class="dropdown dropdown-end">
+                            <label tabindex="0" class="btn btn-ghost btn-circle relative" id="notificationBtn">
+                                <div class="indicator">
+                                    <i class="ri-notification-3-line text-xl"></i>
+                                    @if ($countTukarJadwalToday > 0)
+                                        <span class="absolute top-0 right-0 h-5 w-5 rounded-full bg-red-500 flex items-center justify-center text-white text-xs font-bold">
+                                            {{ $countTukarJadwalToday }}
+                                        </span>
+                                    @endif
+                                </div>
+                            </label>
+                            <div id="notificationDropdown" tabindex="0" class="dropdown-content menu p-0 mt-2 shadow-lg bg-base-100 rounded-box w-80 max-h-[80vh] overflow-y-auto absolute z-50 hidden">
+                                <div class="bg-primary text-white px-4 py-3 flex items-center justify-between">
+                                    <h3 class="font-bold text-lg">Notifikasi</h3>
+                                    <span class="badge badge-sm">{{ $countTukarJadwalToday }} baru</span>
+                                </div>
 
+                                <div class="divide-y divide-gray-200">
+                                    @if ($recentExchanges->count() > 0)
+                                        @foreach ($recentExchanges as $exchange)
+                                            <div class="p-4 {{ $exchange->created_at->isToday() ? 'bg-blue-50' : '' }}">
+                                                <div class="flex items-start">
+                                                    <div class="flex-shrink-0 mr-3">
+                                                        <div class="h-10 w-10 rounded-full bg-primary-100 flex items-center justify-center">
+                                                            <i class="ri-exchange-line text-lg text-primary"></i>
+                                                        </div>
+                                                    </div>
+                                                    <div class="flex-1">
+                                                        <p class="text-sm font-medium text-gray-900">
+                                                            {{ $exchange->pengaju->nama_lengkap }} ↔ {{ $exchange->penerima->nama_lengkap }}
+                                                        </p>
+                                                        <p class="text-xs text-gray-500">
+                                                            Tanggal pertukaran: {{ \Carbon\Carbon::parse($exchange->tanggal_pengajuan)->format('d M Y') }}
+                                                        </p>
+                                                        <p class="text-xs text-gray-500">
+                                                            {{ $exchange->created_at->diffForHumans() }}
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        @endforeach
+                                    @else
+                                        <div class="p-6 text-center text-gray-500">
+                                            <div class="bg-gray-100 rounded-full mx-auto mb-4 flex items-center justify-center h-12 w-12">
+                                                <i class="ri-inbox-line text-xl text-gray-400"></i>
+                                            </div>
+                                            <p>Tidak ada notifikasi baru</p>
+                                        </div>
+                                    @endif
+                                </div>
+
+                                <div class="p-3 bg-gray-50 border-t">
+                                    <a href="{{ route('tukar-jadwal.riwayat') }}" class="btn btn-primary btn-block btn-sm">
+                                        Lihat Semua Riwayat
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
                             <x-dropdown align="right" width="48">
                                 <x-slot name="trigger">
                                     <button
@@ -90,7 +148,7 @@
                                         </div>
                                     </button>
                                 </x-slot>
-
+                                
                                 <x-slot name="content">
                                     <x-dropdown-link :href="route('profile.edit')">
                                         {{ __('Profile') }}

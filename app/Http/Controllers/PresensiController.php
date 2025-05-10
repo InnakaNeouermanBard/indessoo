@@ -85,7 +85,7 @@ class PresensiController extends Controller
         $longtitudeUser = $lokasiUser[1];
 
         $jarak = round($this->validation_radius_presensi($langtitudeKantor, $longtitudeKantor, $langtitudeUser, $longtitudeUser), 2);
-        if ($jarak > 10000000) {
+        if ($jarak > 50) {
             return response()->json([
                 'status' => 500,
                 'success' => false,
@@ -279,32 +279,44 @@ class PresensiController extends Controller
     }
 
     public function monitoringPresensi(Request $request)
-    {
-        $query = DB::table('presensi as p')
-            ->join('karyawan as k', 'p.nik', '=', 'k.nik')
-            ->join('departemen as d', 'k.departemen_id', '=', 'd.id')
-            ->orderBy('k.nama_lengkap', 'asc')
-            ->orderBy('d.kode', 'asc')
-            ->select('p.*', 'k.nama_lengkap as nama_karyawan', 'd.nama as nama_departemen');
+{
+    $query = DB::table('presensi as p')
+        ->join('karyawan as k', 'p.nik', '=', 'k.nik')
+        ->join('departemen as d', 'k.departemen_id', '=', 'd.id')
+        ->orderBy('k.nama_lengkap', 'asc')
+        ->orderBy('d.kode', 'asc')
+        ->select('p.*', 'k.nama_lengkap as nama_karyawan', 'd.nama as nama_departemen');
 
-        if ($request->tanggal_presensi) {
-            $query->whereDate('p.tanggal_presensi', $request->tanggal_presensi);
-        } else {
-            $query->whereDate('p.tanggal_presensi', Carbon::now());
-        }
-
-        $monitoring = $query->paginate(10);
-
-        $lokasiKantor = LokasiKantor::where('is_used', true)->first();
-
-        // Tambahkan data untuk notifikasi
-        $recentExchanges = TukarJadwal::with(['pengaju', 'penerima'])
-            ->orderBy('created_at', 'desc')
-            ->take(5)
-            ->get();
-
-        return view('admin.monitoring-presensi.index', compact('monitoring', 'lokasiKantor', 'recentExchanges'));
+    // Filter berdasarkan tanggal presensi
+    if ($request->tanggal_presensi) {
+        $query->whereDate('p.tanggal_presensi', $request->tanggal_presensi);
+    } else {
+        $query->whereDate('p.tanggal_presensi', Carbon::now());
     }
+
+    // Filter berdasarkan NIK
+    if ($request->has('nik') && !empty($request->nik)) {
+        $query->where('p.nik', 'like', '%' . $request->nik . '%');
+    }
+
+    // Filter berdasarkan Nama Karyawan
+    if ($request->has('nama_karyawan') && !empty($request->nama_karyawan)) {
+        $query->where('k.nama_lengkap', 'like', '%' . $request->nama_karyawan . '%');
+    }
+
+    // Eksekusi query dan paginate hasilnya
+    $monitoring = $query->paginate(10);
+
+    $lokasiKantor = LokasiKantor::where('is_used', true)->first();
+
+    // Tambahkan data untuk notifikasi
+    $recentExchanges = TukarJadwal::with(['pengaju', 'penerima'])
+        ->orderBy('created_at', 'desc')
+        ->take(5)
+        ->get();
+
+    return view('admin.monitoring-presensi.index', compact('monitoring', 'lokasiKantor', 'recentExchanges'));
+}
 
     // Tambahkan metode baru untuk mengelola kuota cuti karyawan (admin)
     public function manajemenKuotaCuti()

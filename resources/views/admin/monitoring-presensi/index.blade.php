@@ -29,72 +29,6 @@
                         ->get();
                 }
             @endphp
-        
-            <!-- Tombol Notifikasi -->
-            <div class="dropdown dropdown-end">
-                <label tabindex="0" class="btn btn-ghost btn-circle relative" id="notificationBtn">
-                    <div class="indicator">
-                        <i class="ri-notification-3-line text-xl"></i>
-                        @if ($countTukarJadwalToday > 0)
-                            <span
-                                class="absolute top-0 right-0 h-5 w-5 rounded-full bg-red-500 flex items-center justify-center text-white text-xs font-bold">
-                                {{ $countTukarJadwalToday }}
-                            </span>
-                        @endif
-                    </div>
-                </label>
-                <div id="notificationDropdown" tabindex="0"
-                    class="dropdown-content menu p-0 mt-2 shadow-lg bg-base-100 rounded-box w-80 max-h-[80vh] overflow-y-auto absolute z-50 hidden">
-                    <div class="bg-primary text-white px-4 py-3 flex items-center justify-between">
-                        <h3 class="font-bold text-lg">Notifikasi</h3>
-                        <span class="badge badge-sm">{{ $countTukarJadwalToday }} baru</span>
-                    </div>
-        
-                    <div class="divide-y divide-gray-200">
-                        @if ($recentExchanges->count() > 0)
-                            @foreach ($recentExchanges as $exchange)
-                                <div class="p-4 {{ $exchange->created_at->isToday() ? 'bg-blue-50' : '' }}">
-                                    <div class="flex items-start">
-                                        <div class="flex-shrink-0 mr-3">
-                                            <div class="h-10 w-10 rounded-full bg-primary-100 flex items-center justify-center">
-                                                <i class="ri-exchange-line text-lg text-primary"></i>
-                                            </div>
-                                        </div>
-                                        <div class="flex-1">
-                                            <p class="text-sm font-medium text-gray-900">
-                                                {{ $exchange->pengaju->nama_lengkap }} ↔
-                                                {{ $exchange->penerima->nama_lengkap }}
-                                            </p>
-                                            <p class="text-xs text-gray-500">
-                                                Tanggal pertukaran:
-                                                {{ \Carbon\Carbon::parse($exchange->tanggal_pengajuan)->format('d M Y') }}
-                                            </p>
-                                            <p class="text-xs text-gray-500">
-                                                {{ $exchange->created_at->diffForHumans() }}
-                                            </p>
-                                        </div>
-                                        <a href="#" class="btn-detail text-blue-600 hover:text-blue-800" data-id="{{ $exchange->id }}">
-                                        </a>
-                                    </div>
-                                </div>
-                            @endforeach
-                        @else
-                            <div class="p-6 text-center text-gray-500">
-                                <div class="bg-gray-100 rounded-full mx-auto mb-4 flex items-center justify-center h-12 w-12">
-                                    <i class="ri-inbox-line text-xl text-gray-400"></i>
-                                </div>
-                                <p>Tidak ada notifikasi baru</p>
-                            </div>
-                        @endif
-                    </div>
-        
-                    <div class="p-3 bg-gray-50 border-t">
-                        <a href="{{ route('tukar-jadwal.riwayat') }}" class="btn btn-primary btn-block btn-sm">
-                            Lihat Semua Riwayat
-                        </a>
-                    </div>
-                </div>
-            </div>
         </div>
         
         <script>
@@ -117,17 +51,38 @@
             });
         </script>
         
-
-
-
             <form action="{{ route('admin.monitoring-presensi') }}" method="get" enctype="multipart/form-data"
                 class="my-3">
-                <div class="flex w-full flex-wrap gap-2 md:flex-nowrap">
-                    <input type="date" name="tanggal_presensi" placeholder="Pencarian"
-                        class="input input-bordered w-full"
-                        value="{{ request()->tanggal_presensi ? request()->tanggal_presensi : Carbon\Carbon::now()->format('Y-m-d') }}" />
-                    <button type="submit" class="btn btn-success w-full md:w-14">
-                        <i class="ri-search-2-line text-lg text-white"></i>
+                <div class="flex gap-2 items-center">
+                    <!-- Input untuk Tanggal Presensi -->
+                    <input 
+                        type="date" 
+                        name="tanggal_presensi" 
+                        class="input input-bordered w-32 md:w-40" 
+                        value="{{ request()->tanggal_presensi ?? Carbon\Carbon::now()->format('Y-m-d') }}" 
+                    />
+
+                    <!-- Input untuk NIK -->
+                    <input 
+                        type="text" 
+                        name="nik" 
+                        placeholder="NIK Karyawan" 
+                        class="input input-bordered w-32 md:w-40" 
+                        value="{{ request()->nik }}" 
+                    />
+
+                    <!-- Input untuk Nama Karyawan -->
+                    <input 
+                        type="text" 
+                        name="nama_karyawan" 
+                        placeholder="Nama Karyawan" 
+                        class="input input-bordered w-32 md:w-40" 
+                        value="{{ request()->nama_karyawan }}" 
+                    />
+
+                    <!-- Tombol Submit -->
+                    <button type="submit" class="btn btn-success w-10 h-10 flex items-center justify-center p-0">
+                        <i class="ri-search-2-line text-white text-lg"></i>
                     </button>
                 </div>
             </form>
@@ -164,30 +119,36 @@
                             </td>
                             <td>
                             @php
-                                // Ambil shift berdasarkan nik
-                                $shift = DB::table('shifts')
-                                    ->join('shift_schedules', 'shift_schedules.shift_id', '=', 'shifts.id')
-                                    ->where('shift_schedules.karyawan_nik', $item->nik) // Sesuaikan dengan kolom nik
-                                    ->first();
+    // Ambil shift berdasarkan nik
+    $shift = DB::table('shifts')
+        ->join('shift_schedules', 'shift_schedules.shift_id', '=', 'shifts.id')
+        ->where('shift_schedules.karyawan_nik', $item->nik)
+        ->first();
 
-                                // Ambil waktu mulai shift
-                                $waktuMulaiShift = Carbon\Carbon::make($shift->waktu_mulai);
-                                $masuk = Carbon\Carbon::make($item->jam_masuk); // Waktu masuk karyawan
-                            @endphp
+    if ($shift) {
+        $waktuMulaiShift = Carbon\Carbon::make($shift->waktu_mulai);
+        $masuk = Carbon\Carbon::make($item->jam_masuk);
+    } else {
+        $waktuMulaiShift = null;
+        $masuk = null;
+    }
+@endphp
 
-                            @if ($masuk->get($waktuMulaiShift))  <!-- Jika waktu masuk lebih besar dari waktu mulai shift -->
-                                @php
-                                    $diff = $masuk->diff($waktuMulaiShift);  // Hitung selisih antara jam masuk dan waktu mulai shift
-                                    if ($diff->format('%h') != 0) {
-                                        $selisih = $diff->format('%h jam %I menit');
-                                    } else {
-                                        $selisih = $diff->format('%I menit');
-                                    }
-                                @endphp
-                                <div>Terlambat <br> {{ $selisih }}</div>
-                            @else
-                                <div>Tepat Waktu</div>
-                            @endif
+
+                            @if ($masuk > $waktuMulaiShift)
+    @php
+        $diff = $masuk->diff($waktuMulaiShift);  // Hitung selisih waktu
+        if ($diff->format('%h') != 0) {
+            $selisih = $diff->format('%h jam %I menit');
+        } else {
+            $selisih = $diff->format('%I menit');
+        }
+    @endphp
+    <div>Terlambat <br> {{ $selisih }}</div>
+@else
+    <div>Tepat Waktu</div>
+@endif
+
                         </td>
                             <td>
                                 <label for="detail_modal_{{ $item->nik }}" class="btn btn-primary btn-sm">
