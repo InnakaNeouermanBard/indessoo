@@ -2,6 +2,24 @@
     <!-- Session Status -->
     <x-auth-session-status class="mb-4" :status="session('status')" />
 
+    <!-- Script SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <!-- Menampilkan Error dengan SweetAlert -->
+    @if ($errors->any())
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Gagal Masuk',
+                    text: 'Username/NIK atau Password yang Anda masukkan salah',
+                    confirmButtonText: 'Coba Lagi',
+                    confirmButtonColor: '#4f46e5'
+                });
+            });
+        </script>
+    @endif
+
     <form method="POST" action="{{ route('login') }}">
         @csrf
 

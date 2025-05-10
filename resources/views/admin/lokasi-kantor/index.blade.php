@@ -19,7 +19,8 @@
                         <th>Alamat</th>
                         <th>Latitude</th>
                         <th>Longitude</th>
-                        <th>Is Used?</th>
+                        <th>Radius (meter)</th>
+                        <th>Status</th>
                         <th>Aksi</th>
                     </tr>
                 </thead>
@@ -31,12 +32,16 @@
                             <td>{{ $item->alamat }}</td>
                             <td>{{ $item->latitude }}</td>
                             <td>{{ $item->longitude }}</td>
+                            <td>{{ $item->radius }} m</td>
                             <td>
-                                @if ($item->is_used)
-                                    <i class="ri-checkbox-circle-fill text-lg text-success"></i>
-                                @else
-                                    <i class="ri-close-circle-fill text-lg text-error"></i>
-                                @endif
+                                <div class="form-control">
+                                    <label class="cursor-pointer label justify-start">
+                                        <input type="checkbox" class="toggle toggle-success toggle-status"
+                                            data-id="{{ $item->id }}" {{ $item->is_used ? 'checked' : '' }} />
+                                        <span class="label-text ml-2"
+                                            id="status-text-{{ $item->id }}">{{ $item->is_used ? 'Aktif' : 'Tidak Aktif' }}</span>
+                                    </label>
+                                </div>
                             </td>
                             <td>
                                 <label class="btn btn-warning btn-sm" for="edit_button"
@@ -44,9 +49,13 @@
                                     <i class="ri-pencil-fill"></i>
                                 </label>
                                 <label class="btn btn-error btn-sm"
-                                    onclick="return delete_button('{{ $item->id }}', '{{ $item->nama }}')">
+                                    onclick="return delete_button('{{ $item->id }}', '{{ $item->kota }}')">
                                     <i class="ri-delete-bin-line"></i>
                                 </label>
+                                <button class="btn btn-info btn-sm"
+                                    onclick="showMap('{{ $item->id }}', '{{ $item->kota }}', '{{ $item->latitude }}', '{{ $item->longitude }}', '{{ $item->radius }}')">
+                                    <i class="ri-map-pin-line"></i>
+                                </button>
                             </td>
                         </tr>
                     @endforeach
@@ -133,10 +142,11 @@
                     <label class="form-control w-full">
                         <div class="label">
                             <span class="label-text font-semibold">
-                                <span class="label-text font-semibold">Radius<span class="text-red-500">*</span></span>
+                                <span class="label-text font-semibold">Radius (meter)<span
+                                        class="text-red-500">*</span></span>
                             </span>
                         </div>
-                        <input type="number" min="0" name="radius" placeholder="Radius"
+                        <input type="number" min="0" name="radius" placeholder="Radius dalam meter"
                             class="input input-bordered w-full text-blue-700" value="{{ old('radius') }}" required />
                         @error('radius')
                             <div class="label">
@@ -147,22 +157,22 @@
                     <div>
                         <div class="label">
                             <span class="label-text font-semibold">
-                                <span class="label-text font-semibold">Is Used?<span
+                                <span class="label-text font-semibold">Status<span
                                         class="text-red-500">*</span></span>
                             </span>
                         </div>
                         <div class="form-control">
                             <label class="label cursor-pointer">
-                                <span class="label-text">Iya</span>
+                                <span class="label-text">Aktif</span>
                                 <input type="radio" name="is_used" value='1'
-                                    class="radio checked:bg-red-500" />
+                                    class="radio checked:bg-success" />
                             </label>
                         </div>
                         <div class="form-control">
                             <label class="label cursor-pointer">
-                                <span class="label-text">Tidak</span>
-                                <input type="radio" name="is_used" value='0'
-                                    class="radio checked:bg-blue-500" checked />
+                                <span class="label-text">Tidak Aktif</span>
+                                <input type="radio" name="is_used" value='0' class="radio checked:bg-error"
+                                    checked />
                             </label>
                         </div>
                         @error('is_used')
@@ -260,12 +270,12 @@
                     <label class="form-control w-full">
                         <div class="label">
                             <span class="label-text font-semibold">
-                                <span class="label-text font-semibold">Radius<span
+                                <span class="label-text font-semibold">Radius (meter)<span
                                         class="text-red-500">*</span></span>
                                 <span class="label-text-alt" id="loading_edit6"></span>
                             </span>
                         </div>
-                        <input type="number" min="0" name="radius" placeholder="Radius"
+                        <input type="number" min="0" name="radius" placeholder="Radius dalam meter"
                             class="input input-bordered w-full text-blue-700" value="{{ old('radius') }}" required />
                         @error('radius')
                             <div class="label">
@@ -276,23 +286,23 @@
                     <div>
                         <div class="label">
                             <span class="label-text font-semibold">
-                                <span class="label-text font-semibold">Is Used?<span
+                                <span class="label-text font-semibold">Status<span
                                         class="text-red-500">*</span></span>
                                 <span class="label-text-alt" id="loading_edit5"></span>
                             </span>
                         </div>
                         <div class="form-control">
                             <label class="label cursor-pointer">
-                                <span class="label-text">Iya</span>
+                                <span class="label-text">Aktif</span>
                                 <input type="radio" name="is_used" value='1'
-                                    class="radio checked:bg-red-500" />
+                                    class="radio checked:bg-success" />
                             </label>
                         </div>
                         <div class="form-control">
                             <label class="label cursor-pointer">
-                                <span class="label-text">Tidak</span>
-                                <input type="radio" name="is_used" value='0'
-                                    class="radio checked:bg-blue-500" checked />
+                                <span class="label-text">Tidak Aktif</span>
+                                <input type="radio" name="is_used" value='0' class="radio checked:bg-error"
+                                    checked />
                             </label>
                         </div>
                         @error('is_used')
@@ -308,129 +318,299 @@
     </div>
     {{-- Akhir Modal Edit --}}
 
+    {{-- Awal Modal Map - Menggunakan dialog DaisyUI --}}
+    <dialog id="map_modal" class="modal">
+        <div class="modal-box max-w-3xl">
+            <form method="dialog">
+                <button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
+            </form>
+            <h3 class="text-lg font-bold mb-4" id="map_title">Lokasi Kantor</h3>
+            <div id="map" class="w-full h-96 rounded-lg"></div>
+        </div>
+    </dialog>
+    {{-- Akhir Modal Map --}}
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+
     <script>
-    @if (session()->has('success'))
-        Swal.fire({
-            title: 'Berhasil',
-            text: '{{ session('success') }}',
-            icon: 'success',
-            confirmButtonColor: '#007bff', // Warna biru untuk tombol OK
-            confirmButtonText: 'OK',
-        });
-    @endif
+        @if (session()->has('success'))
+            Swal.fire({
+                title: 'Berhasil',
+                text: '{{ session('success') }}',
+                icon: 'success',
+                confirmButtonColor: '#007bff', // Warna biru untuk tombol OK
+                confirmButtonText: 'OK',
+            });
+        @endif
 
-    @if (session()->has('error'))
-        Swal.fire({
-            title: 'Gagal',
-            text: '{{ session('error') }}',
-            icon: 'error',
-            confirmButtonColor: '#007bff', // Warna biru untuk tombol OK
-            confirmButtonText: 'OK',
-        });
-    @endif
+        @if (session()->has('error'))
+            Swal.fire({
+                title: 'Gagal',
+                text: '{{ session('error') }}',
+                icon: 'error',
+                confirmButtonColor: '#007bff', // Warna biru untuk tombol OK
+                confirmButtonText: 'OK',
+            });
+        @endif
 
-    function edit_button(id) {
-        // Loading effect start
-        let loading = `<span class="loading loading-dots loading-md text-purple-600"></span>`;
-        $("#loading_edit1").html(loading);
-        $("#loading_edit2").html(loading);
-        $("#loading_edit3").html(loading);
-        $("#loading_edit4").html(loading);
-        $("#loading_edit5").html(loading);
-        $("#loading_edit6").html(loading);
+        // Variabel map global
+        let mapInstance = null;
 
-        $.ajax({
-            type: "get",
-            url: "{{ route('admin.lokasi-kantor.edit') }}",
-            data: {
-                "_token": "{{ csrf_token() }}",
-                "id": id
-            },
-            success: function(data) {
-                // console.log(data);
-                let items = [];
-                $.each(data, function(key, val) {
-                    items.push(val);
-                });
+        // Fungsi untuk toggle status
+        $(document).ready(function() {
+            $('.toggle-status').on('change', function() {
+                const id = $(this).data('id');
+                const isChecked = $(this).prop('checked');
+                const $this = $(this); // Simpan referensi untuk digunakan dalam callback
+                const $labelText = $('#status-text-' + id);
 
-                $("input[name='id']").val(items[0]);
-                $("input[name='kota']").val(items[1]);
-                $("textarea[name='alamat']").html(items[2]);
-                $("input[name='latitude']").val(items[3]);
-                $("input[name='longitude']").val(items[4]);
-                $("input[name='radius']").val(items[5]);
-                if (items[6] == 1) {
-                    $("input[name='is_used'][value='1']").prop('checked', true);
-                } else if (items[6] == 0) {
-                    $("input[name='is_used'][value='0']").prop('checked', true);
-                }
-
-                // Loading effect end
-                loading = "";
-                $("#loading_edit1").html(loading);
-                $("#loading_edit2").html(loading);
-                $("#loading_edit3").html(loading);
-                $("#loading_edit4").html(loading);
-                $("#loading_edit5").html(loading);
-                $("#loading_edit6").html(loading);
-            }
-        });
-    }
-
-    function delete_button(id, nama) {
-        Swal.fire({
-            title: 'Apakah Anda yakin?',
-            html: "<p>Data yang dihapus tidak dapat dipulihkan kembali!</p>" +
-                "<div class='divider'></div>" +
-                "<div class='flex flex-col'>" +
-                "<b>Karyawan: " + nama + "</b>" +
-                "</div>",
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#007bff', // Warna biru untuk tombol OK
-            cancelButtonColor: '#F87272',
-            confirmButtonText: 'Hapus',
-            cancelButtonText: 'Batal',
-        }).then((result) => {
-            if (result.isConfirmed) {
                 $.ajax({
-                    type: "post",
-                    url: "{{ route('admin.lokasi-kantor.delete') }}",
+                    type: "POST",
+                    url: "{{ route('admin.lokasi-kantor.toggle-status') }}",
                     data: {
                         "_token": "{{ csrf_token() }}",
                         "id": id
                     },
                     success: function(response) {
-                        Swal.fire({
-                            title: 'Berhasil',
-                            text: response.message,
-                            icon: 'success',
-                            confirmButtonColor: '#007bff', // Warna biru untuk tombol OK
-                            confirmButtonText: 'OK'
-                        }).then((result) => {
-                            if (result.isConfirmed) {
-                                location.reload();
-                            }
-                        });
+                        if (response.success) {
+                            // Perbarui teks label segera
+                            $labelText.text(response.is_used ? 'Aktif' : 'Tidak Aktif');
+
+                            Swal.fire({
+                                title: 'Berhasil',
+                                text: response.message,
+                                icon: 'success',
+                                confirmButtonColor: '#007bff',
+                                confirmButtonText: 'OK'
+                            });
+                        } else {
+                            // Kembalikan toggle ke status sebelumnya jika terjadi kesalahan
+                            $this.prop('checked', !isChecked);
+                            $labelText.text(!isChecked ? 'Aktif' : 'Tidak Aktif');
+
+                            Swal.fire({
+                                title: 'Gagal',
+                                text: response.message,
+                                icon: 'error',
+                                confirmButtonColor: '#007bff',
+                                confirmButtonText: 'OK'
+                            });
+                        }
                     },
-                    error: function(response) {
+                    error: function(xhr) {
+                        // Kembalikan toggle ke status sebelumnya jika terjadi kesalahan
+                        $this.prop('checked', !isChecked);
+                        $labelText.text(!isChecked ? 'Aktif' : 'Tidak Aktif');
+
                         Swal.fire({
-                            icon: 'error',
                             title: 'Gagal',
-                            text: response.responseJSON.message
-                        })
+                            text: 'Terjadi kesalahan saat mengubah status',
+                            icon: 'error',
+                            confirmButtonColor: '#007bff',
+                            confirmButtonText: 'OK'
+                        });
                     }
                 });
-            }
-        })
-    }
-</script>
+            });
+        });
 
-<style>
-.swal2-confirm {
-    background-color: #007bff !important; /* Warna biru untuk tombol OK */
-    color: white !important; /* Teks tombol OK menjadi putih */
-    border-color: #007bff !important; /* Border tombol OK menjadi biru */
-}
-</style>
+        // Fungsi untuk menampilkan peta
+        function showMap(id, kota, lat, lng, radius) {
+            console.log("showMap dipanggil dengan:", {
+                id,
+                kota,
+                lat,
+                lng,
+                radius
+            });
+
+            // Pastikan modal ada di DOM
+            const modal = document.getElementById('map_modal');
+            if (!modal) {
+                console.error("Modal tidak ditemukan");
+                return;
+            }
+
+            // Pastikan semua parameter tersedia
+            if (!lat || !lng || !radius) {
+                Swal.fire({
+                    title: 'Gagal',
+                    text: 'Data lokasi tidak lengkap',
+                    icon: 'error',
+                    confirmButtonColor: '#007bff',
+                    confirmButtonText: 'OK'
+                });
+                return;
+            }
+
+            // Pastikan nilai adalah numerik
+            lat = parseFloat(lat);
+            lng = parseFloat(lng);
+            radius = parseFloat(radius);
+
+            // Set judul modal
+            document.getElementById('map_title').textContent = 'Lokasi Kantor: ' + kota;
+
+            // Buka modal (DaisyUI dialog)
+            modal.showModal();
+
+            // Hapus map sebelumnya jika ada
+            if (mapInstance) {
+                mapInstance.remove();
+                mapInstance = null;
+            }
+
+            // Inisialisasi map baru dengan timeout untuk memastikan modal sudah terbuka
+            setTimeout(function() {
+                try {
+                    // Initialize the map
+                    mapInstance = L.map('map').setView([lat, lng], 15);
+
+                    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                        maxZoom: 19,
+                        attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+                    }).addTo(mapInstance);
+
+                    // Tambahkan marker
+                    const marker = L.marker([lat, lng]).addTo(mapInstance);
+                    marker.bindPopup("<b>Kantor: " + kota + "</b><br>Lokasi: " + lat + ", " + lng).openPopup();
+
+                    // Tambahkan circle radius
+                    const circle = L.circle([lat, lng], {
+                        color: 'red',
+                        fillColor: '#f03',
+                        fillOpacity: 0.3,
+                        radius: radius
+                    }).addTo(mapInstance);
+
+                    // Fit bounds to circle
+                    mapInstance.fitBounds(circle.getBounds());
+
+                    // Invalidate size karena modal mungkin mempengaruhi rendering
+                    mapInstance.invalidateSize();
+
+                    console.log("Peta berhasil dibuat");
+                } catch (error) {
+                    console.error("Error saat membuat peta:", error);
+                    Swal.fire({
+                        title: 'Gagal',
+                        text: 'Terjadi kesalahan saat memuat peta: ' + error.message,
+                        icon: 'error',
+                        confirmButtonColor: '#007bff',
+                        confirmButtonText: 'OK'
+                    });
+                }
+            }, 300);
+        }
+
+        function edit_button(id) {
+            // Loading effect start
+            let loading = `<span class="loading loading-dots loading-md text-purple-600"></span>`;
+            $("#loading_edit1").html(loading);
+            $("#loading_edit2").html(loading);
+            $("#loading_edit3").html(loading);
+            $("#loading_edit4").html(loading);
+            $("#loading_edit5").html(loading);
+            $("#loading_edit6").html(loading);
+
+            $.ajax({
+                type: "get",
+                url: "{{ route('admin.lokasi-kantor.edit') }}",
+                data: {
+                    "_token": "{{ csrf_token() }}",
+                    "id": id
+                },
+                success: function(data) {
+                    // console.log(data);
+                    let items = [];
+                    $.each(data, function(key, val) {
+                        items.push(val);
+                    });
+
+                    $("input[name='id']").val(items[0]);
+                    $("input[name='kota']").val(items[1]);
+                    $("textarea[name='alamat']").html(items[2]);
+                    $("input[name='latitude']").val(items[3]);
+                    $("input[name='longitude']").val(items[4]);
+                    $("input[name='radius']").val(items[5]);
+                    if (items[6] == 1) {
+                        $("input[name='is_used'][value='1']").prop('checked', true);
+                    } else if (items[6] == 0) {
+                        $("input[name='is_used'][value='0']").prop('checked', true);
+                    }
+
+                    // Loading effect end
+                    loading = "";
+                    $("#loading_edit1").html(loading);
+                    $("#loading_edit2").html(loading);
+                    $("#loading_edit3").html(loading);
+                    $("#loading_edit4").html(loading);
+                    $("#loading_edit5").html(loading);
+                    $("#loading_edit6").html(loading);
+                }
+            });
+        }
+
+        function delete_button(id, kota) {
+            Swal.fire({
+                title: 'Apakah Anda yakin?',
+                html: "<p>Data yang dihapus tidak dapat dipulihkan kembali!</p>" +
+                    "<div class='divider'></div>" +
+                    "<div class='flex flex-col'>" +
+                    "<b>Lokasi: " + kota + "</b>" +
+                    "</div>",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#007bff', // Warna biru untuk tombol OK
+                cancelButtonColor: '#F87272',
+                confirmButtonText: 'Hapus',
+                cancelButtonText: 'Batal',
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.ajax({
+                        type: "post",
+                        url: "{{ route('admin.lokasi-kantor.delete') }}",
+                        data: {
+                            "_token": "{{ csrf_token() }}",
+                            "id": id
+                        },
+                        success: function(response) {
+                            Swal.fire({
+                                title: 'Berhasil',
+                                text: response.message,
+                                icon: 'success',
+                                confirmButtonColor: '#007bff', // Warna biru untuk tombol OK
+                                confirmButtonText: 'OK'
+                            }).then((result) => {
+                                if (result.isConfirmed) {
+                                    location.reload();
+                                }
+                            });
+                        },
+                        error: function(response) {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Gagal',
+                                text: response.responseJSON.message
+                            })
+                        }
+                    });
+                }
+            });
+        }
+    </script>
+
+    <style>
+        .swal2-confirm {
+            background-color: #007bff !important;
+            /* Warna biru untuk tombol OK */
+            color: white !important;
+            /* Teks tombol OK menjadi putih */
+            border-color: #007bff !important;
+            /* Border tombol OK menjadi biru */
+        }
+    </style>
 </x-app-layout>

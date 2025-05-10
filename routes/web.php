@@ -137,6 +137,7 @@ Route::middleware(['auth:web'])->prefix('admin')->group(function () {
     Route::get('/lokasi/perbarui', [LokasiKantorController::class, 'edit'])->name('admin.lokasi-kantor.edit');
     Route::post('/lokasi/perbarui', [LokasiKantorController::class, 'update'])->name('admin.lokasi-kantor.update');
     Route::post('/lokasi/hapus', [LokasiKantorController::class, 'delete'])->name('admin.lokasi-kantor.delete');
+    Route::post('/lokasi-kantor/toggle-status', [LokasiKantorController::class, 'toggleStatus'])->name('admin.lokasi-kantor.toggle-status');
 
     Route::get('/administrasi-presensi', [PresensiController::class, 'indexAdmin'])->name('admin.administrasi-presensi');
     Route::post('/administrasi-presensi/status', [PresensiController::class, 'persetujuanPresensi'])->name('admin.administrasi-presensi.persetujuan');

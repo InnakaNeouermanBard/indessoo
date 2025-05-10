@@ -36,8 +36,8 @@ class PresensiController extends Controller
             ->where('tanggal_presensi', date('Y-m-d'))
             ->first();
 
-        // Ambil lokasi kantor
-        $lokasiKantor = LokasiKantor::where('is_used', true)->first();
+        // Ambil semua lokasi kantor yang aktif (is_used = true)
+        $lokasiKantor = LokasiKantor::where('is_used', true)->get();
 
         // Ambil jadwal shift karyawan hari ini
         $jadwalHariIni = ShiftSchedule::where('karyawan_nik', auth()->guard('karyawan')->user()->nik)
@@ -77,19 +77,67 @@ class PresensiController extends Controller
         $folderPath = "public/unggah/presensi/";
         $folderName = $nik . "-" . $tglPresensi . "-" . $jenisPresensi;
 
-        $lokasiKantor = LokasiKantor::where('is_used', true)->first();
-        $langtitudeKantor = $lokasiKantor->latitude;
-        $longtitudeKantor = $lokasiKantor->longitude;
+        // Ambil semua lokasi kantor yang aktif
+        $lokasiKantorCollection = LokasiKantor::where('is_used', true)->get();
+
+        // Pastikan ada lokasi kantor aktif
+        if ($lokasiKantorCollection->isEmpty()) {
+            return response()->json([
+                'status' => 500,
+                'success' => false,
+                'message' => "Tidak ada lokasi kantor aktif yang tersedia untuk presensi.",
+                'jenis_error' => "radius",
+            ]);
+        }
+
+        // Inisialisasi variabel untuk validasi radius
         $lokasiUser = explode(",", $lokasi);
         $langtitudeUser = $lokasiUser[0];
         $longtitudeUser = $lokasiUser[1];
 
-        $jarak = round($this->validation_radius_presensi($langtitudeKantor, $longtitudeKantor, $langtitudeUser, $longtitudeUser), 2);
-        if ($jarak > 50) {
+        // Inisialisasi variabel untuk menyimpan jarak minimum dan lokasi terdekat
+        $jarakMinimum = PHP_FLOAT_MAX;
+        $namaLokasiTerdekat = '';
+        $radiusLokasiTerdekat = 0;
+        $dalamRadius = false;
+
+        // Periksa jarak ke setiap lokasi kantor aktif
+        foreach ($lokasiKantorCollection as $lokasiKantor) {
+            $langtitudeKantor = $lokasiKantor->latitude;
+            $longtitudeKantor = $lokasiKantor->longitude;
+            $radiusKantor = $lokasiKantor->radius;
+
+            // Hitung jarak ke lokasi kantor ini
+            $jarak = round($this->validation_radius_presensi(
+                $langtitudeKantor,
+                $longtitudeKantor,
+                $langtitudeUser,
+                $longtitudeUser
+            ), 2);
+
+            // Jika jarak dalam radius lokasi ini
+            if ($jarak <= $radiusKantor) {
+                $dalamRadius = true;
+                $namaLokasiTerdekat = $lokasiKantor->kota;
+                $jarakMinimum = $jarak;
+                $radiusLokasiTerdekat = $radiusKantor;
+                break; // Keluar dari loop karena sudah menemukan lokasi dalam radius
+            }
+
+            // Jika tidak dalam radius tapi lebih dekat dari lokasi sebelumnya
+            if ($jarak < $jarakMinimum) {
+                $jarakMinimum = $jarak;
+                $namaLokasiTerdekat = $lokasiKantor->kota;
+                $radiusLokasiTerdekat = $radiusKantor;
+            }
+        }
+
+        // Jika tidak ada lokasi dalam radius yang valid
+        if (!$dalamRadius) {
             return response()->json([
                 'status' => 500,
                 'success' => false,
-                'message' => "Anda berada di luar radius kantor. Jarak Anda " . $jarak . " meter dari kantor",
+                'message' => "Anda berada di luar radius semua lokasi kantor. Jarak terdekat " . $jarakMinimum . " meter dari kantor " . $namaLokasiTerdekat,
                 'jenis_error' => "radius",
             ]);
         }
@@ -139,7 +187,7 @@ class PresensiController extends Controller
             'status' => 200,
             'data' => $data,
             'success' => true,
-            'message' => "Berhasil presensi",
+            'message' => "Berhasil presensi di " . $namaLokasiTerdekat,
             'jenis_presensi' => $jenisPresensi,
         ]);
     }
@@ -279,44 +327,44 @@ class PresensiController extends Controller
     }
 
     public function monitoringPresensi(Request $request)
-{
-    $query = DB::table('presensi as p')
-        ->join('karyawan as k', 'p.nik', '=', 'k.nik')
-        ->join('departemen as d', 'k.departemen_id', '=', 'd.id')
-        ->orderBy('k.nama_lengkap', 'asc')
-        ->orderBy('d.kode', 'asc')
-        ->select('p.*', 'k.nama_lengkap as nama_karyawan', 'd.nama as nama_departemen');
+    {
+        $query = DB::table('presensi as p')
+            ->join('karyawan as k', 'p.nik', '=', 'k.nik')
+            ->join('departemen as d', 'k.departemen_id', '=', 'd.id')
+            ->orderBy('k.nama_lengkap', 'asc')
+            ->orderBy('d.kode', 'asc')
+            ->select('p.*', 'k.nama_lengkap as nama_karyawan', 'd.nama as nama_departemen');
 
-    // Filter berdasarkan tanggal presensi
-    if ($request->tanggal_presensi) {
-        $query->whereDate('p.tanggal_presensi', $request->tanggal_presensi);
-    } else {
-        $query->whereDate('p.tanggal_presensi', Carbon::now());
+        // Filter berdasarkan tanggal presensi
+        if ($request->tanggal_presensi) {
+            $query->whereDate('p.tanggal_presensi', $request->tanggal_presensi);
+        } else {
+            $query->whereDate('p.tanggal_presensi', Carbon::now());
+        }
+
+        // Filter berdasarkan NIK
+        if ($request->has('nik') && !empty($request->nik)) {
+            $query->where('p.nik', 'like', '%' . $request->nik . '%');
+        }
+
+        // Filter berdasarkan Nama Karyawan
+        if ($request->has('nama_karyawan') && !empty($request->nama_karyawan)) {
+            $query->where('k.nama_lengkap', 'like', '%' . $request->nama_karyawan . '%');
+        }
+
+        // Eksekusi query dan paginate hasilnya
+        $monitoring = $query->paginate(10);
+
+        $lokasiKantor = LokasiKantor::where('is_used', true)->first();
+
+        // Tambahkan data untuk notifikasi
+        $recentExchanges = TukarJadwal::with(['pengaju', 'penerima'])
+            ->orderBy('created_at', 'desc')
+            ->take(5)
+            ->get();
+
+        return view('admin.monitoring-presensi.index', compact('monitoring', 'lokasiKantor', 'recentExchanges'));
     }
-
-    // Filter berdasarkan NIK
-    if ($request->has('nik') && !empty($request->nik)) {
-        $query->where('p.nik', 'like', '%' . $request->nik . '%');
-    }
-
-    // Filter berdasarkan Nama Karyawan
-    if ($request->has('nama_karyawan') && !empty($request->nama_karyawan)) {
-        $query->where('k.nama_lengkap', 'like', '%' . $request->nama_karyawan . '%');
-    }
-
-    // Eksekusi query dan paginate hasilnya
-    $monitoring = $query->paginate(10);
-
-    $lokasiKantor = LokasiKantor::where('is_used', true)->first();
-
-    // Tambahkan data untuk notifikasi
-    $recentExchanges = TukarJadwal::with(['pengaju', 'penerima'])
-        ->orderBy('created_at', 'desc')
-        ->take(5)
-        ->get();
-
-    return view('admin.monitoring-presensi.index', compact('monitoring', 'lokasiKantor', 'recentExchanges'));
-}
 
     // Tambahkan metode baru untuk mengelola kuota cuti karyawan (admin)
     public function manajemenKuotaCuti()
@@ -495,6 +543,20 @@ class PresensiController extends Controller
             ->whereYear('tanggal', Carbon::make($bulan)->format('Y'))
             ->sum('overtime');
 
+        // Dapatkan semua data pengajuan presensi untuk diperiksa di template
+        $pengajuanPresensi = DB::table('pengajuan_presensi')
+            ->where('nik', $request->karyawan)
+            ->whereIn('status', ['I', 'S', 'C'])
+            ->whereMonth('tanggal_mulai', Carbon::make($bulan)->format('m'))
+            ->whereYear('tanggal_mulai', Carbon::make($bulan)->format('Y'))
+            ->orWhere(function ($query) use ($request, $bulan) {
+                $query->where('nik', $request->karyawan)
+                    ->whereIn('status', ['I', 'S', 'C'])
+                    ->whereMonth('tanggal_selesai', Carbon::make($bulan)->format('m'))
+                    ->whereYear('tanggal_selesai', Carbon::make($bulan)->format('Y'));
+            })
+            ->get();
+
         // Kirimkan data ke view dan PDF
         $pdf = Pdf::loadView('admin.laporan.pdf.presensi-karyawan', compact(
             'title',
@@ -506,6 +568,7 @@ class PresensiController extends Controller
             'totalCuti',
             'lembur',
             'shift',
+            'pengajuanPresensi'
         ));
 
         // Streaming PDF ke browser
@@ -513,89 +576,89 @@ class PresensiController extends Controller
     }
 
     public function laporanPresensiSemuaKaryawan(Request $request)
-{
-    $title = 'Laporan Presensi Semua Karyawan';
-    $bulan = $request->bulan;
+    {
+        $title = 'Laporan Presensi Semua Karyawan';
+        $bulan = $request->bulan;
 
-    // Ambil riwayat presensi semua karyawan
-    $riwayatPresensi = DB::table("presensi as p")
-        ->join('karyawan as k', 'p.nik', '=', 'k.nik')
-        ->join('departemen as d', 'k.departemen_id', '=', 'd.id')
-        ->whereMonth('tanggal_presensi', Carbon::make($bulan)->format('m'))
-        ->whereYear('tanggal_presensi', Carbon::make($bulan)->format('Y'))
-        ->select(
-            'p.nik',
-            'k.nama_lengkap as nama_karyawan',
-            'k.jabatan as jabatan_karyawan',
-            'd.nama as nama_departemen'
-        )
-        ->selectRaw("COUNT(p.nik) as total_kehadiran, SUM(IF (jam_masuk > '08:00',1,0)) as total_terlambat")
-        ->groupBy(
-            'p.nik',
-            'k.nama_lengkap',
-            'k.jabatan',
-            'd.nama'
-        )
-        ->orderBy("tanggal_presensi", "asc")
-        ->get();
-
-    // Ambil data izin, sakit, cuti dan lembur untuk setiap karyawan
-    $riwayatPresensi = $riwayatPresensi->map(function ($item) use ($bulan) {
-
-        // Mengambil data Izin
-        $izin = DB::table('pengajuan_presensi')
-            ->where('nik', $item->nik)
-            ->where('status', 'I')
-            ->whereMonth('tanggal_mulai', Carbon::make($bulan)->format('m'))
-            ->whereYear('tanggal_mulai', Carbon::make($bulan)->format('Y'))
-            ->count();
-
-        // Mengambil data Sakit
-        $sakit = DB::table('pengajuan_presensi')
-            ->where('nik', $item->nik)
-            ->where('status', 'S')
-            ->whereMonth('tanggal_mulai', Carbon::make($bulan)->format('m'))
-            ->whereYear('tanggal_mulai', Carbon::make($bulan)->format('Y'))
-            ->count();
-
-        // Mengambil data Cuti
-        $cuti = DB::table('pengajuan_presensi')
-            ->where('nik', $item->nik)
-            ->where('status', 'C')
-            ->whereMonth('tanggal_mulai', Carbon::make($bulan)->format('m'))
-            ->whereYear('tanggal_mulai', Carbon::make($bulan)->format('Y'))
+        // Ambil riwayat presensi semua karyawan
+        $riwayatPresensi = DB::table("presensi as p")
+            ->join('karyawan as k', 'p.nik', '=', 'k.nik')
+            ->join('departemen as d', 'k.departemen_id', '=', 'd.id')
+            ->whereMonth('tanggal_presensi', Carbon::make($bulan)->format('m'))
+            ->whereYear('tanggal_presensi', Carbon::make($bulan)->format('Y'))
+            ->select(
+                'p.nik',
+                'k.nama_lengkap as nama_karyawan',
+                'k.jabatan as jabatan_karyawan',
+                'd.nama as nama_departemen'
+            )
+            ->selectRaw("COUNT(p.nik) as total_kehadiran, SUM(IF (jam_masuk > '08:00',1,0)) as total_terlambat")
+            ->groupBy(
+                'p.nik',
+                'k.nama_lengkap',
+                'k.jabatan',
+                'd.nama'
+            )
+            ->orderBy("tanggal_presensi", "asc")
             ->get();
 
-        $totalCuti = 0;
-        foreach ($cuti as $itemCuti) {
-            $totalCuti += Carbon::parse($itemCuti->tanggal_mulai)->diffInDays(Carbon::parse($itemCuti->tanggal_selesai)) + 1;
-        }
+        // Ambil data izin, sakit, cuti dan lembur untuk setiap karyawan
+        $riwayatPresensi = $riwayatPresensi->map(function ($item) use ($bulan) {
 
-        // Mengambil data Lembur
-        $lembur = DB::table('form_lemburs')
-            ->where('nik', $item->nik)
-            ->whereMonth('tanggal', Carbon::make($bulan)->format('m'))
-            ->whereYear('tanggal', Carbon::make($bulan)->format('Y'))
-            ->sum('overtime');
+            // Mengambil data Izin
+            $izin = DB::table('pengajuan_presensi')
+                ->where('nik', $item->nik)
+                ->where('status', 'I')
+                ->whereMonth('tanggal_mulai', Carbon::make($bulan)->format('m'))
+                ->whereYear('tanggal_mulai', Carbon::make($bulan)->format('Y'))
+                ->count();
 
-        // Menambahkan data izin, sakit, cuti, dan lembur ke dalam item
-        $item->total_izin = $izin;
-        $item->total_sakit = $sakit;
-        $item->total_cuti = $totalCuti;
-        $item->total_lembur = $lembur;
+            // Mengambil data Sakit
+            $sakit = DB::table('pengajuan_presensi')
+                ->where('nik', $item->nik)
+                ->where('status', 'S')
+                ->whereMonth('tanggal_mulai', Carbon::make($bulan)->format('m'))
+                ->whereYear('tanggal_mulai', Carbon::make($bulan)->format('Y'))
+                ->count();
 
-        return $item;
-    });
+            // Mengambil data Cuti
+            $cuti = DB::table('pengajuan_presensi')
+                ->where('nik', $item->nik)
+                ->where('status', 'C')
+                ->whereMonth('tanggal_mulai', Carbon::make($bulan)->format('m'))
+                ->whereYear('tanggal_mulai', Carbon::make($bulan)->format('Y'))
+                ->get();
 
-    // Generate PDF
-    $pdf = Pdf::loadView('admin.laporan.pdf.presensi-semua-karyawan', compact(
-        'title',
-        'bulan',
-        'riwayatPresensi'
-    ));
+            $totalCuti = 0;
+            foreach ($cuti as $itemCuti) {
+                $totalCuti += Carbon::parse($itemCuti->tanggal_mulai)->diffInDays(Carbon::parse($itemCuti->tanggal_selesai)) + 1;
+            }
 
-    return $pdf->stream($title . '.pdf');
-}
+            // Mengambil data Lembur
+            $lembur = DB::table('form_lemburs')
+                ->where('nik', $item->nik)
+                ->whereMonth('tanggal', Carbon::make($bulan)->format('m'))
+                ->whereYear('tanggal', Carbon::make($bulan)->format('Y'))
+                ->sum('overtime');
+
+            // Menambahkan data izin, sakit, cuti, dan lembur ke dalam item
+            $item->total_izin = $izin;
+            $item->total_sakit = $sakit;
+            $item->total_cuti = $totalCuti;
+            $item->total_lembur = $lembur;
+
+            return $item;
+        });
+
+        // Generate PDF
+        $pdf = Pdf::loadView('admin.laporan.pdf.presensi-semua-karyawan', compact(
+            'title',
+            'bulan',
+            'riwayatPresensi'
+        ));
+
+        return $pdf->stream($title . '.pdf');
+    }
 
 
     public function laporanPresensiSemuaKaryawanKaryawan(Request $request)

@@ -20,7 +20,8 @@
 
         .title {
             font-family: Arial, Helvetica, sans-serif;
-            font-size: 18px; /* Make the title font slightly larger */
+            font-size: 18px;
+            /* Make the title font slightly larger */
             font-weight: 800;
             line-height: 1.5rem;
         }
@@ -82,7 +83,8 @@
 
         /* Adjust the logo and text layout */
         .header-logo {
-            width: 120px; /* Increased logo size */
+            width: 120px;
+            /* Increased logo size */
             height: 120px;
             border-radius: 21px;
         }
@@ -94,7 +96,24 @@
         }
 
         .header-title {
-            font-size: 22px; /* Larger font size for title */
+            font-size: 22px;
+            /* Larger font size for title */
+        }
+
+        .status-indicator {
+            font-weight: bold;
+            font-size: 16px;
+        }
+
+        .total-row {
+            font-weight: bold;
+            background-color: #f2f2f2;
+        }
+
+        .checkmark {
+            font-size: 16px;
+            font-weight: bold;
+            color: green;
         }
     </style>
 </head>
@@ -164,52 +183,193 @@
                 </tr>
             </thead>
             <tbody>
+                @php
+                    // Inisialisasi variabel untuk perhitungan status per hari
+                    $hariIzin = 0;
+                    $hariSakit = 0;
+                    $hariCuti = 0;
+                    $totalJamLembur = 0;
+                @endphp
+
                 @foreach ($riwayatPresensi as $value => $item)
+                    @php
+                        // Cek apakah pada tanggal tersebut ada pengajuan izin/sakit/cuti
+                        $tanggalPresensi = \Carbon\Carbon::make($item->tanggal_presensi)->format('Y-m-d');
+
+                        // Cek izin untuk tanggal ini
+                        $checkIzin = DB::table('pengajuan_presensi')
+                            ->where('nik', $item->nik)
+                            ->where('status', 'I')
+                            ->where(function ($query) use ($tanggalPresensi) {
+                                $query
+                                    ->where('tanggal_mulai', '<=', $tanggalPresensi)
+                                    ->where('tanggal_selesai', '>=', $tanggalPresensi);
+                            })
+                            ->exists();
+
+                        // Cek sakit untuk tanggal ini
+                        $checkSakit = DB::table('pengajuan_presensi')
+                            ->where('nik', $item->nik)
+                            ->where('status', 'S')
+                            ->where(function ($query) use ($tanggalPresensi) {
+                                $query
+                                    ->where('tanggal_mulai', '<=', $tanggalPresensi)
+                                    ->where('tanggal_selesai', '>=', $tanggalPresensi);
+                            })
+                            ->exists();
+
+                        // Cek cuti untuk tanggal ini
+                        $checkCuti = DB::table('pengajuan_presensi')
+                            ->where('nik', $item->nik)
+                            ->where('status', 'C')
+                            ->where(function ($query) use ($tanggalPresensi) {
+                                $query
+                                    ->where('tanggal_mulai', '<=', $tanggalPresensi)
+                                    ->where('tanggal_selesai', '>=', $tanggalPresensi);
+                            })
+                            ->exists();
+
+                        // Cek lembur untuk tanggal ini
+                        $jamLembur =
+                            DB::table('form_lemburs')
+                                ->where('nik', $item->nik)
+                                ->where('tanggal', $tanggalPresensi)
+                                ->value('overtime') ?? 0;
+
+                        // Tambahkan ke total
+                        if ($checkIzin) {
+                            $hariIzin++;
+                        }
+                        if ($checkSakit) {
+                            $hariSakit++;
+                        }
+                        if ($checkCuti) {
+                            $hariCuti++;
+                        }
+                        $totalJamLembur += $jamLembur;
+                    @endphp
+
                     <tr>
                         <td>{{ $value + 1 }}</td>
                         <td>{{ \Carbon\Carbon::make($item->tanggal_presensi)->format('d-m-Y') }}</td>
-                        <td>{{ \Carbon\Carbon::make($item->jam_masuk)->format('H:i') }}</td>
-                        <td><img src="{{ public_path("storage/unggah/presensi/$item->foto_masuk") }}" width="50"
-                                height="50" /></td>
-                        <td>{{ \Carbon\Carbon::make($item->jam_keluar)->format('H:i') ?? 'Belum Presensi' }}</td>
-                        <td><img src="{{ public_path("storage/unggah/presensi/$item->foto_keluar") }}" width="50"
-                                height="50" /></td>
                         <td>
-                            @php
-                                // Ambil shift berdasarkan nik
-                                $shift = DB::table('shifts')
-                                    ->join('shift_schedules', 'shift_schedules.shift_id', '=', 'shifts.id')
-                                    ->where('shift_schedules.karyawan_nik', $item->nik) // Sesuaikan dengan kolom nik
-                                    ->first();
-
-                                // Ambil waktu mulai shift
-                                $waktuMulaiShift = Carbon\Carbon::make($shift->waktu_mulai);
-                                $masuk = Carbon\Carbon::make($item->jam_masuk); // Waktu masuk karyawan
-                            @endphp
-
-                            @if ($masuk->gt($waktuMulaiShift))  <!-- Jika waktu masuk lebih besar dari waktu mulai shift -->
-                                @php
-                                    $diff = $masuk->diff($waktuMulaiShift);  // Hitung selisih antara jam masuk dan waktu mulai shift
-                                    if ($diff->format('%h') != 0) {
-                                        $selisih = $diff->format('%h jam %I menit');
-                                    } else {
-                                        $selisih = $diff->format('%I menit');
-                                    }
-                                @endphp
-                                <div>Terlambat <br> {{ $selisih }}</div>
+                            @if ($checkIzin || $checkSakit || $checkCuti)
+                                -
                             @else
-                                <div>Tepat Waktu</div>
+                                {{ \Carbon\Carbon::make($item->jam_masuk)->format('H:i') }}
+                            @endif
+                        </td>
+                        <td>
+                            @if ($checkIzin || $checkSakit || $checkCuti)
+                                -
+                            @else
+                                <img src="{{ public_path("storage/unggah/presensi/$item->foto_masuk") }}"
+                                    width="50" height="50" />
+                            @endif
+                        </td>
+                        <td>
+                            @if ($checkIzin || $checkSakit || $checkCuti)
+                                -
+                            @else
+                                {{ \Carbon\Carbon::make($item->jam_keluar)->format('H:i') ?? 'Belum Presensi' }}
+                            @endif
+                        </td>
+                        <td>
+                            @if ($checkIzin || $checkSakit || $checkCuti)
+                                -
+                            @else
+                                <img src="{{ public_path("storage/unggah/presensi/$item->foto_keluar") }}"
+                                    width="50" height="50" />
+                            @endif
+                        </td>
+                        <td>
+                            @if ($checkIzin)
+                                <span class="status-indicator">IZIN</span>
+                            @elseif($checkSakit)
+                                <span class="status-indicator">SAKIT</span>
+                            @elseif($checkCuti)
+                                <span class="status-indicator">CUTI</span>
+                            @else
+                                @php
+                                    // Ambil shift berdasarkan nik
+                                    $shift = DB::table('shifts')
+                                        ->join('shift_schedules', 'shift_schedules.shift_id', '=', 'shifts.id')
+                                        ->where('shift_schedules.karyawan_nik', $item->nik)
+                                        ->where('shift_schedules.tanggal', $tanggalPresensi)
+                                        ->first();
+
+                                    // Jika tidak ditemukan, gunakan shift default
+                                    if (!$shift) {
+                                        $shift = (object) [
+                                            'waktu_mulai' => '08:00:00',
+                                            'nama' => 'Default',
+                                        ];
+                                    }
+
+                                    // Ambil waktu mulai shift
+                                    $waktuMulaiShift = Carbon\Carbon::make($shift->waktu_mulai);
+                                    $masuk = Carbon\Carbon::make($item->jam_masuk); // Waktu masuk karyawan
+                                @endphp
+
+                                @if ($masuk && $waktuMulaiShift && $masuk->gt($waktuMulaiShift))
+                                    <!-- Jika waktu masuk lebih besar dari waktu mulai shift -->
+                                    @php
+                                        $diff = $masuk->diff($waktuMulaiShift); // Hitung selisih antara jam masuk dan waktu mulai shift
+                                        if ($diff->format('%h') != 0) {
+                                            $selisih = $diff->format('%h jam %I menit');
+                                        } else {
+                                            $selisih = $diff->format('%I menit');
+                                        }
+                                    @endphp
+                                    <div>Terlambat <br> {{ $selisih }}</div>
+                                @else
+                                    <div>Tepat Waktu</div>
+                                @endif
                             @endif
                         </td>
 
-                        <!-- Hanya tampilkan jumlah lembur, izin, sakit, dan cuti -->
-                        <td>{{ $lembur }} jam</td>
-                        <td>{{ $izin }} hari</td>
-                        <td>{{ $sakit }} hari</td>
-                        <td>{{ $totalCuti }} hari</td>
+                        <!-- Status per hari -->
+                        <td>{{ $jamLembur ? $jamLembur . ' jam' : '-' }}</td>
+                        <td>{!! $checkIzin ? '<span class="checkmark">✓</span>' : '-' !!}</td>
+                        <td>{!! $checkSakit ? '<span class="checkmark">✓</span>' : '-' !!}</td>
+                        <td>{!! $checkCuti ? '<span class="checkmark">✓</span>' : '-' !!}</td>
                     </tr>
                 @endforeach
+
+                <!-- Baris Total -->
+                <tr class="total-row">
+                    <td colspan="7" style="text-align: right"><strong>TOTAL</strong></td>
+                    <td><strong>{{ $totalJamLembur }} jam</strong></td>
+                    <td><strong>{{ $hariIzin }} hari</strong></td>
+                    <td><strong>{{ $hariSakit }} hari</strong></td>
+                    <td><strong>{{ $hariCuti }} hari</strong></td>
+                </tr>
             </tbody>
+        </table>
+
+        <!-- Tanda tangan -->
+        <table class="pengesahan-atasan" style="margin-top: 30px;">
+            <tr class="tempat">
+                <td colspan="2">Baturraden, {{ \Carbon\Carbon::now()->format('d F Y') }}</td>
+            </tr>
+            <tr class="atasan">
+                <td>
+                    <p>Mengetahui,</p>
+                    <p>HR Manager</p>
+                    <br>
+                    <br>
+                    <br>
+                    <p><strong>____________</strong></p>
+                </td>
+                <td>
+                    <p>Dibuat Oleh,</p>
+                    <p>HR Staff</p>
+                    <br>
+                    <br>
+                    <br>
+                    <p><strong>{{ auth()->user()->name }}</strong></p>
+                </td>
+            </tr>
         </table>
     </section>
 

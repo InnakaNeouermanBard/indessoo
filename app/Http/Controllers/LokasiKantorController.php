@@ -16,10 +16,6 @@ class LokasiKantorController extends Controller
 
     public function store(Request $request)
     {
-        if ($request->is_used == LokasiKantor::where('is_used', true)->first()->is_used) {
-            return to_route('admin.lokasi-kantor')->with('error', "Data Lokasi Kantor yang digunakan sudah ada, silakan pilih is_used dengan tidak");
-        }
-
         $data = $request->validate([
             'kota' => 'required|string|max:255',
             'alamat' => 'required|string|max:255',
@@ -29,6 +25,7 @@ class LokasiKantorController extends Controller
             'is_used' => 'required|boolean',
         ]);
 
+        // Tidak perlu pengecekan khusus, semua lokasi bisa aktif
         $create = LokasiKantor::create($data);
 
         if ($create) {
@@ -55,10 +52,7 @@ class LokasiKantorController extends Controller
             'is_used' => 'required|boolean',
         ]);
 
-        if ($request->is_used == true) {
-            LokasiKantor::where('is_used', true)->update(['is_used' => false]);
-        }
-
+        // Tidak perlu menonaktifkan lokasi lain, karena semua lokasi bisa aktif
         $update = LokasiKantor::where('id', $request->id)->update($data);
 
         if ($update) {
@@ -68,10 +62,23 @@ class LokasiKantorController extends Controller
         }
     }
 
+    public function toggleStatus(Request $request)
+    {
+        $lokasiKantor = LokasiKantor::findOrFail($request->id);
+        $lokasiKantor->is_used = !$lokasiKantor->is_used;
+        $lokasiKantor->save();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Status lokasi kantor berhasil diubah',
+            'is_used' => $lokasiKantor->is_used
+        ]);
+    }
+
     public function delete(Request $request)
     {
         if (LokasiKantor::count() == 1) {
-            return response()->json(['success' => false, 'message' => 'Data Lokasi Kantor Gagal dihapus']);
+            return response()->json(['success' => false, 'message' => 'Data Lokasi Kantor Gagal dihapus. Minimal harus ada satu lokasi kantor.']);
         }
 
         $delete = LokasiKantor::where('id', $request->id)->delete();

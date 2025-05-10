@@ -76,15 +76,21 @@
             display: flex;
             justify-content: center;
         }
- 
+
         .swal2-confirm {
-            background-color: #007bff !important; /* Warna biru untuk tombol OK */
-            color: white !important; /* Teks tombol OK menjadi putih */
+            background-color: #007bff !important;
+            /* Warna biru untuk tombol OK */
+            color: white !important;
+            /* Teks tombol OK menjadi putih */
         }
+
         .swal2-cancel {
-            background-color: #007bff !important; /* Warna biru untuk tombol OK */
-            color: white !important; /* Teks tombol OK menjadi putih */
-            border-color: #007bff !important; /* Border tombol OK menjadi biru */
+            background-color: #007bff !important;
+            /* Warna biru untuk tombol OK */
+            color: white !important;
+            /* Teks tombol OK menjadi putih */
+            border-color: #007bff !important;
+            /* Border tombol OK menjadi biru */
         }
 
         #map {
@@ -108,6 +114,50 @@
         #webcam-container,
         #map-container {
             transition: all 0.3s ease-in-out;
+        }
+
+        /* Style untuk marker kantor */
+        .kantor-marker {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: blue;
+            background-color: white;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Tambahkan informasi lokasi aktif */
+        .lokasi-info {
+            margin-bottom: 15px;
+            padding: 10px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid #007bff;
+        }
+
+        .lokasi-info h4 {
+            margin-top: 0;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #007bff;
+        }
+
+        .lokasi-list {
+            max-height: 150px;
+            overflow-y: auto;
+            padding: 5px;
+        }
+
+        .lokasi-item {
+            padding: 5px 0;
+            border-bottom: 1px dashed #e0e0e0;
+        }
+
+        .lokasi-item:last-child {
+            border-bottom: none;
         }
     </style>
 @endsection
@@ -135,7 +185,6 @@
         let image = null;
         let map = null;
         let marker = null;
-        let circle = null;
         let userLatitude = null;
         let userLongitude = null;
         let locationInterval = null;
@@ -229,7 +278,83 @@
             document.getElementById('notifikasi_presensi_gagal_radius').load();
         });
 
-        // Inisialisasi map dengan optimasi
+        // Fungsi untuk membuat peta dengan multiple lokasi kantor aktif
+        function createMap(lat, lng) {
+            map = L.map('map').setView([lat, lng], 17);
+
+            L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                maxZoom: 19,
+                attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+            }).addTo(map);
+
+            // Tambahkan marker posisi user
+            marker = L.marker([lat, lng]).addTo(map);
+            marker.bindPopup("<b>Anda berada di sini</b>").openPopup();
+
+            // Konversi koleksi lokasi kantor dari PHP ke array JavaScript
+            const lokasiKantorArray = {!! json_encode($lokasiKantor) !!};
+
+            // Array untuk menyimpan semua bounds (untuk fitBounds nanti)
+            const bounds = [];
+            bounds.push([lat, lng]); // Tambahkan posisi user ke bounds
+
+            // Tambahkan circle dan marker untuk setiap lokasi kantor aktif
+            lokasiKantorArray.forEach(lokasiKantor => {
+                const kantorLat = parseFloat(lokasiKantor.latitude);
+                const kantorLng = parseFloat(lokasiKantor.longitude);
+                const radiusKantor = parseFloat(lokasiKantor.radius);
+
+                // Tambahkan ke bounds untuk fitBounds
+                bounds.push([kantorLat, kantorLng]);
+
+                // Tambahkan circle untuk menunjukkan radius kantor
+                const circle = L.circle([kantorLat, kantorLng], {
+                    color: 'red',
+                    fillColor: '#f03',
+                    fillOpacity: 0.3,
+                    radius: radiusKantor
+                }).addTo(map);
+
+                // Tambahkan marker untuk lokasi kantor
+                const markerKantor = L.marker([kantorLat, kantorLng], {
+                    icon: L.divIcon({
+                        className: 'kantor-marker',
+                        html: '<i class="ri-building-2-line" style="font-size: 20px; color: blue;"></i>',
+                        iconSize: [20, 20],
+                        iconAnchor: [10, 10]
+                    })
+                }).addTo(map);
+
+                // Tambahkan popup informasi lokasi kantor
+                markerKantor.bindPopup("<b>Kantor " + lokasiKantor.kota + "</b><br>Radius: " + radiusKantor +
+                    " meter");
+
+                // Hitung jarak user ke lokasi kantor ini untuk debugging
+                const distance = map.distance([lat, lng], [kantorLat, kantorLng]);
+                console.log("Jarak ke kantor " + lokasiKantor.kota + ": " + distance.toFixed(2) +
+                    " meter (Radius: " + radiusKantor + " meter)");
+            });
+
+            // Pastikan map dirender dengan benar
+            setTimeout(function() {
+                map.invalidateSize();
+
+                // Jika ada lokasi kantor, sesuaikan tampilan peta untuk menampilkan semua lokasi
+                if (bounds.length > 1) {
+                    // Buat L.latLngBounds dari array koordinat
+                    const mapBounds = L.latLngBounds(bounds);
+                    // Sesuaikan zoom agar semua marker terlihat
+                    map.fitBounds(mapBounds, {
+                        padding: [50, 50] // Padding untuk estetika
+                    });
+                }
+            }, 300);
+
+            mapInitialized = true;
+            console.log("Map berhasil dimuat dengan " + lokasiKantorArray.length + " lokasi kantor aktif");
+        }
+
+        // Fungsi untuk inisialisasi map dengan optimasi dan dukungan multiple lokasi kantor
         function initMap() {
             if (mapInitialized) return Promise.resolve();
 
@@ -267,36 +392,6 @@
                     }
                 }, 300); // timeout yang lebih pendek
             });
-        }
-
-        // Fungsi untuk membuat peta (pisahkan untuk memudahkan pembacaan)
-        function createMap(lat, lng) {
-            map = L.map('map').setView([lat, lng], 17);
-
-            L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                maxZoom: 19,
-                attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-            }).addTo(map);
-
-            // Tambahkan marker posisi user
-            marker = L.marker([lat, lng]).addTo(map);
-            marker.bindPopup("<b>Anda berada di sini</b>").openPopup();
-
-            // Tambahkan circle untuk menunjukkan radius kantor
-            circle = L.circle([{{ $lokasiKantor->latitude }}, {{ $lokasiKantor->longitude }}], {
-                color: 'red',
-                fillColor: '#f03',
-                fillOpacity: 0.5,
-                radius: {{ $lokasiKantor->radius }}
-            }).addTo(map);
-
-            // Pastikan map dirender dengan benar
-            setTimeout(function() {
-                map.invalidateSize();
-            }, 300);
-
-            mapInitialized = true;
-            console.log("Map berhasil dimuat");
         }
 
         // Fungsi untuk memperbarui posisi marker
@@ -763,6 +858,22 @@
                 </div>
             </div>
         @endif
+
+        <!-- Informasi Lokasi Kantor Aktif -->
+        <div class="lokasi-info mb-4">
+            <h4 class="text-lg text-dark font-bold mb-2">Lokasi Kantor Aktif ({{ $lokasiKantor->count() }})</h4>
+            <div class="lokasi-list">
+                @forelse($lokasiKantor as $lokasi)
+                    <div class="lokasi-item">
+                        <i class="ri-map-pin-line text-blue-500 mr-1"></i>
+                        <strong class="text-black">{{ $lokasi->kota }}</strong>
+                        <p class="text-black">(Radius: {{ $lokasi->radius }}m)</p>
+                    </div>
+                @empty
+                    <div class="text-error">Tidak ada lokasi kantor aktif yang tersedia</div>
+                @endforelse
+            </div>
+        </div>
 
         <!-- Tombol Ajukan Tukar Jadwal -->
         <div class="mb-6">
