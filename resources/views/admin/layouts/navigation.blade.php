@@ -4,7 +4,7 @@
         {{-- Sidebar Navigation (for both Desktop & Mobile) --}}
         <div :class="{'w-64': !open, 'w-16': open}" class="fixed inset-y-0 left-0 bg-blue-800 text-white z-30 transition-all duration-300">
             {{-- Logo --}}
-            <div class="flex items-center justify-center h-32 border-b border-gray-700">
+            <div class="flex items-center justify-center h-32 border-b bg-white border-gray-700">
                 <a href="{{ route('admin.dashboard') }}">
                     <x-application-logo class="w-auto h-32 fill-current text-gray-500" />
                 </a>

@@ -118,9 +118,6 @@
                     <span class="title header-title" style="display: block; margin-bottom: 5px;">
                         PT INDESSO AROMA BATURRADEN<br>
                     </span>
-                    <span style="display: block; margin-top: 10px;">
-                        <i>Jl. Raya Baturaden KM.10, Dusun III, Karangtengah, Kec. Baturaden, Kabupaten Banyumas, Jawa Tengah 53151.</i>
-                    </span>
                 </td>
             </tr>
         </table>

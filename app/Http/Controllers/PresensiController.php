@@ -29,7 +29,7 @@ class PresensiController extends Controller
             ->paginate(10);
         $bulan = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
 
-        $title = 'Presensi';
+        $title = 'Absensi';
         // Cek apakah karyawan sudah presensi pada hari ini
         $presensiKaryawan = DB::table('presensi')
             ->where('nik', auth()->guard('karyawan')->user()->nik)
@@ -180,7 +180,7 @@ class PresensiController extends Controller
 
     public function pengajuanPresensi()
     {
-        $title = "Izin Karyawan";
+        $title = "Form Perizinan";
         $riwayatPengajuanPresensi = DB::table("pengajuan_presensi")
             ->where('nik', auth()->guard('karyawan')->user()->nik)
             ->orderBy("tanggal_mulai", "asc")
@@ -374,7 +374,59 @@ class PresensiController extends Controller
             ->orderBy("tanggal_presensi", "asc")
             ->get();
 
-        $pdf = Pdf::loadView('dashboard.laporan.pdf.presensi-karyawan', compact('title', 'bulan', 'karyawan', 'riwayatPresensi'));
+        $shift = $karyawan->shift;  // Mengambil shift karyawan melalui relasi shift()
+
+        // Ambil data pengajuan presensi (Izin, Sakit, Cuti)
+        $izin = DB::table('pengajuan_presensi')
+            ->where('nik', $request->karyawan)
+            ->where('status', 'I')
+            ->whereMonth('tanggal_mulai', Carbon::make($bulan)->format('m'))
+            ->whereYear('tanggal_mulai', Carbon::make($bulan)->format('Y'))
+            ->count();
+
+        $sakit = DB::table('pengajuan_presensi')
+            ->where('nik', $request->karyawan)
+            ->where('status', 'S')
+            ->whereMonth('tanggal_mulai', Carbon::make($bulan)->format('m'))
+            ->whereYear('tanggal_mulai', Carbon::make($bulan)->format('Y'))
+            ->count();
+
+        $cuti = DB::table('pengajuan_presensi')
+            ->where('nik', $request->karyawan) // Filter berdasarkan NIK karyawan
+            ->where('status', 'C') // Status Cuti
+            ->whereMonth('tanggal_mulai', Carbon::make($bulan)->format('m')) // Bulan yang dipilih
+            ->whereYear('tanggal_mulai', Carbon::make($bulan)->format('Y')) // Tahun yang dipilih
+            ->get(); // Ambil semua pengajuan cuti
+
+        $totalCuti = 0;
+
+        // Loop melalui semua pengajuan cuti untuk menghitung total hari cuti
+        foreach ($cuti as $item) {
+            // Hitung jumlah hari cuti untuk setiap pengajuan
+            $totalCuti += Carbon::parse($item->tanggal_mulai)->diffInDays(Carbon::parse($item->tanggal_selesai)) + 1;
+        }
+
+        // Ambil data lembur
+        $lembur = DB::table('form_lemburs')
+            ->where('nik', $request->karyawan)
+            ->whereMonth('tanggal', Carbon::make($bulan)->format('m'))
+            ->whereYear('tanggal', Carbon::make($bulan)->format('Y'))
+            ->sum('overtime');
+
+        // Kirimkan data ke view dan PDF
+        $pdf = Pdf::loadView('dashboard.laporan.pdf.presensi-karyawan', compact(
+            'title',
+            'bulan',
+            'karyawan',
+            'riwayatPresensi',
+            'izin',
+            'sakit',
+            'totalCuti',
+            'lembur',
+            'shift',
+        ));
+
+        // Streaming PDF ke browser
         return $pdf->stream($title . ' ' . $karyawan->nama_lengkap . '.pdf');
     }
 

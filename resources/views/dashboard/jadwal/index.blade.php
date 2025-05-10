@@ -5,7 +5,7 @@
 
 @section('container')
     <div class="container mx-auto px-4 py-6 space-y-6">
-
+        
         {{-- Filter berdasarkan bulan dan tahun --}}
         <form action="{{ route('karyawan.jadwalkerja.index') }}" method="get" class="mb-4 bg-white p-4 rounded shadow">
             <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -42,7 +42,7 @@
         @if (session('error'))
             <div class="alert alert-error mb-4">{{ session('error') }}</div>
         @endif
-
+            
         <!-- Tampilan Jadwal Karyawan -->
         <div id="jadwalTableContainer" class="bg-white rounded shadow p-4 mb-6">
             <h3 class="text-lg font-semibold mb-4 text-center">

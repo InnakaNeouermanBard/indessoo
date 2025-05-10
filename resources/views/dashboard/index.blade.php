@@ -72,7 +72,7 @@
             </div>
 
             <!-- Masuk Kerja Hari Ini -->
-            <div class="mb-6 w-full max-w-full px-3 sm:w-1/2 sm:flex-none xl:mb-0 xl:w-1/4">
+            {{-- <div class="mb-6 w-full max-w-full px-3 sm:w-1/2 sm:flex-none xl:mb-0 xl:w-1/4">
                 <div
                     class="dark:bg-slate-850 dark:shadow-dark-xl relative flex min-w-0 flex-col break-words rounded-2xl bg-white bg-clip-border shadow-xl">
                     <div class="flex-auto p-4">
@@ -124,10 +124,10 @@
                         </div>
                     </div>
                 </div>
-            </div>
+            </div> --}}
 
             <!-- Pulang Kerja Hari Ini -->
-            <div class="w-full max-w-full px-3 sm:w-1/2 sm:flex-none xl:w-1/4">
+            {{-- <div class="w-full max-w-full px-3 sm:w-1/2 sm:flex-none xl:w-1/4">
                 <div
                     class="dark:bg-slate-850 dark:shadow-dark-xl relative flex min-w-0 flex-col break-words rounded-2xl bg-white bg-clip-border shadow-xl">
                     <div class="flex-auto p-4">
@@ -179,7 +179,7 @@
                         </div>
                     </div>
                 </div>
-            </div>
+            </div> --}}
         </div>
 
         <!-- Jadwal Shift Karyawan -->
@@ -211,7 +211,7 @@
                                         @foreach ($jadwalShift as $jadwal)
                                             <tr
                                                 class="hover {{ \Carbon\Carbon::parse($jadwal->tanggal)->isToday() ? 'bg-blue-50 dark:bg-blue-900/20' : '' }}">
-                                                <td class="text-slate-500 dark:text-slate-300">
+                                                <td >
                                                     {{ \Carbon\Carbon::parse($jadwal->tanggal)->format('l') }}<br>
                                                     {{ \Carbon\Carbon::parse($jadwal->tanggal)->format('d-m-Y') }}
                                                 </td>
@@ -400,13 +400,13 @@
 
                     <div class="mt-6 flex flex-wrap gap-y-10">
                         {{-- Tabel Rekap Presensi --}}
-                        <div class="w-full overflow-x-auto lg:w-1/2 lg:flex-none">
-                            <h1 class="ml-3 text-lg font-semibold dark:text-white">Rekap Presensi</h1>
+                        <div class="w-full overflow-x-auto lg:flex-none">
+                            <h1 class="ml-3 text-lg font-semibold dark:text-white">Rekap Absensi</h1>
                             <table
-                                class="table mb-4 w-full border-collapse items-center border-gray-200 align-top dark:border-white/40">
+                                class="table mb-4 w-full border-collapse items-center border-gray-200 align-center dark:border-white/40">
                                 <thead class="text-sm text-gray-800 dark:text-gray-300">
                                     <tr>
-                                        <th></th>
+                                        <th>NO</th>
                                         <th>Hari</th>
                                         <th>Tanggal</th>
                                         <th>Jam Masuk</th>
@@ -445,11 +445,11 @@
                                             $statusKeluar =
                                                 $item->jam_keluar > $jamKeluarStandar ? 'text-success' : 'text-error';
                                         @endphp
-                                        <tr class="hover">
+                                        <tr class="hover text-black">
                                             <td class="font-bold">{{ $riwayatPresensi->firstItem() + $value }}</td>
-                                            <td class="text-slate-500 dark:text-slate-300">
+                                            <td >
                                                 {{ date('l', strtotime($item->tanggal_presensi)) }}</td>
-                                            <td class="text-slate-500 dark:text-slate-300">
+                                            <td >
                                                 {{ date('d-m-Y', strtotime($item->tanggal_presensi)) }}</td>
                                             <td class="{{ $statusMasuk }}">
                                                 {{ date('H:i:s', strtotime($item->jam_masuk)) }}</td>
@@ -469,7 +469,7 @@
                         </div>
 
                         {{-- Tabel Leaderboard Hari ini --}}
-                        <div class="w-full overflow-x-auto lg:w-1/2 lg:flex-none">
+                        {{-- <div class="w-full overflow-x-auto lg:w-1/2 lg:flex-none">
                             <h1 class="ml-3 text-lg font-semibold dark:text-white">
                                 Leaderboard
                                 <span class="font-bold text-blue-700 dark:text-blue-500">{{ date('d-m-Y') }}</span>
@@ -533,7 +533,7 @@
                             <div class="mx-3 mb-3">
                                 {{ $leaderboard->links() }}
                             </div>
-                        </div>
+                        </div> --}}
                     </div>
                 </div>
             </div>

@@ -1,10 +1,10 @@
 <aside
-        class="dark:bg-slate-850 max-w-64 ease-nav-brand z-990 fixed inset-y-0 my-4 block w-full -translate-x-full flex-wrap items-center justify-between overflow-y-auto rounded-2xl border-0 bg-white p-0 antialiased shadow-xl transition-transform duration-200 dark:shadow-none xl:left-0 xl:ml-6 xl:translate-x-0"
+        class="dark:bg-blue-800 max-w-64 ease-nav-brand z-990 fixed inset-y-0 my-4 block w-full -translate-x-full flex-wrap items-center justify-between overflow-y-auto rounded-2xl border-0 bg-white p-0 antialiased shadow-xl transition-transform duration-200 dark:shadow-none xl:translate-x-0"
     aria-expanded="false">
     <div class="h-19 flex justify-center items-center">
         <i class="ri-close-large-fill absolute right-0 top-0 cursor-pointer p-4 text-slate-400 opacity-50 dark:text-white xl:hidden"
             sidenav-close></i>
-        <a class="m-0 block whitespace-nowrap px-8 py-6 text-sm text-slate-700 dark:text-white" href="{{ route('karyawan.dashboard') }}">
+        <a class="m-0 block whitespace-nowrap px-8 py-6 text-sm text-slate-700 dark:text-black" href="{{ route('karyawan.dashboard') }}">
     <!-- Logo untuk mode terang -->
     <img src="{{ asset('img/logo-fix.png') }}"
         class="ease-nav-brand inline max-h-32 w-auto transition-all duration-200 dark:hidden" alt="main_logo" />
@@ -20,7 +20,7 @@
     <hr
         class="mt-0 h-px bg-transparent bg-gradient-to-r from-transparent via-black/40 to-transparent dark:bg-gradient-to-r dark:from-transparent dark:via-white dark:to-transparent" />
 
-    <div class="h-sidenav block max-h-screen w-auto grow basis-full items-center overflow-auto">
+    <div class="h-sidenav block max-h-screen w-auto bg-blue-800 grow basis-full items-center overflow-auto">
         <ul class="mb-0 flex flex-col pl-0">
             <li class="mt-0.5 w-full">
                 <a class="py-2.7 ease-nav-brand mx-2 my-0 flex items-center whitespace-nowrap px- 4 text-sm transition-colors dark:text-white dark:opacity-80 {{ Request::routeIs(['karyawan.dashboard']) ? 'rounded-lg font text-slate-700 bg-blue-500/13' : '' }}"
@@ -40,7 +40,7 @@
                         class="mr-2 flex h-8 w-8 items-center justify-center rounded-lg bg-center stroke-0 text-center xl:p-2.5">
                         <i class="ri-camera-fill relative top-0 text-lg leading-normal text-purple-500"></i>
                     </div>
-                    <span class="ease pointer-events-none ml-1 opacity-100 duration-300">Presensi</span>
+                    <span class="ease pointer-events-none ml-1 opacity-100 duration-300">Absensi</span>
                 </a>
             </li>
 

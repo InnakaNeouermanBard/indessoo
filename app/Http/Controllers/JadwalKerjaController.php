@@ -22,7 +22,7 @@ class JadwalKerjaController extends Controller
     public function indexKaryawan()
     {
         $files = ExcelFile::latest()->paginate(10);
-        $title = 'Jadwal Karyawan';
+        $title = 'Jadwal';
         return view('dashboard.jadwal.index', compact('files', 'title'));
     }
 

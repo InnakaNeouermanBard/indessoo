@@ -669,7 +669,7 @@ class ShiftScheduleController extends Controller
 
       public function jadwalKaryawan(Request $request)
     {
-        $title = "Jadwal Karyawan";
+        $title = "Jadwal";
 
         $karyawan = auth()->guard('karyawan')->user(); // Ambil data karyawan yang sedang login
         $bulan = $request->bulan ?? date('m'); // Default bulan saat ini

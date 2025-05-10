@@ -175,7 +175,7 @@
                                 $masuk = Carbon\Carbon::make($item->jam_masuk); // Waktu masuk karyawan
                             @endphp
 
-                            @if ($masuk->gt($waktuMulaiShift))  <!-- Jika waktu masuk lebih besar dari waktu mulai shift -->
+                            @if ($masuk->get($waktuMulaiShift))  <!-- Jika waktu masuk lebih besar dari waktu mulai shift -->
                                 @php
                                     $diff = $masuk->diff($waktuMulaiShift);  // Hitung selisih antara jam masuk dan waktu mulai shift
                                     if ($diff->format('%h') != 0) {
