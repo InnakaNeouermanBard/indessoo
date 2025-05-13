@@ -19,7 +19,7 @@
                     <i class="ri-check-line mr-2"></i> {{ __('Absensi') }}
                 </x-sidebar-link>
                 <x-sidebar-link :href="route('admin.administrasi-presensi')" :active="request()->routeIs('admin.administrasi-presensi')">
-                    <i class="ri-file-list-3-line mr-2"></i> {{ __('Form Perizinan') }}
+                    <i class="ri-file-list-3-line mr-2"></i> {{ __('Form Cuti') }}
                 </x-sidebar-link>
                 <x-sidebar-link :href="route('form-lembur.index')" :active="request()->routeIs('form-lembur.index')">
                     <i class="ri-time-line mr-2"></i> {{ __('Form Lembur') }}

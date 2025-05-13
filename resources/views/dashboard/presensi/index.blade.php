@@ -895,14 +895,15 @@
                     </div>
 
                     <!-- Form Tukar Jadwal - Direct Submit tanpa JavaScript processing -->
-                    <div class="p-4">
+                    <div class="p-4 text-black dark:text-white">
                         <form action="{{ route('presensi.tukar-jadwal') }}" method="POST">
                             @csrf
 
                             <!-- Karyawan Tujuan -->
-                            <div class="mb-4">
-                                <label class="block mb-2 font-medium">Karyawan Tujuan:</label>
-                                <select name="nik_penerima" class="w-full p-2 border border-gray-300 rounded-md bg-white"
+                            <div class="mb-4 text-black dark:text-white">
+                                <label class="block mb-2 font-medium text-black dark:text-black">Karyawan Tujuan:</label>
+                                <select name="nik_penerima"
+                                    class="w-full p-2 border border-gray-300 rounded-md bg-white text-black dark:text-black"
                                     required>
                                     <option value="" selected disabled>Pilih karyawan untuk tukar jadwal</option>
                                     @foreach ($karyawan as $karyawanItem)
@@ -916,11 +917,12 @@
 
                             <!-- Tanggal Tukar Jadwal -->
                             <div class="mb-4">
-                                <label class="block mb-2 font-medium">Tanggal Tukar Jadwal:</label>
+                                <label class="block mb-2 font-medium text-black dark:text-black">Tanggal Tukar
+                                    Jadwal:</label>
                                 <div class="relative">
                                     <input type="date" name="tanggal_pengajuan"
-                                        class="w-full p-2 border border-gray-300 rounded-md" min="{{ date('Y-m-d') }}"
-                                        required>
+                                        class="w-full p-2 border text-black dark:text-black border-gray-300 rounded-md"
+                                        min="{{ date('Y-m-d') }}" required>
                                     <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
                                         <i class="ri-calendar-line text-gray-500"></i>
                                     </div>
@@ -929,7 +931,7 @@
 
                             <!-- Alasan -->
                             <div class="mb-4">
-                                <label class="block mb-2 font-medium">Alasan:</label>
+                                <label class="block mb-2 text-black dark:text-black font-medium">Alasan:</label>
                                 <textarea name="alasan" rows="4" class="w-full p-2 border border-gray-300 rounded-md"
                                     placeholder="Berikan alasan pertukaran jadwal" required></textarea>
                             </div>

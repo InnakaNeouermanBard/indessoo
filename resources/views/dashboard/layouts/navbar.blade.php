@@ -7,7 +7,7 @@
                 <li class="text-sm leading-normal">
                     <a class="text-black dark:text-white opacity-50" href="javascript:;">Pages</a>
                 </li>
-                <li class="pl-2 text-sm capitalize leading-normal text-black dark:text-white before:float-left before:pr-2 before:text-black dark:text-white before:content-['/']"
+                <li class="pl-2 text-sm capitalize leading-normal text-black before:float-left before:pr-2 before:text-black dark:text-white before:content-['/']"
                     aria-current="page">{{ $title }}</li>
             </ol>
             <h6 class="mb-0 font-bold capitalize text-black">{{ $title }}</h6>
@@ -16,8 +16,8 @@
         <div class="mt-2 flex grow items-center sm:mr-6 sm:mt-0 md:mr-0 lg:flex lg:basis-auto">
             <div class="flex items-center md:ml-auto md:pr-4">
                 <div class="text-sm text-black dark:text-white" id="date-time">
-                                bjnklsf
-                            </div>
+                    bjnklsf
+                </div>
             </div>
             <ul class="md-max:w-full mb-0 flex list-none flex-row justify-end pl-0">
                 {{-- Dark mode switcher --}}
@@ -184,7 +184,8 @@
                 <!-- notifications -->
                 <li class="relative flex items-center pr-2">
                     <p class="transform-dropdown-show hidden"></p>
-                    <a href="javascript:;" class="ease-nav-brand block p-0 text-sm text-black dark:text-white transition-all"
+                    <a href="javascript:;"
+                        class="ease-nav-brand block p-0 text-sm text-black dark:text-white transition-all"
                         dropdown-trigger aria-expanded="false">
                         <i class="ri-notification-3-fill cursor-pointer"></i>
                     </a>
@@ -276,7 +277,8 @@
 
                 <li class="relative flex items-center pl-4 xl:pr-4">
                     <div class="relative group">
-                        <button class="flex items-center text-sm font-semibold text-black dark:text-white focus:outline-none"
+                        <button
+                            class="flex items-center text-sm font-semibold text-black dark:text-white focus:outline-none"
                             id="profileDropdownToggle">
                             @if (Auth::guard('karyawan')->user()->foto)
                                 <div class="avatar">
@@ -351,42 +353,42 @@
                     </div>
                 </div>
                 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"
-        integrity="sha512-v2CJ7UaYy4JwqLDIrZUI/4hqeoQieOmAZNXBeQyjo21dadnwR+8ZaIJVT8EE2iyI61OV8e6M8PP2/4hpQINQ/g=="
-        crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+                    integrity="sha512-v2CJ7UaYy4JwqLDIrZUI/4hqeoQieOmAZNXBeQyjo21dadnwR+8ZaIJVT8EE2iyI61OV8e6M8PP2/4hpQINQ/g=="
+                    crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 
-        <script>
-        // Function to update date and time
-        function updateDateTime() {
-            const date = new Date();
-            
-            // Format the date (example: Monday, 10 May 2025)
-            const dateString = date.toLocaleDateString('id-ID', {
-                weekday: 'long', // Day of the week (example: Monday)
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric',
-            });
+                <script>
+                    // Function to update date and time
+                    function updateDateTime() {
+                        const date = new Date();
 
-            // Format the time (example: 15:30:45)
-            const timeString = date.toLocaleTimeString('id-ID', {
-                hour: '2-digit',
-                minute: '2-digit',
-                second: '2-digit',
-            });
+                        // Format the date (example: Monday, 10 May 2025)
+                        const dateString = date.toLocaleDateString('id-ID', {
+                            weekday: 'long', // Day of the week (example: Monday)
+                            year: 'numeric',
+                            month: 'long',
+                            day: 'numeric',
+                        });
 
-            // Combine date and time
-            const dateTimeString = `${dateString}, ${timeString}`;
+                        // Format the time (example: 15:30:45)
+                        const timeString = date.toLocaleTimeString('id-ID', {
+                            hour: '2-digit',
+                            minute: '2-digit',
+                            second: '2-digit',
+                        });
 
-            // Set the element with ID 'date-time' to the value of dateTimeString
-            document.getElementById('date-time').textContent = dateTimeString;
-        }
+                        // Combine date and time
+                        const dateTimeString = `${dateString}, ${timeString}`;
 
-        // Update time every second
-        setInterval(updateDateTime, 1000);
+                        // Set the element with ID 'date-time' to the value of dateTimeString
+                        document.getElementById('date-time').textContent = dateTimeString;
+                    }
 
-        // Call once to show the time immediately when the page loads
-        updateDateTime();
-    </script>
+                    // Update time every second
+                    setInterval(updateDateTime, 1000);
+
+                    // Call once to show the time immediately when the page loads
+                    updateDateTime();
+                </script>
                 <script>
                     function openLogoutModal() {
                         const modal = document.getElementById('logoutModal');

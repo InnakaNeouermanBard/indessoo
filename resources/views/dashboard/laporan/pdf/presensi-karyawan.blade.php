@@ -137,21 +137,21 @@
                 <td>:</td>
                 <td>{{ $karyawan->nama_lengkap }}</td>
             </tr>
-            <tr>
+            {{-- <tr>
                 <td>Jabatan</td>
                 <td>:</td>
                 <td>{{ $karyawan->jabatan }}</td>
             </tr>
-            {{-- <tr>
+            <tr>
                 <td>Departemen</td>
                 <td>:</td>
                 <td>{{ $karyawan->departemen->nama }}</td>
-            </tr> --}}
+            </tr>
             <tr>
                 <td>Email / Telepon</td>
                 <td>:</td>
                 <td>{{ $karyawan->email }} / {{ $karyawan->telepon }}</td>
-            </tr>
+            </tr> --}}
         </table>
 
         <table class="presensi-karyawan">
@@ -194,9 +194,10 @@
                                 $masuk = Carbon\Carbon::make($item->jam_masuk); // Waktu masuk karyawan
                             @endphp
 
-                            @if ($masuk->gt($waktuMulaiShift))  <!-- Jika waktu masuk lebih besar dari waktu mulai shift -->
+                            @if ($masuk->gt($waktuMulaiShift))
+                                <!-- Jika waktu masuk lebih besar dari waktu mulai shift -->
                                 @php
-                                    $diff = $masuk->diff($waktuMulaiShift);  // Hitung selisih antara jam masuk dan waktu mulai shift
+                                    $diff = $masuk->diff($waktuMulaiShift); // Hitung selisih antara jam masuk dan waktu mulai shift
                                     if ($diff->format('%h') != 0) {
                                         $selisih = $diff->format('%h jam %I menit');
                                     } else {

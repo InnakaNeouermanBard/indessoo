@@ -1,7 +1,7 @@
 <aside
-        class="dark:bg-blue-800 max-w-64 ease-nav-brand z-990 fixed inset-0 top-0 left-0 block w-full -translate-x-full flex-wrap items-center justify-between overflow-y-auto bg-white p-0 antialiased shadow-xl transition-transform duration-200 dark:shadow-none xl:translate-x-0"
+    class="dark:bg-blue-800 max-w-64 ease-nav-brand z-990 fixed inset-0 top-0 left-0 block w-full -translate-x-full flex-wrap items-center justify-between overflow-y-auto bg-white p-0 antialiased shadow-xl transition-transform duration-200 dark:shadow-none xl:translate-x-0"
     aria-expanded="false">
-    
+
     <!-- Burger Menu Button (untuk tampilan mobile) -->
     <button class="xl:hidden text-white p-4 ml-2" onclick="toggleSidebar()">
         <i class="ri-menu-3-line text-2xl"></i>
@@ -10,14 +10,15 @@
     <div class="h-19 flex justify-center items-center bg-white">
         <i class="ri-close-large-fill absolute right-0 top-0 cursor-pointer p-4 text-white opacity-50 xl:hidden"
             sidenav-close></i>
-        <a class="m-0 block whitespace-nowrap px-8 py-6 text-sm text-white dark:text-black" href="{{ route('karyawan.dashboard') }}">
-    <!-- Logo untuk mode terang -->
-    <img src="{{ asset('img/logo-fix.png') }}"
-        class="ease-nav-brand inline max-h-32 w-auto transition-all duration-200 dark:hidden" alt="main_logo" />
-    <!-- Logo untuk mode gelap -->
-    <img src="{{ asset('img/logo-fix.png') }}"
-        class="ease-nav-brand hidden max-h-32 w-auto transition-all duration-200 dark:inline" alt="main_logo" />
-</a>
+        <a class="m-0 block whitespace-nowrap px-8 py-6 text-sm text-white dark:text-black"
+            href="{{ route('karyawan.dashboard') }}">
+            <!-- Logo untuk mode terang -->
+            <img src="{{ asset('img/logo-fix.png') }}"
+                class="ease-nav-brand inline max-h-32 w-auto transition-all duration-200 dark:hidden" alt="main_logo" />
+            <!-- Logo untuk mode gelap -->
+            <img src="{{ asset('img/logo-fix.png') }}"
+                class="ease-nav-brand hidden max-h-32 w-auto transition-all duration-200 dark:inline" alt="main_logo" />
+        </a>
     </div>
 
     <hr
@@ -54,19 +55,20 @@
                         class="mr-2 flex h-8 w-8 items-center justify-center rounded-lg bg-center stroke-0 text-center xl:p-2.5">
                         <i class="ri-calendar-close-fill relative top-0 text-lg leading-normal text-white"></i>
                     </div>
-                    <span class="ease pointer-events-none ml-1 opacity-100 duration-300">Form Perizinan</span>
+                    <span class="ease pointer-events-none ml-1 opacity-100 duration-300">Form Cuti</span>
                 </a>
             </li>
 
             <li class="mt-0.5 w-full">
-    <a class="py-2.7 ease-nav-brand mx-2 my-0 flex items-center whitespace-nowrap px-4 text-sm text-white transition-colors dark:text-white dark:opacity-80 {{ Request::routeIs(['karyawan.form-lembur.index']) ? 'rounded-none font text-slate-700 bg-blue-500/13' : '' }}"
-        href="{{ route('karyawan.form-lembur.index') }}">
-        <div class="mr-2 flex h-8 w-8 items-center justify-center rounded-lg bg-center stroke-0 text-center xl:p-2.5">
-            <i class="ri-time-fill relative top-0 text-lg leading-normal text-white"></i>
-        </div>
-        <span class="ease pointer-events-none ml-1 opacity-100 duration-300">Form Lembur</span>
-    </a>
-</li>
+                <a class="py-2.7 ease-nav-brand mx-2 my-0 flex items-center whitespace-nowrap px-4 text-sm text-white transition-colors dark:text-white dark:opacity-80 {{ Request::routeIs(['karyawan.form-lembur.index']) ? 'rounded-none font text-slate-700 bg-blue-500/13' : '' }}"
+                    href="{{ route('karyawan.form-lembur.index') }}">
+                    <div
+                        class="mr-2 flex h-8 w-8 items-center justify-center rounded-lg bg-center stroke-0 text-center xl:p-2.5">
+                        <i class="ri-time-fill relative top-0 text-lg leading-normal text-white"></i>
+                    </div>
+                    <span class="ease pointer-events-none ml-1 opacity-100 duration-300">Form Lembur</span>
+                </a>
+            </li>
 
             <li class="mt-0.5 w-full">
                 <a class="py-2.7 ease-nav-brand mx-2 my-0 flex items-center whitespace-nowrap px-4 text-sm text-white transition-colors dark:text-white dark:opacity-80 {{ Request::routeIs(['karyawan.profile']) ? 'rounded-none font text-slate-700 bg-blue-500/13' : '' }}"
@@ -82,7 +84,8 @@
             <li class="mt-0.5 w-full">
                 <a class="py-2.7 ease-nav-brand mx-2 my-0 flex items-center whitespace-nowrap px-4 text-sm text-white transition-colors dark:text-white dark:opacity-80 {{ Request::routeIs(['karyawan.form-lembur.index']) ? 'rounded-none font text-slate-700 bg-blue-500/13' : '' }}"
                     href="{{ route('karyawan.jadwalkerja.index') }}">
-                    <div class="mr-2 flex h-8 w-8 items-center justify-center rounded-lg bg-center stroke-0 text-center xl:p-2.5">
+                    <div
+                        class="mr-2 flex h-8 w-8 items-center justify-center rounded-lg bg-center stroke-0 text-center xl:p-2.5">
                         <i class="ri-calendar-line relative top-0 text-lg leading-normal text-white"></i>
                     </div>
                     <span class="ease pointer-events-none ml-1 opacity-100 duration-300">Jadwal</span>
@@ -90,14 +93,15 @@
             </li>
 
             <li class="mt-0.5 w-full">
-    <a class="py-2.7 ease-nav-brand mx-2 my-0 flex items-center whitespace-nowrap px-4 text-sm text-white transition-colors dark:text-white dark:opacity-80 {{ Request::routeIs(['karyawan.profile']) ? 'rounded-none font text-slate-700 bg-blue-500/13' : '' }}"
-        href="{{ route('karyawan.laporan') }}">
-        <div class="mr-2 flex h-8 w-8 items-center justify-center rounded-lg bg-center stroke-0 text-center xl:p-2.5">
-            <i class="ri-file-list-3-line relative top-0 text-lg leading-normal text-white"></i>
-        </div>
-        <span class="ease pointer-events-none ml-1 opacity-100 duration-300">Laporan</span>
-    </a>
-</li>
+                <a class="py-2.7 ease-nav-brand mx-2 my-0 flex items-center whitespace-nowrap px-4 text-sm text-white transition-colors dark:text-white dark:opacity-80 {{ Request::routeIs(['karyawan.profile']) ? 'rounded-none font text-slate-700 bg-blue-500/13' : '' }}"
+                    href="{{ route('karyawan.laporan') }}">
+                    <div
+                        class="mr-2 flex h-8 w-8 items-center justify-center rounded-lg bg-center stroke-0 text-center xl:p-2.5">
+                        <i class="ri-file-list-3-line relative top-0 text-lg leading-normal text-white"></i>
+                    </div>
+                    <span class="ease pointer-events-none ml-1 opacity-100 duration-300">Laporan</span>
+                </a>
+            </li>
 
 
         </ul>
@@ -183,7 +187,7 @@
             document.getElementById('logout-form').submit();
         }, 500);
     }
-    
+
     function toggleSidebar() {
         const sidebar = document.querySelector('aside');
         sidebar.classList.toggle('-translate-x-full');

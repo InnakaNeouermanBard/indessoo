@@ -1,29 +1,29 @@
 {{-- index.blade.php --}}
 <x-app-layout>
     <x-slot name="header">
-    <div class="flex justify-between items-center">
-        <div>
-            <!-- Judul utama Jadwal Kerja -->
-            <h2 class="text-xl font-semibold leading-tight text-gray-800">
-                {{ __('Jadwal Kerja') }}
-            </h2>
-            <!-- Subjudul Karyawan Outsourcing -->
-            <h3 class="text-lg text-gray-600 mt-2">
-                Karyawan Outsourcing
-            </h3>
+        <div class="flex justify-between items-center">
+            <div>
+                <!-- Judul utama Jadwal Kerja -->
+                <h2 class="text-xl font-semibold leading-tight text-gray-800">
+                    {{ __('Jadwal Kerja') }}
+                </h2>
+                <!-- Subjudul Karyawan Outsourcing -->
+                <h3 class="text-lg text-gray-600 mt-2">
+                    Karyawan Outsourcing
+                </h3>
+            </div>
+            <!-- Tombol di sisi kanan -->
+            <div class="flex gap-2">
+                <a href="{{ route('jadwal-shift.create-massal') }}" class="btn btn-accent btn-sm">
+                    Buat Jadwal Massal
+                </a>
+                <label class="btn btn-primary btn-sm" for="create_modal_toggle"
+                    onclick="window.dispatchEvent(new CustomEvent('open-modal', { detail: 'create_modal' }))">
+                    Tambah Jadwal
+                </label>
+            </div>
         </div>
-        <!-- Tombol di sisi kanan -->
-        <div class="flex gap-2">
-            <a href="{{ route('jadwal-shift.create-massal') }}" class="btn btn-accent btn-sm">
-                Buat Jadwal Massal
-            </a>
-            <label class="btn btn-primary btn-sm" for="create_modal_toggle"
-                onclick="window.dispatchEvent(new CustomEvent('open-modal', { detail: 'create_modal' }))">
-                Tambah Jadwal
-            </label>
-        </div>
-    </div>
-</x-slot>
+    </x-slot>
 
     <div class="container mx-auto px-5 py-4">
         <form action="{{ route('jadwal-shift.index') }}" method="get" class="mb-4 bg-white p-4 rounded shadow">
@@ -125,7 +125,8 @@
                         <tbody>
                             @forelse ($jadwal as $i => $item)
                                 <tr>
-                                    <td>{{ $jadwal->firstItem() + $i }}</td> <!-- Modify this line to handle pagination -->
+                                    <td>{{ $jadwal->firstItem() + $i }}</td>
+                                    <!-- Modify this line to handle pagination -->
                                     <td>
                                         <a href="{{ route('jadwal-shift.karyawan-detail', $item->karyawan_nik) }}?bulan={{ $bulan }}&tahun={{ $tahun }}"
                                             class="text-blue-600 hover:underline">
@@ -168,9 +169,9 @@
                     </table>
                 </div>
             </div>
-        <div class="p-4">
-            {{ $jadwal->links() }}  <!-- Menampilkan pagination -->
-        </div>
+            <div class="p-4">
+                {{ $jadwal->links() }} <!-- Menampilkan pagination -->
+            </div>
         </div>
     </div>
 
@@ -289,7 +290,7 @@
     <x-slot name="header">
         <div class="flex items-center justify-between">
             <h2 class="text-2xl font-bold text-gray-800">
-                {{ __('Jadwal Karyawan') }}
+                {{ __('Jadwal Excel') }}
             </h2>
             <label for="import_modal" class="btn btn-primary btn-sm">
                 <i class="ri-upload-cloud-2-line mr-1"></i> Import Excel

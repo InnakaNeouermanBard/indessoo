@@ -1,30 +1,31 @@
 <x-app-layout>
     <x-slot name="header">
-    <div class="flex items-center justify-between">
-        <div>
-            <h2 class="text-xl font-semibold leading-tight text-gray-800">
-                {{ __('Data Karyawan') }}
-            </h2>
-            <h3 class="text-lg text-gray-600 mt-2"> <!-- Subjudul di bawah judul utama -->
-                Karyawan Outsourcing
-            </h3>
+        <div class="flex items-center justify-between">
+            <div>
+                <h2 class="text-xl font-semibold leading-tight text-gray-800">
+                    {{ __('Data Karyawan') }}
+                </h2>
+                <h3 class="text-lg text-gray-600 mt-2"> <!-- Subjudul di bawah judul utama -->
+                    Karyawan Outsourcing
+                </h3>
+            </div>
+            <label class="btn btn-primary btn-sm" for="create_modal">Tambah Data</label>
         </div>
-        <label class="btn btn-primary btn-sm" for="create_modal">Tambah Data</label>
-    </div>
-</x-slot>
+    </x-slot>
 
     <div class="container mx-auto px-5 pt-5">
         <div>
             <form action="{{ route('admin.karyawan') }}" method="get" enctype="multipart/form-data" class="my-3">
                 <div class="flex w-full flex-wrap gap-2 md:flex-nowrap">
-    <!-- Input untuk Nama Karyawan -->
-    <input type="text" name="nama_karyawan" placeholder="Nama Karyawan" class="input input-bordered w-full md:w-48" value="{{ request()->nama_karyawan }}" />
+                    <!-- Input untuk Nama Karyawan -->
+                    <input type="text" name="nama_karyawan" placeholder="Nama Karyawan"
+                        class="input input-bordered w-full md:w-48" value="{{ request()->nama_karyawan }}" />
 
-    <!-- Tombol Submit dengan ukuran lebih kecil -->
-    <button type="submit" class="btn btn-success w-full md:w-12">
-        <i class="ri-search-2-line text-lg text-white"></i>
-    </button>
-</div>
+                    <!-- Tombol Submit dengan ukuran lebih kecil -->
+                    <button type="submit" class="btn btn-success w-full md:w-12">
+                        <i class="ri-search-2-line text-lg text-white"></i>
+                    </button>
+                </div>
 
             </form>
         </div>
@@ -33,7 +34,8 @@
                 class="table mb-4 w-full border-collapse items-center border-gray-200 align-top dark:border-white/40">
                 <thead class="text-sm text-black">
                     <tr>
-                        <th></th>
+                        <th>No</th>
+                        <th>NIK</th>
                         <th>Departemen</th>
                         <th>Nama Lengkap</th>
                         <th>Foto</th>
@@ -47,6 +49,7 @@
                     @foreach ($karyawan as $value => $item)
                         <tr class="hover">
                             <td class="font-bold">{{ $karyawan->firstItem() + $value }}</td>
+                            <td>{{ $item->nik }}</td>
                             <td>{{ $item->departemen->nama }}</td>
                             <td>{{ $item->nama_lengkap }}</td>
                             <td>
@@ -164,11 +167,13 @@
                     <label class="form-control w-full">
                         <div class="label">
                             <span class="label-text font-semibold">
-                                <span class="label-text font-semibold">Telepon<span class="text-red-500">*</span></span>
+                                <span class="label-text font-semibold">Telepon<span
+                                        class="text-red-500">*</span></span>
                             </span>
                         </div>
                         <input type="text" name="telepon" placeholder="Telepon"
-                            class="input input-bordered w-full text-blue-700" value="{{ old('telepon') }}" required />
+                            class="input input-bordered w-full text-blue-700" value="{{ old('telepon') }}"
+                            required />
                         @error('telepon')
                             <div class="label">
                                 <span class="label-text-alt text-sm text-error">{{ $message }}</span>
@@ -511,13 +516,19 @@
     </script>
     <style>
         .swal2-confirm {
-            background-color: #007bff !important; /* Warna biru untuk tombol OK */
-            color: white !important; /* Teks tombol OK menjadi putih */
+            background-color: #007bff !important;
+            /* Warna biru untuk tombol OK */
+            color: white !important;
+            /* Teks tombol OK menjadi putih */
         }
+
         .swal2-cancel {
-            background-color: #007bff !important; /* Warna biru untuk tombol OK */
-            color: white !important; /* Teks tombol OK menjadi putih */
-            border-color: #007bff !important; /* Border tombol OK menjadi biru */
+            background-color: #007bff !important;
+            /* Warna biru untuk tombol OK */
+            color: white !important;
+            /* Teks tombol OK menjadi putih */
+            border-color: #007bff !important;
+            /* Border tombol OK menjadi biru */
         }
-</style>
+    </style>
 </x-app-layout>

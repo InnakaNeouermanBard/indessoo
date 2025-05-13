@@ -1,26 +1,27 @@
 <x-app-layout>
     {{-- index admin presensi  --}}
     <x-slot name="header">
-    <div class="flex items-center justify-start"> <!-- Ganti justify-between dengan justify-start -->
-        <h2 class="text-xl font-semibold leading-tight text-gray-800">
-            {{ __('Absensi') }}
-        </h2> <hr>
-    </div>
-    <h3> Karyawan Outsorcing <h3>
-</x-slot>
+        <div class="flex items-center justify-start"> <!-- Ganti justify-between dengan justify-start -->
+            <h2 class="text-xl font-semibold leading-tight text-gray-800">
+                {{ __('Absensi') }}
+            </h2>
+            <hr>
+        </div>
+        <h3> Karyawan Outsorcing <h3>
+    </x-slot>
 
 
     <div class="container mx-auto px-5 pt-5">
         <div>
             <!-- admin/tukar-jadwal.blade.php -->
-        
+
             @php
                 // Hitung jumlah tukar jadwal hari ini
                 $countTukarJadwalToday = \App\Models\TukarJadwal::whereDate(
                     'created_at',
                     \Carbon\Carbon::today(),
                 )->count();
-        
+
                 // Definisikan $recentExchanges jika belum tersedia
                 if (!isset($recentExchanges)) {
                     $recentExchanges = \App\Models\TukarJadwal::with(['pengaju', 'penerima'])
@@ -30,139 +31,244 @@
                 }
             @endphp
         </div>
-        
+
         <script>
-            // Fungsi untuk toggle visibilitas dropdown
-            document.getElementById('notificationBtn').addEventListener('click', function(event) {
-                var dropdown = document.getElementById('notificationDropdown');
-                // Pastikan dropdown tidak hilang saat klik pada dropdown itu sendiri
-                event.stopPropagation();
-                dropdown.classList.toggle('hidden'); // Menampilkan/Menyembunyikan dropdown
-            });
-        
-            // Menutup dropdown jika diklik di luar
-            window.addEventListener('click', function(event) {
-                var dropdown = document.getElementById('notificationDropdown');
-                var btn = document.getElementById('notificationBtn');
-                // Jika klik di luar tombol atau dropdown, sembunyikan dropdown
-                if (!btn.contains(event.target)) {
-                    dropdown.classList.add('hidden'); // Menyembunyikan dropdown
+            document.addEventListener('DOMContentLoaded', function() {
+                // PENTING: Pastikan elemen ada sebelum menambahkan event listener
+                const notificationBtn = document.getElementById('notificationBtn');
+                const notificationDropdown = document.getElementById('notificationDropdown');
+
+                // Jika elemen tidak ada, keluar dari fungsi
+                if (!notificationBtn || !notificationDropdown) {
+                    console.warn('Elemen notifikasi tidak ditemukan!');
+                    return;
+                }
+
+                // Fungsi untuk toggle visibilitas dropdown
+                notificationBtn.addEventListener('click', function(event) {
+                    // Pastikan dropdown tidak hilang saat klik pada dropdown itu sendiri
+                    event.stopPropagation();
+                    notificationDropdown.classList.toggle('hidden'); // Menampilkan/Menyembunyikan dropdown
+                    console.log('Toggle notifikasi dropdown');
+                });
+
+                // Menutup dropdown jika diklik di luar
+                window.addEventListener('click', function(event) {
+                    // Jika klik di luar tombol atau dropdown, sembunyikan dropdown
+                    if (notificationBtn && !notificationBtn.contains(event.target) &&
+                        !notificationDropdown.contains(event.target)) {
+                        notificationDropdown.classList.add('hidden'); // Menyembunyikan dropdown
+                    }
+                });
+
+                // Event listener untuk setiap tombol detail di dalam dropdown
+                const setupDetailButtons = function() {
+                    const detailButtons = document.querySelectorAll('.btn-detail');
+                    console.log('Setup tombol detail:', detailButtons.length);
+
+                    detailButtons.forEach(button => {
+                        // Hapus event listener lama jika ada untuk menghindari duplikasi
+                        button.removeEventListener('click', handleDetailClick);
+                        // Tambahkan event listener baru
+                        button.addEventListener('click', handleDetailClick);
+                    });
+                };
+
+                // Handler untuk tombol detail
+                const handleDetailClick = function(e) {
+                    e.preventDefault();
+                    e.stopPropagation(); // Mencegah dropdown menutup
+
+                    const id = this.getAttribute('data-id');
+                    console.log('Button detail diklik:', id);
+
+                    // Cari parent item notifikasi (li, div, atau elemen lain)
+                    const notificationItem = this.closest('li') ||
+                        this.closest('.notification-item') ||
+                        this.closest('.dropdown-item') ||
+                        this.parentElement;
+
+                    if (notificationItem) {
+                        console.log('Menghapus item notifikasi');
+
+                        // Tampilkan detail notifikasi terlebih dahulu
+                        showDetailModal(id);
+
+                        // Animasi fade out
+                        notificationItem.style.transition = 'opacity 0.3s';
+                        notificationItem.style.opacity = '0';
+
+                        // Hapus elemen setelah animasi
+                        setTimeout(() => {
+                            notificationItem.remove();
+                            updateNotificationCounter();
+                            markNotificationAsRead(id);
+                        }, 300);
+                    } else {
+                        console.warn('Parent notifikasi tidak ditemukan');
+                        showDetailModal(id);
+                    }
+                };
+
+                // Setup awal
+                setupDetailButtons();
+
+                // Tambahkan MutationObserver untuk menangani jika ada notifikasi baru
+                const observer = new MutationObserver(function(mutations) {
+                    mutations.forEach(function(mutation) {
+                        if (mutation.type === 'childList' && mutation.addedNodes.length > 0) {
+                            setupDetailButtons();
+                        }
+                    });
+                });
+
+                // Amati perubahan di dalam dropdown
+                if (notificationDropdown) {
+                    observer.observe(notificationDropdown, {
+                        childList: true,
+                        subtree: true
+                    });
                 }
             });
+
+            // Fungsi untuk memperbarui counter notifikasi
+            function updateNotificationCounter() {
+                const notifCounter = document.getElementById('notification-counter') ||
+                    document.querySelector('.notification-counter');
+
+                if (notifCounter) {
+                    let currentCount = parseInt(notifCounter.textContent);
+                    if (!isNaN(currentCount) && currentCount > 0) {
+                        currentCount--;
+                        notifCounter.textContent = currentCount;
+
+                        if (currentCount === 0) {
+                            notifCounter.classList.add('hidden');
+                        }
+                    }
+                }
+            }
+
+            // Fungsi untuk menandai notifikasi sebagai dibaca
+            function markNotificationAsRead(id) {
+                if (!id) return;
+
+                $.ajax({
+                    url: '/admin/notifications/mark-as-read/' + id,
+                    type: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                    },
+                    data: {
+                        "_token": "{{ csrf_token() }}"
+                    },
+                    success: function(response) {
+                        console.log('Notifikasi berhasil ditandai sebagai dibaca');
+                    },
+                    error: function(xhr, status, error) {
+                        console.error('Gagal menandai notifikasi:', error);
+                    }
+                });
+            }
         </script>
-        
-            <form action="{{ route('admin.monitoring-presensi') }}" method="get" enctype="multipart/form-data"
-                class="my-3">
-                <div class="flex gap-2 items-center">
-                    <!-- Input untuk Tanggal Presensi -->
-                    <input 
-                        type="date" 
-                        name="tanggal_presensi" 
-                        class="input input-bordered w-32 md:w-40" 
-                        value="{{ request()->tanggal_presensi ?? Carbon\Carbon::now()->format('Y-m-d') }}" 
-                    />
 
-                    <!-- Input untuk NIK -->
-                    <input 
-                        type="text" 
-                        name="nik" 
-                        placeholder="NIK Karyawan" 
-                        class="input input-bordered w-32 md:w-40" 
-                        value="{{ request()->nik }}" 
-                    />
+        <form action="{{ route('admin.monitoring-presensi') }}" method="get" enctype="multipart/form-data" class="my-3">
+            <div class="flex gap-2 items-center">
+                <!-- Input untuk Tanggal Presensi -->
+                <input type="date" name="tanggal_presensi" class="input input-bordered w-32 md:w-40"
+                    value="{{ request()->tanggal_presensi ?? Carbon\Carbon::now()->format('Y-m-d') }}" />
 
-                    <!-- Input untuk Nama Karyawan -->
-                    <input 
-                        type="text" 
-                        name="nama_karyawan" 
-                        placeholder="Nama Karyawan" 
-                        class="input input-bordered w-32 md:w-40" 
-                        value="{{ request()->nama_karyawan }}" 
-                    />
+                <!-- Input untuk NIK -->
+                <input type="text" name="nik" placeholder="NIK Karyawan"
+                    class="input input-bordered w-32 md:w-40" value="{{ request()->nik }}" />
 
-                    <!-- Tombol Submit -->
-                    <button type="submit" class="btn btn-success w-10 h-10 flex items-center justify-center p-0">
-                        <i class="ri-search-2-line text-white text-lg"></i>
-                    </button>
-                </div>
-            </form>
-        </div>
-        <div class="w-full overflow-x-auto rounded-md bg-slate-200 px-10">
-            <table id="tabelPresensi"
-                class="table mb-4 w-full border-collapse items-center border-gray-200 align-top dark:border-white/40">
-                <thead class="text-sm text-black">
-                    <tr>
-                        <th></th>
-                        <th>NIK</th>
-                        <th>Nama Karyawan</th>
-                        <th>Tanggal</th>
-                        <th>Jam Masuk</th>
-                        <th>Jam Keluar</th>
-                        <th>Keterangan</th>
-                        <th>Aksi</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach ($monitoring as $value => $item)
-                        <tr class="hover">
-                            <td class="font-bold">{{ $monitoring->firstItem() + $value }}</td>
-                            <td>{{ $item->nik }}</td>
-                            <td>{{ $item->nama_karyawan }}</td>
-                            <td>{{ $item->tanggal_presensi }}</td>
-                            <td>{{ $item->jam_masuk }}</td>
-                            <td>
-                                @if ($item->jam_keluar)
-                                    {{ $item->jam_keluar }}
-                                @else
-                                    <div class="w-fit rounded-md bg-error p-1 text-white">Belum Presensi</div>
-                                @endif
-                            </td>
-                            <td>
+                <!-- Input untuk Nama Karyawan -->
+                <input type="text" name="nama_karyawan" placeholder="Nama Karyawan"
+                    class="input input-bordered w-32 md:w-40" value="{{ request()->nama_karyawan }}" />
+
+                <!-- Tombol Submit -->
+                <button type="submit" class="btn btn-success w-10 h-10 flex items-center justify-center p-0">
+                    <i class="ri-search-2-line text-white text-lg"></i>
+                </button>
+            </div>
+        </form>
+    </div>
+    <div class="w-full overflow-x-auto rounded-md bg-slate-200 px-10">
+        <table id="tabelPresensi"
+            class="table mb-4 w-full border-collapse items-center border-gray-200 align-top dark:border-white/40">
+            <thead class="text-sm text-black">
+                <tr>
+                    <th></th>
+                    <th>NIK</th>
+                    <th>Nama Karyawan</th>
+                    <th>Tanggal</th>
+                    <th>Jam Masuk</th>
+                    <th>Jam Keluar</th>
+                    <th>Keterangan</th>
+                    <th>Aksi</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach ($monitoring as $value => $item)
+                    <tr class="hover">
+                        <td class="font-bold">{{ $monitoring->firstItem() + $value }}</td>
+                        <td>{{ $item->nik }}</td>
+                        <td>{{ $item->nama_karyawan }}</td>
+                        <td>{{ $item->tanggal_presensi }}</td>
+                        <td>{{ $item->jam_masuk }}</td>
+                        <td>
+                            @if ($item->jam_keluar)
+                                {{ $item->jam_keluar }}
+                            @else
+                                <div class="w-fit rounded-md bg-error p-1 text-white">Belum Presensi</div>
+                            @endif
+                        </td>
+                        <td>
                             @php
-    // Ambil shift berdasarkan nik
-    $shift = DB::table('shifts')
-        ->join('shift_schedules', 'shift_schedules.shift_id', '=', 'shifts.id')
-        ->where('shift_schedules.karyawan_nik', $item->nik)
-        ->first();
+                                // Ambil shift berdasarkan nik
+                                $shift = DB::table('shifts')
+                                    ->join('shift_schedules', 'shift_schedules.shift_id', '=', 'shifts.id')
+                                    ->where('shift_schedules.karyawan_nik', $item->nik)
+                                    ->first();
 
-    if ($shift) {
-        $waktuMulaiShift = Carbon\Carbon::make($shift->waktu_mulai);
-        $masuk = Carbon\Carbon::make($item->jam_masuk);
-    } else {
-        $waktuMulaiShift = null;
-        $masuk = null;
-    }
-@endphp
+                                if ($shift) {
+                                    $waktuMulaiShift = Carbon\Carbon::make($shift->waktu_mulai);
+                                    $masuk = Carbon\Carbon::make($item->jam_masuk);
+                                } else {
+                                    $waktuMulaiShift = null;
+                                    $masuk = null;
+                                }
+                            @endphp
 
 
                             @if ($masuk > $waktuMulaiShift)
-    @php
-        $diff = $masuk->diff($waktuMulaiShift);  // Hitung selisih waktu
-        if ($diff->format('%h') != 0) {
-            $selisih = $diff->format('%h jam %I menit');
-        } else {
-            $selisih = $diff->format('%I menit');
-        }
-    @endphp
-    <div>Terlambat <br> {{ $selisih }}</div>
-@else
-    <div>Tepat Waktu</div>
-@endif
+                                @php
+                                    $diff = $masuk->diff($waktuMulaiShift); // Hitung selisih waktu
+                                    if ($diff->format('%h') != 0) {
+                                        $selisih = $diff->format('%h jam %I menit');
+                                    } else {
+                                        $selisih = $diff->format('%I menit');
+                                    }
+                                @endphp
+                                <div>Terlambat <br> {{ $selisih }}</div>
+                            @else
+                                <div>Tepat Waktu</div>
+                            @endif
 
                         </td>
-                            <td>
-                                <label for="detail_modal_{{ $item->nik }}" class="btn btn-primary btn-sm">
-                                    Detail
-                                </label>
-                            </td>
-                        </tr>
-                    @endforeach
-                </tbody>
-            </table>
-            <div class="mx-3 mb-5">
-                {{ $monitoring->links() }}
-            </div>
+                        <td>
+                            <label for="detail_modal_{{ $item->nik }}" class="btn btn-primary btn-sm">
+                                Detail
+                            </label>
+                        </td>
+                    </tr>
+                @endforeach
+            </tbody>
+        </table>
+        <div class="mx-3 mb-5">
+            {{ $monitoring->links() }}
         </div>
+    </div>
     </div>
 
     {{-- Modal Detail untuk Setiap Karyawan --}}
@@ -347,19 +453,87 @@
     </script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            const detailButtons = document.querySelectorAll('.dropdown-content .btn-detail');
-
-            detailButtons.forEach(button => {
-                button.addEventListener('click', function(e) {
+            // Menangani klik pada detail button notifikasi
+            // Gunakan delegasi event untuk mengatasi button yang baru ditambahkan
+            document.addEventListener('click', function(e) {
+                // Cek apakah yang diklik adalah btn-detail atau elemen di dalamnya
+                const detailButton = e.target.closest('.btn-detail');
+                if (detailButton) {
                     e.preventDefault();
-                    e.stopPropagation(); // Prevent dropdown from closing
-                    const id = this.getAttribute('data-id');
+
+                    // Ambil ID dari atribut data
+                    const id = detailButton.getAttribute('data-id');
+                    console.log('Button detail diklik dengan ID:', id);
 
                     // Show the details of the notification
                     showDetailModal(id);
-                });
+
+                    // Cari elemen notifikasi parent - coba beberapa selector yang umum
+                    // Gunakan closest dengan selector yang lebih umum
+                    const notificationItem = detailButton.closest('li') ||
+                        detailButton.closest('.notification-item') ||
+                        detailButton.closest('.dropdown-item');
+
+                    // Log untuk debugging
+                    console.log('Elemen notifikasi yang ditemukan:', notificationItem);
+
+                    if (notificationItem) {
+                        // Tambahkan animasi fadeOut sebelum menghapus item
+                        notificationItem.style.transition = 'opacity 0.3s';
+                        notificationItem.style.opacity = '0';
+
+                        // Sembunyikan notifikasi
+                        setTimeout(() => {
+                            notificationItem.remove();
+
+                            // Perbarui counter notifikasi jika ada
+                            updateNotificationCounter();
+
+                            // Tandai sebagai dibaca di server
+                            markNotificationAsRead(id);
+                        }, 300);
+                    }
+                }
             });
         });
+
+        function updateNotificationCounter() {
+            const notifCounter = document.getElementById('notification-counter') ||
+                document.querySelector('.notification-counter');
+
+            if (notifCounter) {
+                let currentCount = parseInt(notifCounter.textContent);
+                if (!isNaN(currentCount) && currentCount > 0) {
+                    currentCount--;
+                    notifCounter.textContent = currentCount;
+
+                    // Sembunyikan counter jika tidak ada notifikasi
+                    if (currentCount === 0) {
+                        notifCounter.classList.add('hidden');
+                    }
+                }
+            }
+        }
+
+        function markNotificationAsRead(id) {
+            // Log untuk debugging
+            console.log('Menandai notifikasi sebagai telah dibaca:', id);
+
+            // Gunakan $.ajax karena kodenya menggunakan jQuery
+            $.ajax({
+                url: '/admin/notifications/mark-as-read/' + id,
+                type: 'POST',
+                data: {
+                    "_token": "{{ csrf_token() }}"
+                },
+                success: function(response) {
+                    console.log('Notifikasi berhasil ditandai sebagai dibaca');
+                },
+                error: function(xhr, status, error) {
+                    console.error('Gagal menandai notifikasi:', error);
+                }
+            });
+        }
 
         function showDetailModal(id) {
             // Fetch the details dynamically (if needed)

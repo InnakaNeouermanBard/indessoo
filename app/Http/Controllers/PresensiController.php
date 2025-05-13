@@ -577,7 +577,7 @@ class PresensiController extends Controller
 
     public function laporanPresensiSemuaKaryawan(Request $request)
     {
-        $title = 'Laporan Presensi Semua Karyawan';
+        $title = 'Laporan Presensi All Karyawan OUTSOURCING';
         $bulan = $request->bulan;
 
         // Ambil riwayat presensi semua karyawan

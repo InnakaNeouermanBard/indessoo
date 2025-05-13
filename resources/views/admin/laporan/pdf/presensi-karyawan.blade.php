@@ -153,7 +153,7 @@
                 <td>:</td>
                 <td>{{ $karyawan->nama_lengkap }}</td>
             </tr>
-            <tr>
+            {{-- <tr>
                 <td>Jabatan</td>
                 <td>:</td>
                 <td>{{ $karyawan->jabatan }}</td>
@@ -162,7 +162,7 @@
                 <td>Email / Telepon</td>
                 <td>:</td>
                 <td>{{ $karyawan->email }} / {{ $karyawan->telepon }}</td>
-            </tr>
+            </tr> --}}
         </table>
 
 
@@ -348,29 +348,7 @@
         </table>
 
         <!-- Tanda tangan -->
-        <table class="pengesahan-atasan" style="margin-top: 30px;">
-            <tr class="tempat">
-                <td colspan="2">Baturraden, {{ \Carbon\Carbon::now()->format('d F Y') }}</td>
-            </tr>
-            <tr class="atasan">
-                <td>
-                    <p>Mengetahui,</p>
-                    <p>HR Manager</p>
-                    <br>
-                    <br>
-                    <br>
-                    <p><strong>____________</strong></p>
-                </td>
-                <td>
-                    <p>Dibuat Oleh,</p>
-                    <p>HR Staff</p>
-                    <br>
-                    <br>
-                    <br>
-                    <p><strong>{{ auth()->user()->name }}</strong></p>
-                </td>
-            </tr>
-        </table>
+
     </section>
 
 </body>

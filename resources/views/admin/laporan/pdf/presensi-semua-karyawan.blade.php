@@ -102,59 +102,55 @@
                     </span>
                     <span class="title" style="display: block; margin-bottom: 5px;">
                         PERIODE {{ strtoupper(\Carbon\Carbon::make($bulan)->format('F')) }} TAHUN
-                        {{ \Carbon\Carbon::make($bulan)->format('Y') }} <br>
+                        {{ \Carbon\Carbon::make($bulan)->format('Y') }} PT INDESSO AROMA<br>
                     </span>
-                    <span class="title" style="display: block; margin-bottom: 5px;">
-                        PT INDESSO AROMA BATURRADEN <br>
-                    </span>
-                    <span style="display: block; margin-top: 10px;">
-                        <i>Jl. Raya Baturaden KM.10, Dusun III, Karangtengah, Kec. Baturaden, Kabupaten Banyumas, Jawa Tengah 53151</i>
-                    </span>
+
+
                 </td>
             </tr>
         </table>
 
         <table class="presensi-karyawan">
-    <thead>
-        <tr>
-            <th>No.</th>
-            <th>Nama Karyawan</th>
-            <th>NIK</th>
-            {{-- <th>Jabatan / Departemen</th> --}}
-            <th>Departemen</th>
-            <th>Jumlah Kehadiran</th>
-            <th>Jumlah Lembur</th>
-            <th>Jumlah Izin</th>
-            <th>Jumlah Sakit</th>
-            <th>Jumlah Cuti</th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach ($riwayatPresensi as $value => $item)
-            <tr>
-                <td>
-                    {{ $value + 1 . '.' }}
-                </td>
-                <td>
-                    {{ $item->nama_karyawan }}
-                </td>
-                <td>
-                    {{ $item->nik }}
-                </td>
-                <td>
-                    {{ $item->nama_departemen }}
-                </td>
-                <td>
-                    {{ $item->total_kehadiran }}
-                </td>
-                <td>{{ $item->total_lembur }} jam</td>
-                <td>{{ $item->total_izin }} hari</td>
-                <td>{{ $item->total_sakit }} hari</td>
-                <td>{{ $item->total_cuti }} hari</td>
-            </tr>
-        @endforeach
-    </tbody>
-</table>
+            <thead>
+                <tr>
+                    <th>No.</th>
+                    <th>Nama Karyawan</th>
+                    <th>NIK</th>
+                    {{-- <th>Jabatan / Departemen</th> --}}
+                    <th>Departemen</th>
+                    <th>Jumlah Kehadiran</th>
+                    <th>Jumlah Lembur</th>
+                    <th>Jumlah Izin</th>
+                    <th>Jumlah Sakit</th>
+                    <th>Jumlah Cuti</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach ($riwayatPresensi as $value => $item)
+                    <tr>
+                        <td>
+                            {{ $value + 1 . '.' }}
+                        </td>
+                        <td>
+                            {{ $item->nama_karyawan }}
+                        </td>
+                        <td>
+                            {{ $item->nik }}
+                        </td>
+                        <td>
+                            {{ $item->nama_departemen }}
+                        </td>
+                        <td>
+                            {{ $item->total_kehadiran }}
+                        </td>
+                        <td>{{ $item->total_lembur }} jam</td>
+                        <td>{{ $item->total_izin }} hari</td>
+                        <td>{{ $item->total_sakit }} hari</td>
+                        <td>{{ $item->total_cuti }} hari</td>
+                    </tr>
+                @endforeach
+            </tbody>
+        </table>
 
     </section>
 
