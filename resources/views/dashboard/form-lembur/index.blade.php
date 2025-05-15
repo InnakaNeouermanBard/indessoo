@@ -202,6 +202,11 @@
                         readonly required />
                 </label>
 
+                <label class="form-control w-full mt-2">
+                    <span class="label-text">Keterangan Lembur</span>
+                    <textarea name="keterangan" class="input input-bordered w-full" rows="4"></textarea>
+                </label>
+
                 <button type="submit" class="btn btn-success mt-3 w-full">Ajukan</button>
             </form>
         </div>

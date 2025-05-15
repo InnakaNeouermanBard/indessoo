@@ -15,5 +15,6 @@ class FormLembur extends Model
         'jam_selesai',
         'overtime',
         'status',
+        'keterangan',
     ];
 }

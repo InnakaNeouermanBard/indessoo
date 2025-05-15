@@ -44,6 +44,7 @@
                         <th>Tanggal</th>
                         <th>Mulai</th>
                         <th>Selesai</th>
+                        <th>Keterangan</th>
                         <th>Status</th>
                         <th>Aksi</th>
                     </tr>
@@ -57,6 +58,7 @@
                             <td>{{ $item->tanggal }}</td>
                             <td>{{ $item->jam_mulai }}</td>
                             <td>{{ $item->jam_selesai }}</td>
+                            <td>{{ $item->keterangan }}</td>
                             <td>
                                 @if ($item->status == 'pending')
                                     <span class="badge badge-warning">Pending</span>
@@ -139,6 +141,13 @@
                         step="0.01" readonly required />
                 </label>
 
+                <!-- resources/views/admin/form-lembur/index.blade.php -->
+
+                <label class="form-control w-full mt-2">
+                    <span class="label-text">Keterangan Lembur</span>
+                    <textarea name="keterangan" class="input input-bordered w-full" rows="4"></textarea>
+                </label>
+
                 <button type="submit" class="btn btn-success mt-3 w-full">Simpan</button>
             </form>
         </div>
@@ -180,6 +189,10 @@
                         <tr>
                             <td class="font-bold">Overtime (Jam)</td>
                             <td id="detail_overtime"></td>
+                        </tr>
+                        <tr>
+                            <td class="font-bold">Keterangan</td>
+                            <td id="detail_keterangan"></td>
                         </tr>
                         <tr>
                             <td class="font-bold">Status</td>
@@ -242,6 +255,11 @@
                     <span class="label-text">Overtime (Jam)</span>
                     <input type="number" name="overtime" id="edit_overtime" class="input input-bordered w-full"
                         step="0.01" readonly required />
+                </label>
+
+                <label class="form-control w-full mt-2">
+                    <span class="label-text">Keterangan Lembur</span>
+                    <textarea id="edit_keterangan" name="keterangan" class="input input-bordered w-full" rows="4" required readonly></textarea>
                 </label>
 
                 <label class="form-control w-full mt-2">
@@ -331,6 +349,7 @@
                     $('#detail_jam_mulai').text(response.jam_mulai);
                     $('#detail_jam_selesai').text(response.jam_selesai);
                     $('#detail_overtime').text(response.overtime);
+                    $('#detail_keterangan').text(response.keterangan);
 
                     // Set status dengan format yang sesuai
                     let statusText = '';
@@ -367,6 +386,7 @@
                     $('#edit_jam_mulai').val(response.jam_mulai);
                     $('#edit_jam_selesai').val(response.jam_selesai);
                     $('#edit_overtime').val(response.overtime);
+                    $('#edit_keterangan').val(response.keterangan);
                     $('#edit_status').val(response.status);
 
                     // Set action form update

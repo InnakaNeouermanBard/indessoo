@@ -57,6 +57,7 @@ class FormLemburController extends Controller
     public function edit($id)
     {
         $karyawan = FormLembur::findOrFail($id);
+        
         return response()->json($karyawan);
     }
 
@@ -68,6 +69,7 @@ class FormLemburController extends Controller
             'jam_selesai' => 'required',
             'overtime' => 'required|numeric',
             'status' => 'required|in:pending,approved,rejected',
+            'keterangan' => 'nullable|string',
         ]);
 
         $formLembur = FormLembur::findOrFail($id);
@@ -77,6 +79,7 @@ class FormLemburController extends Controller
             'jam_selesai' => $request->jam_selesai,
             'overtime' => $request->overtime,
             'status' => $request->status,
+            'keterangan' => $request->keterangan,  // Update keterangan
         ]);
 
         return redirect()->route('form-lembur.index')->with('success', 'Data lembur berhasil diperbarui.');
@@ -141,6 +144,8 @@ class FormLemburController extends Controller
             'jam_mulai' => 'required',
             'jam_selesai' => 'required',
             'overtime' => 'required|numeric',
+            'keterangan' => 'nullable|string',  // Validasi untuk keterangan
+
         ]);
 
         $user = Auth::user();
@@ -157,6 +162,7 @@ class FormLemburController extends Controller
             'jam_mulai' => $request->jam_mulai,
             'jam_selesai' => $request->jam_selesai,
             'overtime' => $request->overtime,
+            'keterangan' => $request->keterangan,
             'status' => 'pending',
         ]);
 
