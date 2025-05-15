@@ -332,8 +332,21 @@
                     </label>
                     <label class="form-control w-full">
                         <div class="label">
-                            <span class="label-text font-semibold">Foto</span>
+                            <span class="label-text font-semibold">Password<span class="text-red-500">*</span></span>
                             <span class="label-text-alt" id="loading_edit7"></span>
+                        </div>
+                        <input type="password" name="password" placeholder="Password Baru"
+                            class="input input-bordered w-full text-blue-700" required />
+                        @error('password')
+                            <div class="label">
+                                <span class="label-text-alt text-sm text-error">{{ $message }}</span>
+                            </div>
+                        @enderror
+                    </label>
+                    <label class="form-control w-full">
+                        <div class="label">
+                            <span class="label-text font-semibold">Foto</span>
+                            <span class="label-text-alt" id="loading_edit8"></span>
                         </div>
                         @error('foto')
                             <div class="label">
@@ -414,6 +427,7 @@
             $("#loading_edit5").html(loading);
             $("#loading_edit6").html(loading);
             $("#loading_edit7").html(loading);
+            $("#loading_edit8").html(loading);
 
             $("select[id='departemen_id']").children().remove().end();
 
@@ -437,6 +451,7 @@
                     $("input[name='jabatan']").val(items[4]);
                     $("input[name='telepon']").val(items[5]);
                     $("input[name='email']").val(items[6]);
+                    $("input[name='password']").val(items[7]);
 
                     const departemen = @json($departemen);
                     let options = '<option disabled>Pilih Departemen!</option>';
@@ -462,6 +477,7 @@
                     $("#loading_edit5").html(loading);
                     $("#loading_edit6").html(loading);
                     $("#loading_edit7").html(loading);
+                    $("#loading_edit8").html(loading);
                 }
             });
         }

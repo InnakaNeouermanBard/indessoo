@@ -122,6 +122,7 @@ class KaryawanController extends Controller
             'jabatan' => 'required|string|max:255',
             'telepon' => 'required|string|max:15',
             'email' => ['required', 'email', Rule::unique('karyawan')->ignore($karyawan)],
+            'password' => 'required',
         ]);
         if ($request->hasFile('foto')) {
             $data['foto'] = $request->nik . "." . $request->file('foto')->getClientOriginalExtension();

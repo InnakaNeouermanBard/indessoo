@@ -16,8 +16,9 @@ class JadwalKerjaController extends Controller
     public function index()
     {
         $files = ExcelFile::latest()->paginate(10);
-        return view('admin.jadwal.index', compact('files'));
+        return view('admin.jadwal.indexExcel', compact('files'));
     }
+
 
     public function indexKaryawan()
     {
