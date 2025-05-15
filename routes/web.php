@@ -155,8 +155,12 @@ Route::middleware(['auth:karyawan'])->prefix('karyawan')->group(function () {
     Route::prefix('jadwal-kerja')->group(function () {
         Route::get('jadwal-kerja', [ShiftScheduleController::class, 'jadwalKaryawan'])
             ->name('karyawan.jadwalkerja.index');  // Menampilkan jadwal kazryawan dengan filter bulan dan tahun
+        Route::get('jadwal-excel', [JadwalKerjaController::class, 'indexKaryawanExcel'])
+            ->name('karyawan.jadwalkerja.indexExcel');
         Route::get('jadwal-kerja/download/{id}', [JadwalKerjaController::class, 'downloadKaryawan'])
             ->name('karyawan.jadwalkerja.download');
+            // Route untuk karyawan melihat file Excel yang di-upload admin
+        // Route untuk karyawan melihat file Excel yang di-upload admin
     });
 
     Route::prefix('presensi')->group(function () {

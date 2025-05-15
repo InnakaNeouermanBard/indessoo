@@ -136,8 +136,8 @@
                     text: "File ini akan hilang selamanya!",
                     icon: 'warning',
                     showCancelButton: true,
-                    confirmButtonColor: '#d33',
-                    cancelButtonColor: '#6c757d',
+                    confirmButtonColor: '#000000',
+                    cancelButtonColor: '#000000',
                     confirmButtonText: 'Ya, hapus!',
                     cancelButtonText: 'Batal'
                 }).then((result) => {
@@ -148,5 +148,16 @@
             });
         });
     </script>
+    <style>
+        .swal2-confirm {
+    background-color: #007bff !important; /* Warna biru untuk tombol OK */
+    color: white !important; /* Teks tombol OK menjadi putih */
+}
+.swal2-cancel {
+    background-color: #007bff !important; /* Warna biru untuk tombol OK */
+    color: white !important; /* Teks tombol OK menjadi putih */
+    border-color: #007bff !important; /* Border tombol OK menjadi biru */
+}
+</style>
     {{-- Pastikan SweetAlert2, DaisyUI & Alpine.js di-include di layout utama --}}
 </x-app-layout>

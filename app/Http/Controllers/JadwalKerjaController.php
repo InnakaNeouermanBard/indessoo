@@ -27,6 +27,15 @@ class JadwalKerjaController extends Controller
         return view('dashboard.jadwal.index', compact('files', 'title'));
     }
 
+    // Di dalam JadwalKerjaController.php
+
+    public function indexKaryawanExcel()
+    {
+        $files = ExcelFile::latest()->paginate(10);  // Ambil file terbaru yang di-upload admin
+        $title = 'Jadwal Excel';
+        return view('dashboard.jadwal.indexExcel', compact('files', 'title'));  // Pastikan menggunakan view karyawan
+    }
+
     public function import(Request $request)
     {
         $request->validate([

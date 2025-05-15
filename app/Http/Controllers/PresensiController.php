@@ -228,7 +228,7 @@ class PresensiController extends Controller
 
     public function pengajuanPresensi()
     {
-        $title = "Form Perizinan";
+        $title = "Form Cuti";
         $riwayatPengajuanPresensi = DB::table("pengajuan_presensi")
             ->where('nik', auth()->guard('karyawan')->user()->nik)
             ->orderBy("tanggal_mulai", "asc")
@@ -244,7 +244,7 @@ class PresensiController extends Controller
 
     public function pengajuanPresensiCreate()
     {
-        $title = "Form Pengajuan Presensi";
+        $title = "Form Cuti";
         $statusPengajuan = StatusPengajuanPresensi::cases();
 
         // Ambil data karyawan untuk mendapatkan sisa kuota cuti

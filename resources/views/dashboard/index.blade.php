@@ -247,10 +247,10 @@
                                                     @endif
                                                 </td>
                                                 <td>
-                                                    @if (\Carbon\Carbon::parse($jadwal->tanggal)->isPast())
-                                                        <span class="badge badge-ghost">Selesai</span>
-                                                    @elseif(\Carbon\Carbon::parse($jadwal->tanggal)->isToday())
+                                                    @if(\Carbon\Carbon::parse($jadwal->tanggal)->isToday())
                                                         <span class="badge badge-primary">Hari Ini</span>
+                                                    @elseif (\Carbon\Carbon::parse($jadwal->tanggal)->isPast())
+                                                        <span class="badge badge-ghost">Selesai</span>
                                                     @else
                                                         <span class="badge badge-info">Akan Datang</span>
                                                     @endif
