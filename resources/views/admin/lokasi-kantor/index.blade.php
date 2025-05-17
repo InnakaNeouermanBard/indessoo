@@ -35,12 +35,14 @@
                             <td>{{ $item->radius }} m</td>
                             <td>
                                 <div class="form-control">
-                                    <label class="cursor-pointer label justify-start">
+                                    {{-- <label class="cursor-pointer label justify-start">
                                         <input type="checkbox" class="toggle toggle-success toggle-status"
                                             data-id="{{ $item->id }}" {{ $item->is_used ? 'checked' : '' }} />
                                         <span class="label-text ml-2"
                                             id="status-text-{{ $item->id }}">{{ $item->is_used ? 'Aktif' : 'Tidak Aktif' }}</span>
-                                    </label>
+                                    </label> --}}
+                                    <span class="label-text ml-2"
+                                            id="status-text-{{ $item->id }}">{{ $item->is_used ? 'Aktif' : 'Tidak Aktif' }}</span>
                                 </div>
                             </td>
                             <td>
