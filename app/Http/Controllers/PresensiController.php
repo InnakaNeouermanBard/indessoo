@@ -194,6 +194,7 @@ class PresensiController extends Controller
 
     public function validation_radius_presensi($langtitudeKantor, $longtitudeKantor, $langtitudeUser, $longtitudeUser)
     {
+        
         $theta = $longtitudeKantor - $longtitudeUser;
         $hitungKoordinat = (sin(deg2rad($langtitudeKantor)) * sin(deg2rad($langtitudeUser))) + (cos(deg2rad($langtitudeKantor)) * cos(deg2rad($langtitudeUser)) * cos(deg2rad($theta)));
         $miles = rad2deg(acos($hitungKoordinat)) * 60 * 1.1515;
@@ -427,12 +428,33 @@ class PresensiController extends Controller
         $bulan = $request->bulan;
 
         $karyawan = auth()->guard('karyawan')->user(); // hanya karyawan yang login
-        $riwayatPresensi = DB::table("presensi")
-            ->where('nik', $karyawan->nik)
-            ->whereMonth('tanggal_presensi', Carbon::make($bulan)->format('m'))
-            ->whereYear('tanggal_presensi', Carbon::make($bulan)->format('Y'))
-            ->orderBy("tanggal_presensi", "asc")
-            ->get();
+                $riwayatPresensi = [];
+        $startDate = Carbon::make($bulan)->startOfMonth();
+        $endDate = Carbon::make($bulan)->endOfMonth();
+
+        while ($startDate->lte($endDate)) {
+            $tanggal = $startDate->format('Y-m-d');
+
+            $presensi = DB::table('presensi')
+                ->where('nik', $karyawan->nik)
+                ->whereDate('tanggal_presensi', $tanggal)
+                ->first();
+
+            $pengajuan = DB::table('pengajuan_presensi')
+                ->where('nik', $karyawan->nik)
+                ->where('status_approved', 2)
+                ->where('tanggal_mulai', '<=', $tanggal)
+                ->where('tanggal_selesai', '>=', $tanggal)
+                ->first();
+
+            $riwayatPresensi[] = [
+                'tanggal' => $tanggal,
+                'presensi' => $presensi,
+                'pengajuan' => $pengajuan
+            ];
+
+            $startDate->addDay();
+        }
 
         $shift = $karyawan->shift;  // Mengambil shift karyawan melalui relasi shift()
 
@@ -497,12 +519,33 @@ class PresensiController extends Controller
         $karyawan = Karyawan::find($request->karyawan); // Ambil data karyawan berdasarkan NIK
 
         // Ambil riwayat presensi karyawan
-        $riwayatPresensi = DB::table("presensi")
-            ->where('nik', $request->karyawan)
-            ->whereMonth('tanggal_presensi', Carbon::make($bulan)->format('m'))
-            ->whereYear('tanggal_presensi', Carbon::make($bulan)->format('Y'))
-            ->orderBy("tanggal_presensi", "asc")
-            ->get();
+        $riwayatPresensi = [];
+        $startDate = Carbon::make($bulan)->startOfMonth();
+        $endDate = Carbon::make($bulan)->endOfMonth();
+
+        while ($startDate->lte($endDate)) {
+            $tanggal = $startDate->format('Y-m-d');
+
+            $presensi = DB::table('presensi')
+                ->where('nik', $request->karyawan)
+                ->whereDate('tanggal_presensi', $tanggal)
+                ->first();
+
+            $pengajuan = DB::table('pengajuan_presensi')
+                ->where('nik', $request->karyawan)
+                ->where('status_approved', 2)
+                ->where('tanggal_mulai', '<=', $tanggal)
+                ->where('tanggal_selesai', '>=', $tanggal)
+                ->first();
+
+            $riwayatPresensi[] = [
+                'tanggal' => $tanggal,
+                'presensi' => $presensi,
+                'pengajuan' => $pengajuan
+            ];
+
+            $startDate->addDay();
+        }
 
         $shift = $karyawan->shift;  // Mengambil shift karyawan melalui relasi shift()
 
@@ -764,6 +807,12 @@ class PresensiController extends Controller
         }
     }
 
+    public function markAsRead(Request $request)
+{
+    auth()->user()->unreadNotifications->markAsRead();
+    return response()->json(['success' => true]);
+}
+    
     public function ajukanTukarJadwal(Request $request)
     {
         // Validasi input

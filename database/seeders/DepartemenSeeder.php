@@ -13,18 +13,18 @@ class DepartemenSeeder extends Seeder
      */
     public function run(): void
     {
-        // Departemen::create([
-        //     'kode' => 'D001',
-        //     'nama' => 'Produksi',
-        // ]);
-        // Departemen::create([
-        //     'kode' => 'D002',
-        //     'nama' => 'Maintenance',
-        // ]);
-        // Departemen::create([
-        //     'kode' => 'D003',
-        //     'nama' => 'Quality Control',
-        // ]);
+        Departemen::create([
+            'kode' => 'D001',
+            'nama' => 'Produksi',
+        ]);
+        Departemen::create([
+            'kode' => 'D002',
+            'nama' => 'Maintenance',
+        ]);
+        Departemen::create([
+            'kode' => 'D003',
+            'nama' => 'Quality Control',
+        ]);
         Departemen::create([
             'kode' => 'D004',
             'nama' => 'Gudang',

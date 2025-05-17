@@ -10,11 +10,15 @@ use Illuminate\Support\Facades\DB;
 
 class DashboardController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         $title = "Dashboard";
         $nik = auth()->guard('karyawan')->user()->nik;
+        
+            $bulan = $request->bulan ?? date('Y-m'); // default ke bulan ini
 
+
+        $karyawan = auth()->guard('karyawan')->user(); // hanya karyawan yang login
         // Ambil data presensi hari ini
         $presensiHariIni = DB::table('presensi')
             ->where('nik', $nik)
@@ -48,13 +52,46 @@ class DashboardController extends Controller
             ->first();
 
         // Ambil rekap pengajuan presensi bulan ini
-        $rekapPengajuanPresensi = DB::table('pengajuan_presensi')
+        // $rekapPengajuanPresensi = DB::table('pengajuan_presensi')
+        //     ->where('nik', $nik)
+        //     ->whereMonth('tanggal_mulai', date('m')) // Ganti tanggal_pengajuan dengan tanggal_mulai 
+        //     ->whereYear('tanggal_mulai', date('Y')) // Ganti tanggal_pengajuan dengan tanggal_mulai 
+        //     ->where('status_approved', 2) // Status disetujui 
+        //     ->selectRaw('sum(if(status = "Sakit", 1, 0)) as jml_sakit, sum(if(status = "Izin", 1, 0)) as jml_izin, sum(if(status = "Cuti", 1, 0)) as jml_cuti')
+        //     ->first();
+
+        $izin = DB::table('pengajuan_presensi')
             ->where('nik', $nik)
-            ->whereMonth('tanggal_mulai', date('m')) // Ganti tanggal_pengajuan dengan tanggal_mulai 
-            ->whereYear('tanggal_mulai', date('Y')) // Ganti tanggal_pengajuan dengan tanggal_mulai 
-            ->where('status_approved', 2) // Status disetujui 
-            ->selectRaw('sum(if(status = "Sakit", 1, 0)) as jml_sakit, sum(if(status = "Izin", 1, 0)) as jml_izin')
-            ->first();
+            ->where('status', 'I')
+            ->where('status_approved', 2)
+            ->whereMonth('tanggal_mulai', Carbon::make($bulan)->format('m'))
+            ->whereYear('tanggal_mulai', Carbon::make($bulan)->format('Y'))
+            ->count();
+
+        $sakit = DB::table('pengajuan_presensi')
+            ->where('nik', $nik)
+            ->where('status', 'S')
+            ->where('status_approved', 2)
+            ->whereMonth('tanggal_mulai', Carbon::make($bulan)->format('m'))
+            ->whereYear('tanggal_mulai', Carbon::make($bulan)->format('Y'))
+            ->count();
+
+        $cuti = DB::table('pengajuan_presensi')
+            ->where('nik', $nik) // Filter berdasarkan NIK karyawan
+            ->where('status', 'C') // Status Cuti
+            ->where('status_approved', 2)
+            ->whereMonth('tanggal_mulai', Carbon::make($bulan)->format('m')) // Bulan yang dipilih
+            ->whereYear('tanggal_mulai', Carbon::make($bulan)->format('Y')) // Tahun yang dipilih
+            ->get(); // Ambil semua pengajuan cuti
+
+        $totalCuti = 0;
+
+        // Loop melalui semua pengajuan cuti untuk menghitung total hari cuti
+        foreach ($cuti as $item) {
+            // Hitung jumlah hari cuti untuk setiap pengajuan
+            $totalCuti += Carbon::parse($item->tanggal_mulai)->diffInDays(Carbon::parse($item->tanggal_selesai)) + 1;
+        }
+
 
         // Ambil data leaderboard presensi hari ini
         $leaderboard = DB::table('presensi as p')
@@ -70,7 +107,9 @@ class DashboardController extends Controller
             'jadwalShift',
             'riwayatPresensi',
             'rekapPresensi',
-            'rekapPengajuanPresensi',
+            'izin',
+            'totalCuti',
+            'sakit',
             'leaderboard'
         ));
     }

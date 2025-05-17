@@ -447,11 +447,11 @@
 
                     $("input[name='nik_lama']").val(items[0]);
                     $("input[name='nik']").val(items[0]);
-                    $("input[name='nama_lengkap']").val(items[2]);
-                    $("input[name='jabatan']").val(items[4]);
+                    $("input[name='nama_lengkap']").val(items[1]);
+                    $("input[name='jabatan']").val(items[3]);
                     $("input[name='telepon']").val(items[5]);
                     $("input[name='email']").val(items[6]);
-                    $("input[name='password']").val(items[7]);
+                    // $("input[name='password']").val(items[7]);
 
                     const departemen = @json($departemen);
                     let options = '<option disabled>Pilih Departemen!</option>';

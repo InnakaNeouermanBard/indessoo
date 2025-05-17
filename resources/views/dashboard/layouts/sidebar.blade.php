@@ -26,80 +26,115 @@
 
     <div class="h-sidenav block max-h-screen w-auto bg-blue-800 grow basis-full items-center overflow-auto">
         <ul class="mb-0 flex flex-col pl-0">
+            @php
+                $isActive = Request::routeIs('karyawan.dashboard');
+            @endphp
+
             <li class="mt-0.5 w-full">
-                <a class="py-2.7 ease-nav-brand mx-2 my-0 flex items-center whitespace-nowrap px-4 text-sm text-white transition-colors dark:text-white dark:opacity-80 {{ Request::routeIs(['karyawan.dashboard']) ? 'rounded-none font text-slate-700 bg-blue-500/13' : '' }}"
-                    href="{{ route('karyawan.dashboard') }}">
-                    <div
-                        class="mr-2 flex h-8 w-8 items-center justify-center rounded-lg bg-center stroke-0 text-center xl:p-2.5">
-                        <i class="ri-tv-2-line relative top-0 text-lg leading-normal text-white"></i>
-                    </div>
-                    <span class="ease pointer-events-none ml-1 opacity-100 duration-300">Dashboard</span>
+                <a href="{{ route('karyawan.dashboard') }}"
+                class="{{ $isActive 
+                    ? 'flex items-center w-full px-4 py-2 text-white font-medium bg-gray-700 rounded-md focus:outline-none focus:bg-gray-700 transition duration-150 ease-in-out' 
+                    : 'flex items-center w-full px-4 py-2 text-gray-300 font-medium hover:text-white hover:bg-gray-700 rounded-md focus:outline-none focus:bg-gray-700 transition duration-150 ease-in-out' }}">
+                    <i class="ri-tv-2-line mr-2 text-lg leading-normal"></i>
+                    <span>Dashboard</span>
                 </a>
             </li>
 
+            {{-- @php
+                $isActive = Request::routeIs('karyawan.dashboard');
+            @endphp
+
             <li class="mt-0.5 w-full">
-                <a class="py-2.7 ease-nav-brand mx-2 my-0 flex items-center whitespace-nowrap px-4 text-sm text-white transition-colors dark:text-white dark:opacity-80 {{ Request::routeIs(['karyawan.presensi']) ? 'rounded-none font text-slate-700 bg-blue-500/13' : '' }}"
-                    href="{{ route('karyawan.presensi') }}">
-                    <div
-                        class="mr-2 flex h-8 w-8 items-center justify-center rounded-lg bg-center stroke-0 text-center xl:p-2.5">
-                        <i class="ri-camera-fill relative top-0 text-lg leading-normal text-white"></i>
-                    </div>
-                    <span class="ease pointer-events-none ml-1 opacity-100 duration-300">Absensi</span>
+                <a href="{{ route('karyawan.dashboard') }}"
+                class="{{ $isActive 
+                    ? 'flex items-center w-full px-4 py-2 text-white font-medium bg-gray-700 rounded-md focus:outline-none focus:bg-gray-700 transition duration-150 ease-in-out' 
+                    : 'flex items-center w-full px-4 py-2 text-gray-300 font-medium hover:text-white hover:bg-gray-700 rounded-md focus:outline-none focus:bg-gray-700 transition duration-150 ease-in-out' }}">
+                    <i class="ri-tv-2-line mr-2 text-lg leading-normal"></i>
+                    <span>Dashboard</span>
+                </a>
+            </li> --}}
+
+            @php
+                $isActive = Request::routeIs('karyawan.presensi');
+            @endphp
+
+            <li class="mt-0.5 w-full">
+                <a href="{{ route('karyawan.presensi') }}"
+                class="{{ $isActive 
+                    ? 'flex items-center w-full px-4 py-2 text-white font-medium bg-gray-700 rounded-md focus:outline-none focus:bg-gray-700 transition duration-150 ease-in-out' 
+                    : 'flex items-center w-full px-4 py-2 text-gray-300 font-medium hover:text-white hover:bg-gray-700 rounded-md focus:outline-none focus:bg-gray-700 transition duration-150 ease-in-out' }}">
+                    <i class="ri-camera-fill mr-2 text-lg leading-normal"></i>
+                    <span>Absensi</span>
                 </a>
             </li>
 
+            @php
+                $isActive = Request::routeIs('karyawan.izin');
+            @endphp
+
             <li class="mt-0.5 w-full">
-                <a class="py-2.7 ease-nav-brand mx-2 my-0 flex items-center whitespace-nowrap px-4 text-sm text-white transition-colors dark:text-white dark:opacity-80 {{ Request::routeIs(['karyawan.izin', 'karyawan.izin.create']) ? 'rounded-none font text-slate-700 bg-blue-500/13' : '' }}"
-                    href="{{ route('karyawan.izin') }}">
-                    <div
-                        class="mr-2 flex h-8 w-8 items-center justify-center rounded-lg bg-center stroke-0 text-center xl:p-2.5">
-                        <i class="ri-calendar-close-fill relative top-0 text-lg leading-normal text-white"></i>
-                    </div>
-                    <span class="ease pointer-events-none ml-1 opacity-100 duration-300">Form Cuti</span>
+                <a href="{{ route('karyawan.izin') }}"
+                class="{{ $isActive 
+                    ? 'flex items-center w-full px-4 py-2 text-white font-medium bg-gray-700 rounded-md focus:outline-none focus:bg-gray-700 transition duration-150 ease-in-out' 
+                    : 'flex items-center w-full px-4 py-2 text-gray-300 font-medium hover:text-white hover:bg-gray-700 rounded-md focus:outline-none focus:bg-gray-700 transition duration-150 ease-in-out' }}">
+                    <i class="ri-calendar-close-fill mr-2 text-lg leading-normal"></i>
+                    <span>Form Cuti</span>
                 </a>
             </li>
 
+            @php
+                $isActive = Request::routeIs('karyawan.form-lembur.index');
+            @endphp
+
             <li class="mt-0.5 w-full">
-                <a class="py-2.7 ease-nav-brand mx-2 my-0 flex items-center whitespace-nowrap px-4 text-sm text-white transition-colors dark:text-white dark:opacity-80 {{ Request::routeIs(['karyawan.form-lembur.index']) ? 'rounded-none font text-slate-700 bg-blue-500/13' : '' }}"
-                    href="{{ route('karyawan.form-lembur.index') }}">
-                    <div
-                        class="mr-2 flex h-8 w-8 items-center justify-center rounded-lg bg-center stroke-0 text-center xl:p-2.5">
-                        <i class="ri-time-fill relative top-0 text-lg leading-normal text-white"></i>
-                    </div>
-                    <span class="ease pointer-events-none ml-1 opacity-100 duration-300">Form Lembur</span>
+                <a href="{{ route('karyawan.form-lembur.index') }}"
+                class="{{ $isActive 
+                    ? 'flex items-center w-full px-4 py-2 text-white font-medium bg-gray-700 rounded-md focus:outline-none focus:bg-gray-700 transition duration-150 ease-in-out' 
+                    : 'flex items-center w-full px-4 py-2 text-gray-300 font-medium hover:text-white hover:bg-gray-700 rounded-md focus:outline-none focus:bg-gray-700 transition duration-150 ease-in-out' }}">
+                    <i class="ri-time-fill mr-2 text-lg leading-normal"></i>
+                    <span>Form Lembur</span>
                 </a>
             </li>
 
+            @php
+                $isActive = Request::routeIs('karyawan.profile');
+            @endphp
+
             <li class="mt-0.5 w-full">
-                <a class="py-2.7 ease-nav-brand mx-2 my-0 flex items-center whitespace-nowrap px-4 text-sm text-white transition-colors dark:text-white dark:opacity-80 {{ Request::routeIs(['karyawan.profile']) ? 'rounded-none font text-slate-700 bg-blue-500/13' : '' }}"
-                    href="{{ route('karyawan.profile') }}">
-                    <div
-                        class="mr-2 flex h-8 w-8 items-center justify-center rounded-lg bg-center stroke-0 text-center xl:p-2.5">
-                        <i class="ri-user-3-fill relative top-0 text-lg leading-normal text-white"></i>
-                    </div>
-                    <span class="ease pointer-events-none ml-1 opacity-100 duration-300">Profile</span>
+                <a href="{{ route('karyawan.profile') }}"
+                class="{{ $isActive 
+                    ? 'flex items-center w-full px-4 py-2 text-white font-medium bg-gray-700 rounded-md focus:outline-none focus:bg-gray-700 transition duration-150 ease-in-out' 
+                    : 'flex items-center w-full px-4 py-2 text-gray-300 font-medium hover:text-white hover:bg-gray-700 rounded-md focus:outline-none focus:bg-gray-700 transition duration-150 ease-in-out' }}">
+                    <i class="ri-user-3-fill mr-2 text-lg leading-normal"></i>
+                    <span>Profile</span>
                 </a>
             </li>
 
+            @php
+                $isActive = Request::routeIs('karyawan.jadwalkerja.index');
+            @endphp
+
             <li class="mt-0.5 w-full">
-                <a class="py-2.7 ease-nav-brand mx-2 my-0 flex items-center whitespace-nowrap px-4 text-sm text-white transition-colors dark:text-white dark:opacity-80 {{ Request::routeIs(['karyawan.form-lembur.index']) ? 'rounded-none font text-slate-700 bg-blue-500/13' : '' }}"
-                    href="{{ route('karyawan.jadwalkerja.index') }}">
-                    <div
-                        class="mr-2 flex h-8 w-8 items-center justify-center rounded-lg bg-center stroke-0 text-center xl:p-2.5">
-                        <i class="ri-calendar-line relative top-0 text-lg leading-normal text-white"></i>
-                    </div>
-                    <span class="ease pointer-events-none ml-1 opacity-100 duration-300">Jadwal</span>
+                <a href="{{ route('karyawan.jadwalkerja.index') }}"
+                class="{{ $isActive 
+                    ? 'flex items-center w-full px-4 py-2 text-white font-medium bg-gray-700 rounded-md focus:outline-none focus:bg-gray-700 transition duration-150 ease-in-out' 
+                    : 'flex items-center w-full px-4 py-2 text-gray-300 font-medium hover:text-white hover:bg-gray-700 rounded-md focus:outline-none focus:bg-gray-700 transition duration-150 ease-in-out' }}">
+                    <i class="ri-calendar-line mr-2 text-lg leading-normal"></i>
+                    <span>Jadwal</span>
                 </a>
             </li>
 
+            @php
+                $isActive = Request::routeIs('karyawan.laporan');
+            @endphp
+
             <li class="mt-0.5 w-full">
-                <a class="py-2.7 ease-nav-brand mx-2 my-0 flex items-center whitespace-nowrap px-4 text-sm text-white transition-colors dark:text-white dark:opacity-80 {{ Request::routeIs(['karyawan.profile']) ? 'rounded-none font text-slate-700 bg-blue-500/13' : '' }}"
-                    href="{{ route('karyawan.laporan') }}">
-                    <div
-                        class="mr-2 flex h-8 w-8 items-center justify-center rounded-lg bg-center stroke-0 text-center xl:p-2.5">
-                        <i class="ri-file-list-3-line relative top-0 text-lg leading-normal text-white"></i>
-                    </div>
-                    <span class="ease pointer-events-none ml-1 opacity-100 duration-300">Laporan</span>
+                <a href="{{ route('karyawan.laporan') }}"
+                class="{{ $isActive 
+                    ? 'flex items-center w-full px-4 py-2 text-white font-medium bg-gray-700 rounded-md focus:outline-none focus:bg-gray-700 transition duration-150 ease-in-out' 
+                    : 'flex items-center w-full px-4 py-2 text-gray-300 font-medium hover:text-white hover:bg-gray-700 rounded-md focus:outline-none focus:bg-gray-700 transition duration-150 ease-in-out' }}">
+                    <i class="ri-file-list-line mr-2 text-lg leading-normal"></i>
+                    <span>Laporan</span>
                 </a>
             </li>
 

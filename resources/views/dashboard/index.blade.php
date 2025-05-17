@@ -289,7 +289,7 @@
 
                     <div class="mb-5 flex flex-wrap">
                         <!-- Rekap Hadir -->
-                        <div class="mb-3 w-full max-w-full px-3 sm:w-1/2 sm:flex-none xl:mb-0 xl:w-1/4">
+                        <div class="mb-3 w-full max-w-full px-3 sm:w-1/2 sm:flex-none xl:mb-0 xl:w-1/5">
                             <div
                                 class="dark:bg-slate-900 dark:shadow-dark-xl relative flex min-w-0 flex-col break-words rounded-2xl bg-white bg-clip-border shadow-xl">
                                 <div class="flex-auto p-4">
@@ -316,7 +316,7 @@
                         </div>
 
                         <!-- Rekap Izin -->
-                        <div class="mb-3 w-full max-w-full px-3 sm:w-1/2 sm:flex-none xl:mb-0 xl:w-1/4">
+                        <div class="mb-3 w-full max-w-full px-3 sm:w-1/2 sm:flex-none xl:mb-0 xl:w-1/5">
                             <div
                                 class="dark:bg-slate-900 dark:shadow-dark-xl relative flex min-w-0 flex-col break-words rounded-2xl bg-white bg-clip-border shadow-xl">
                                 <div class="flex-auto p-4">
@@ -327,7 +327,7 @@
                                                     class="mb-0 font-sans text-sm font-semibold uppercase leading-normal dark:text-white dark:opacity-60">
                                                     Sakit</p>
                                                 <h5 class="mb-2 font-bold dark:text-white">
-                                                    {{ $rekapPengajuanPresensi->jml_sakit }}</h5>
+                                                    {{ $sakit }}</h5>
                                             </div>
                                         </div>
                                         <div class="basis-1/3 px-3 text-right">
@@ -341,9 +341,34 @@
                                 </div>
                             </div>
                         </div>
+                        
+                        <div class="mb-3 w-full max-w-full px-3 sm:w-1/2 sm:flex-none xl:mb-0 xl:w-1/5">
+                            <div
+                                class="dark:bg-slate-900 dark:shadow-dark-xl relative flex min-w-0 flex-col break-words rounded-2xl bg-white bg-clip-border shadow-xl">
+                                <div class="flex-auto p-4">
+                                    <div class="-mx-3 flex flex-row">
+                                        <div class="w-2/3 max-w-full flex-none px-3">
+                                            <div>
+                                                <p
+                                                    class="mb-0 font-sans text-sm font-semibold uppercase leading-normal dark:text-white dark:opacity-60">
+                                                    Cuti</p>
+                                                <h5 class="mb-2 font-bold dark:text-white">
+                                                    {{ $totalCuti }}</h5>
+                                            </div>
+                                        </div>
+                                        <div class="basis-1/3 px-3 text-right">
+                                            <div
+                                                class="rounded-circle inline-block h-12 w-12 bg-gradient-to-tl from-emerald-500 to-teal-400 text-center">
+                                                <i class="ri-hotel-bed-line relative top-3 text-2xl leading-none text-white"></i>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
 
                         <!-- Rekap Sakit -->
-                        <div class="mb-3 w-full max-w-full px-3 sm:w-1/2 sm:flex-none xl:mb-0 xl:w-1/4">
+                        <div class="mb-3 w-full max-w-full px-3 sm:w-1/2 sm:flex-none xl:mb-0 xl:w-1/5">
                             <div
                                 class="dark:bg-slate-900 dark:shadow-dark-xl relative flex min-w-0 flex-col break-words rounded-2xl bg-white bg-clip-border shadow-xl">
                                 <div class="flex-auto p-4">
@@ -354,7 +379,7 @@
                                                     class="mb-0 font-sans text-sm font-semibold uppercase leading-normal dark:text-white dark:opacity-60">
                                                     Izin</p>
                                                 <h5 class="mb-2 font-bold dark:text-white">
-                                                    {{ $rekapPengajuanPresensi->jml_izin }}</h5>
+                                                    {{ $izin }}</h5>
                                             </div>
                                         </div>
                                         <div class="basis-1/3 px-3 text-right">
@@ -370,7 +395,7 @@
                         </div>
 
                         <!-- Rekap Telat -->
-                        <div class="mb-3 w-full max-w-full px-3 sm:w-1/2 sm:flex-none xl:mb-0 xl:w-1/4">
+                        <div class="mb-3 w-full max-w-full px-3 sm:w-1/2 sm:flex-none xl:mb-0 xl:w-1/5">
                             <div
                                 class="dark:bg-slate-900 dark:shadow-dark-xl relative flex min-w-0 flex-col break-words rounded-2xl bg-white bg-clip-border shadow-xl">
                                 <div class="flex-auto p-4">

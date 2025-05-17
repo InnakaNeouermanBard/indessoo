@@ -118,6 +118,7 @@ Route::middleware(['auth:web'])->prefix('admin')->group(function () {
     Route::get('jadwal-shift/{id}', [App\Http\Controllers\ShiftScheduleController::class, 'show'])
         ->name('jadwal-shift.show');
 
+    Route::post('/notifications/mark-as-read', [PresensiControllerm::class, 'markAsRead'])->name('notifications.markAsRead');
 
     Route::get('/departemen', [DepartemenController::class, 'index'])->name('admin.departemen');
     Route::post('/departemen/tambah', [DepartemenController::class, 'store'])->name('admin.departemen.store');

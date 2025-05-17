@@ -105,10 +105,7 @@
                         {{ \Carbon\Carbon::make($bulan)->format('Y') }} <br>
                     </span>
                     <span class="title" style="display: block; margin-bottom: 5px;">
-                        PT ABCD DEFG <br>
-                    </span>
-                    <span style="display: block; margin-top: 10px;">
-                        <i>Lorem ipsum, dolor sit amet consectetur adipisicing elit. Accusantium, vero.</i>
+                        PT INDESSO AROMA BATURRADEN <br>
                     </span>
                 </td>
             </tr>
@@ -171,52 +168,145 @@
                 </tr>
             </thead>
             <tbody>
-                @foreach ($riwayatPresensi as $value => $item)
-                    <tr>
-                        <td>{{ $value + 1 }}</td>
-                        <td>{{ \Carbon\Carbon::make($item->tanggal_presensi)->format('d-m-Y') }}</td>
-                        <td>{{ \Carbon\Carbon::make($item->jam_masuk)->format('H:i') }}</td>
-                        <td><img src="{{ public_path("storage/unggah/presensi/$item->foto_masuk") }}" width="50"
-                                height="50" /></td>
-                        <td>{{ \Carbon\Carbon::make($item->jam_keluar)->format('H:i') ?? 'Belum Presensi' }}</td>
-                        <td><img src="{{ public_path("storage/unggah/presensi/$item->foto_keluar") }}" width="50"
-                                height="50" /></td>
-                        <td>
-                            @php
-                                // Ambil shift berdasarkan nik
-                                $shift = DB::table('shifts')
-                                    ->join('shift_schedules', 'shift_schedules.shift_id', '=', 'shifts.id')
-                                    ->where('shift_schedules.karyawan_nik', $item->nik) // Sesuaikan dengan kolom nik
-                                    ->first();
+                @php
+                    use Carbon\Carbon;
+                    // Inisialisasi variabel untuk perhitungan status per hari
+                    $hariIzin = 0;
+                    $hariSakit = 0;
+                    $hariCuti = 0;
+                    $totalJamLembur = 0;
+                @endphp
 
-                                // Ambil waktu mulai shift
-                                $waktuMulaiShift = Carbon\Carbon::make($shift->waktu_mulai);
-                                $masuk = Carbon\Carbon::make($item->jam_masuk); // Waktu masuk karyawan
-                            @endphp
+                @foreach ($riwayatPresensi as $index => $item)
+    @php
+        $tanggal = Carbon::parse($item['tanggal'])->format('Y-m-d');
+        $presensi = $item['presensi'];
+        $pengajuan = $item['pengajuan'];
 
-                            @if ($masuk->gt($waktuMulaiShift))
-                                <!-- Jika waktu masuk lebih besar dari waktu mulai shift -->
-                                @php
-                                    $diff = $masuk->diff($waktuMulaiShift); // Hitung selisih antara jam masuk dan waktu mulai shift
-                                    if ($diff->format('%h') != 0) {
-                                        $selisih = $diff->format('%h jam %I menit');
-                                    } else {
-                                        $selisih = $diff->format('%I menit');
-                                    }
-                                @endphp
-                                <div>Terlambat <br> {{ $selisih }}</div>
-                            @else
-                                <div>Tepat Waktu</div>
-                            @endif
-                        </td>
+        // Status Izin/Sakit/Cuti
+        $statusIzin = $statusSakit = $statusCuti = false;
+        $statusLabel = '-';
 
-                        <!-- Hanya tampilkan jumlah lembur, izin, sakit, dan cuti -->
-                        <td>{{ $lembur }} jam</td>
-                        <td>{{ $izin }} hari</td>
-                        <td>{{ $sakit }} hari</td>
-                        <td>{{ $totalCuti }} hari</td>
-                    </tr>
-                @endforeach
+        if ($pengajuan) {
+            if ($pengajuan->status === 'I') {
+                $statusIzin = true;
+                $statusLabel = 'Izin';
+                $hariIzin++;
+            } elseif ($pengajuan->status === 'S') {
+                $statusSakit = true;
+                $statusLabel = 'Sakit';
+                $hariSakit++;
+            } elseif ($pengajuan->status === 'C') {
+                $statusCuti = true;
+                $statusLabel = 'Cuti';
+                $hariCuti++;
+            }
+        }
+
+        // Cek jam lembur
+        $jamLembur = DB::table('form_lemburs')
+            ->where('nik', $karyawan->nik)
+            ->whereDate('tanggal', $tanggal)
+            ->value('overtime') ?? 0;
+        $totalJamLembur += $jamLembur;
+    @endphp
+
+    <tr>
+        <td>{{ $index + 1 }}</td>
+        <td>{{ Carbon::parse($tanggal)->format('d-m-Y') }}</td>
+
+        {{-- Jam Masuk --}}
+        <td>
+            @if ($presensi && !$statusIzin && !$statusSakit && !$statusCuti)
+                {{ Carbon::parse($presensi->jam_masuk)->format('H:i') }}
+            @else
+                -
+            @endif
+        </td>
+
+        {{-- Foto Masuk --}}
+        <td>
+            @if ($presensi && !$statusIzin && !$statusSakit && !$statusCuti && $presensi->foto_masuk)
+                <img src="{{ public_path("storage/unggah/presensi/$presensi->foto_masuk") }}" width="50" height="50" />
+            @else
+                -
+            @endif
+        </td>
+
+        {{-- Jam Keluar --}}
+        <td>
+            @if ($presensi && !$statusIzin && !$statusSakit && !$statusCuti)
+                {{ $presensi->jam_keluar ? Carbon::parse($presensi->jam_keluar)->format('H:i') : 'Belum Presensi' }}
+            @else
+                -
+            @endif
+        </td>
+
+        {{-- Foto Keluar --}}
+        <td>
+            @if ($presensi && !$statusIzin && !$statusSakit && !$statusCuti && $presensi->foto_keluar)
+                <img src="{{ public_path("storage/unggah/presensi/$presensi->foto_keluar") }}" width="50" height="50" />
+            @else
+                -
+            @endif
+        </td>
+
+        {{-- Keterangan Presensi (Terlambat / Tepat Waktu / Status Izin) --}}
+        <td>
+            @if ($statusIzin || $statusSakit || $statusCuti)
+                <span class="status-indicator">{{ $statusLabel }}</span>
+            @elseif ($presensi)
+                @php
+                    $shift = DB::table('shifts')
+                        ->join('shift_schedules', 'shift_schedules.shift_id', '=', 'shifts.id')
+                        ->where('shift_schedules.karyawan_nik', $karyawan->nik)
+                        ->where('shift_schedules.tanggal', $tanggal)
+                        ->first();
+
+                    // Jika tidak ditemukan shift, gunakan default
+                    if (!$shift) {
+                        $shift = (object) [
+                            'waktu_mulai' => '08:00:00',
+                            'nama' => 'Default',
+                        ];
+                    }
+
+                    $waktuMulaiShift = Carbon::make($shift->waktu_mulai);
+                    $jamMasuk = Carbon::make($presensi->jam_masuk);
+                @endphp
+
+                @if ($jamMasuk && $jamMasuk->gt($waktuMulaiShift))
+                    @php
+                        $diff = $jamMasuk->diff($waktuMulaiShift);
+                        $selisih = $diff->format('%h jam %I menit');
+                    @endphp
+                    <div>Terlambat <br> {{ $selisih }}</div>
+                @else
+                    <div>Tepat Waktu</div>
+                @endif
+            @else
+                -
+            @endif
+        </td>
+
+        {{-- Lembur --}}
+        <td>{{ $jamLembur ? $jamLembur . ' jam' : '-' }}</td>
+
+        {{-- Status Harian: Izin / Sakit / Cuti --}}
+        <td>{{ $statusIzin ? 'Ya' : '-' }}</td>
+        <td>{{ $statusSakit ? 'Ya' : '-' }}</td>
+        <td>{{ $statusCuti ? 'Ya' : '-' }}</td>
+    </tr>
+@endforeach
+
+                <!-- Baris Total -->
+                <tr class="total-row">
+                    <td colspan="7" style="text-align: right"><strong>TOTAL</strong></td>
+                    <td><strong>{{ $totalJamLembur }} jam</strong></td>
+                    <td><strong>{{ $hariIzin }} hari</strong></td>
+                    <td><strong>{{ $hariSakit }} hari</strong></td>
+                    <td><strong>{{ $hariCuti }} hari</strong></td>
+                </tr>
             </tbody>
         </table>
     </section>
