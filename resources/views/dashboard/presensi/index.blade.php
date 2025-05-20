@@ -1263,6 +1263,31 @@
                                                 </div>
                                             </div>
                                         </div>
+
+                                        <!-- Modal View Lokasi -->
+                                        <input type="checkbox" id="view_modal" class="modal-toggle" />
+                                        <div class="modal" role="dialog">
+                                            <div class="modal-box">
+                                                <div class="mb-3 flex justify-between">
+                                                    <h3 class="judul-lokasi text-lg font-bold"></h3>
+                                                    <label for="view_modal" class="cursor-pointer">
+                                                        <i class="ri-close-large-fill"></i>
+                                                    </label>
+                                                </div>
+                                                <div>
+                                                    <label class="form-control w-full">
+                                                        <div class="label">
+                                                            <span class="label-text font-semibold">Koordinat</span>
+                                                            <span class="label-text-alt" id="loading_edit1"></span>
+                                                        </div>
+                                                        <input type="text" name="lokasi" placeholder="Lokasi"
+                                                            class="input input-bordered w-full text-blue-700" readonly />
+                                                        <div id="lokasi-map" class="mx-auto mt-3 w-full rounded-md"
+                                                            style="height: 320px;"></div>
+                                                    </label>
+                                                </div>
+                                            </div>
+                                        </div>
                                     @endforeach
 
                                 </tbody>
@@ -1277,6 +1302,32 @@
         </div>
     </div>
     <script>
+        var lokasiKantor = {!! json_encode($lokasiKantor->first()) !!}; // Ambil lokasi kantor pertama
+
+        function maps(latitude, longitude) {
+            let lokasiMap = L.map('lokasi-map').setView([latitude, longitude], 17); // Set peta dengan lat dan lon
+
+            L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                maxZoom: 19,
+                attribution: '&copy; OpenStreetMap contributors'
+            }).addTo(lokasiMap);
+
+            // Tambahkan marker untuk lokasi presensi
+            let marker = L.marker([latitude, longitude]).addTo(lokasiMap);
+            marker.bindPopup("<b>Lokasi Presensi</b>").openPopup(); // Popup marker
+
+            // Tambahkan radius kantor sebagai circle
+            L.circle([lokasiKantor.latitude, lokasiKantor.longitude], {
+                color: 'red', // Warna border
+                fillColor: '#f03', // Warna isian
+                fillOpacity: 0.5, // Opasitas
+                radius: lokasiKantor.radius // Radius kantor
+            }).addTo(lokasiMap);
+
+            lokasiMap.invalidateSize(); // Menyesuaikan ukuran peta
+        }
+
+
         function viewLokasi(tipe, nik, tanggalPresensi) {
             // Aktifkan modal lokasi
             document.getElementById('view_modal').checked = true;
