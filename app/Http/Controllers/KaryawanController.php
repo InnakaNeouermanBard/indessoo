@@ -63,7 +63,7 @@ class KaryawanController extends Controller
 
         $departemen = Departemen::get();
 
-        $query = Karyawan::join('departemen as d', 'karyawan.departemen_id', '=', 'd.id')->select('karyawan.*', 'd.kode')->orderBy('d.kode', 'asc')->orderBy('karyawan.nama_lengkap', 'asc');
+        $query = Karyawan::join('departemen as d', 'karyawan.departemen_id', '=', 'd.id')->select('karyawan.*', 'd.kode')->orderBy('karyawan.nik', 'asc')->orderBy('d.kode', 'asc')->orderBy('karyawan.nama_lengkap', 'asc');
         if ($request->nama_karyawan) {
             $query->where('karyawan.nama_lengkap', 'like', '%' . $request->nama_karyawan . '%');
         }
