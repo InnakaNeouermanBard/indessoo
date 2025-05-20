@@ -29,13 +29,17 @@
                 <tbody>
                     @foreach ($karyawan as $index => $item)
                         @php
-                            // Hitung jumlah cuti yang sudah dipakai tahun ini
                             $cutiTerpakai = DB::table('pengajuan_presensi')
                                 ->where('nik', $item->nik)
                                 ->where('status', 'C')
                                 ->where('status_approved', 2)
                                 ->whereYear('tanggal_mulai', date('Y'))
-                                ->count();
+                                ->get()
+                                ->sum(function ($cuti) {
+                                    $start = \Carbon\Carbon::parse($cuti->tanggal_mulai);
+                                    $end = \Carbon\Carbon::parse($cuti->tanggal_selesai);
+                                    return $start->diffInDays($end) + 1; // +1 untuk menghitung hari terakhir
+                            });
 
                             $sisaKuota = $item->kuota_cuti - $cutiTerpakai;
                         @endphp
@@ -47,13 +51,11 @@
                             <td class="px-4 py-3">{{ $item->kuota_cuti }} hari</td>
                             <td class="px-4 py-3">{{ $cutiTerpakai }} hari</td>
                             <td class="px-4 py-3">
-                                <span
-                                    class="{{ $sisaKuota <= 0 ? 'text-red-500 font-bold' : 'text-green-500 font-bold' }}">
+                                <span class="{{ $sisaKuota <= 0 ? 'text-red-500 font-bold' : 'text-green-500 font-bold' }}">
                                     {{ $sisaKuota }} hari
                                 </span>
                             </td>
                             <td class="px-4 py-3 text-center">
-                                <!-- Tombol Edit Kuota dengan data atribut -->
                                 <button class="edit-kuota-btn btn btn-info btn-sm"
                                     data-nik="{{ $item->nik }}"
                                     data-nama="{{ $item->nama_lengkap }}"
@@ -88,8 +90,7 @@
 
                 <div class="mb-4">
                     <label for="edit-kuota" class="block text-sm font-medium mb-2">Kuota Cuti (Hari)</label>
-                    <input type="number" id="edit-kuota" name="kuota_cuti" class="input input-bordered w-full"
-                        min="0" required>
+                    <input type="number" id="edit-kuota" name="kuota_cuti" class="input input-bordered w-full" min="0" required>
                 </div>
 
                 <div class="flex justify-end gap-2 mt-6">
@@ -101,76 +102,61 @@
         <label class="modal-backdrop close-modal" for="editKuotaModal"></label>
     </div>
 
-    @push('scripts')
-        <script>
-            $(document).ready(function() {
-                // Edit kuota modal
-                $(".edit-kuota-btn").click(function() {
-                    const nik = $(this).data('nik');
-                    const nama = $(this).data('nama');
-                    const kuota = $(this).data('kuota');
-
-                    // Isi data ke modal
-                    $("#edit-nik").val(nik);
-                    $("#edit-nama").text(nama);
-                    $("#edit-kuota").val(kuota);
-
-                    // Update action URL form
-                    $("#formEditKuota").attr('action', `/admin/kuota-cuti/${nik}`);
-
-                    // Tampilkan modal
-                    $("#editKuotaModal").addClass("modal-open");
-                });
-
-                // Tutup modal
-                $(".close-modal").click(function() {
-                    $("#editKuotaModal").removeClass("modal-open");
-                });
-
-                // Menutup modal ketika klik di luar modal-box
-                $(document).click(function(event) {
-                    if ($(event.target).is("#editKuotaModal")) {
-                        $("#editKuotaModal").removeClass("modal-open");
-                    }
-                });
-            });
-        </script>
+    @push('styles')
         <style>
-        .modal {
-    display: none;
-}
+            .modal {
+                display: none;
+                position: fixed;
+                inset: 0;
+                background-color: rgba(0, 0, 0, 0.5);
+                z-index: 1000;
+            }
 
-.modal-open {
-    display: block;
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-color: rgba(0, 0, 0, 0.5); /* Overlay */
-    z-index: 1000;
-}
+            .modal.modal-open {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
 
-.modal-box {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    background-color: white;
-    padding: 20px;
-    border-radius: 8px;
-    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
-}
-
-.modal-backdrop {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-color: rgba(0, 0, 0, 0.5); /* Untuk area di luar modal */
-    z-index: 999;
-}
-</style>
+            .modal-box {
+                background-color: white;
+                padding: 20px;
+                border-radius: 8px;
+                box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+                max-width: 500px;
+                width: 100%;
+            }
+        </style>
     @endpush
+
+    @push('scripts')
+    <script>
+        $(document).ready(function () {
+            $(".edit-kuota-btn").click(function () {
+                const nik = $(this).data("nik");
+                const nama = $(this).data("nama");
+                const kuota = $(this).data("kuota");
+
+                $("#edit-nik").val(nik);
+                $("#edit-nama").text(nama);
+                $("#edit-kuota").val(kuota);
+
+                const route = `{{ route('admin.kuota-cuti.update', ['nik' => '__nik__']) }}`.replace('__nik__', nik);
+                $("#formEditKuota").attr("action", route);
+
+                $("#editKuotaModal").addClass("modal-open");
+            });
+
+            $(".close-modal").click(function () {
+                $("#editKuotaModal").removeClass("modal-open");
+            });
+
+            $(document).click(function (event) {
+                if ($(event.target).is("#editKuotaModal")) {
+                    $("#editKuotaModal").removeClass("modal-open");
+                }
+            });
+        });
+    </script>
+@endpush
 </x-app-layout>

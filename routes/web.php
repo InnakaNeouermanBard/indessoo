@@ -118,7 +118,7 @@ Route::middleware(['auth:web'])->prefix('admin')->group(function () {
     Route::get('jadwal-shift/{id}', [App\Http\Controllers\ShiftScheduleController::class, 'show'])
         ->name('jadwal-shift.show');
 
-    Route::post('/notifications/mark-as-read', [PresensiControllerm::class, 'markAsRead'])->name('notifications.markAsRead');
+    Route::post('/notifications/mark-as-read', [PresensiController::class, 'markAsRead'])->name('notifications.markAsRead');
 
     Route::get('/departemen', [DepartemenController::class, 'index'])->name('admin.departemen');
     Route::post('/departemen/tambah', [DepartemenController::class, 'store'])->name('admin.departemen.store');
@@ -139,6 +139,7 @@ Route::middleware(['auth:web'])->prefix('admin')->group(function () {
     Route::post('/lokasi/perbarui', [LokasiKantorController::class, 'update'])->name('admin.lokasi-kantor.update');
     Route::post('/lokasi/hapus', [LokasiKantorController::class, 'delete'])->name('admin.lokasi-kantor.delete');
     Route::post('/lokasi-kantor/toggle-status', [LokasiKantorController::class, 'toggleStatus'])->name('admin.lokasi-kantor.toggle-status');
+    Route::get('/admin/presensi/lokasi', [PresensiController::class, 'viewLokasi']);
 
     Route::get('/administrasi-presensi', [PresensiController::class, 'indexAdmin'])->name('admin.administrasi-presensi');
     Route::post('/administrasi-presensi/status', [PresensiController::class, 'persetujuanPresensi'])->name('admin.administrasi-presensi.persetujuan');
@@ -169,6 +170,9 @@ Route::middleware(['auth:karyawan'])->prefix('karyawan')->group(function () {
         Route::post('/', [PresensiController::class, 'store'])->name('karyawan.presensi.store');
         // routes/web.php
         Route::post('/presensi/tukar-jadwal', [PresensiController::class, 'ajukanTukarJadwal'])->name('presensi.tukar-jadwal');
+        Route::get('/presensi/view-lokasi', [PresensiController::class, 'viewLokasi'])->name('presensi.view-lokasi');
+        Route::post('/monitoring-presensi/lokasi', [PresensiController::class, 'viewLokasi'])->name('karyawan.monitoring-presensi.lokasi');
+
 
 
         Route::prefix('history')->group(function () {

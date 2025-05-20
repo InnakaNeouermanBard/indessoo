@@ -7,7 +7,6 @@
                     {{ __('Data Admin') }}
                 </h2>
                 <h3 class="text-lg text-gray-600 mt-2"> <!-- Menambahkan subjudul dengan h3 -->
-                    Karyawan Outsorcing
                 </h3>
             </div>
             <label class="btn btn-primary btn-sm" for="create_modal">Tambah Admin</label>

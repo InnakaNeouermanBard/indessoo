@@ -73,7 +73,24 @@
                                 </div>
                             @enderror
                         </label>
+                        @php
+                            $user = \App\Models\Karyawan::where('nik', auth()->user()->nik)->first();
 
+                            $kuotaTahunan = $user?->kuota_cuti ?? 12; // fallback ke 12 jika tidak ditemukan
+                            $cutiTerpakai = \DB::table('pengajuan_presensi')
+                                ->where('nik', auth()->user()->nik)
+                                ->where('status', 'C')
+                                ->where('status_approved', 2)
+                                ->whereYear('tanggal_mulai', date('Y'))
+                                ->get()
+                                ->sum(function ($cuti) {
+                                    $start = \Carbon\Carbon::parse($cuti->tanggal_mulai);
+                                    $end = \Carbon\Carbon::parse($cuti->tanggal_selesai);
+                                    return $start->diffInDays($end) + 1;
+                                });
+
+                            $sisaKuota = $kuotaTahunan - $cutiTerpakai;
+                        @endphp
                         {{-- Info Sisa Kuota Cuti --}}
                         <div id="info-sisa-kuota" class="my-3 p-3 bg-blue-50 rounded-lg">
                             <div class="flex items-center gap-2">
@@ -118,7 +135,7 @@
                                 </span>
                             </div>
                             <input type="input" name="keterangan"
-                                class="input input-bordered w-full text-blue-700 dark:bg-slate-100"/>
+                                class="input input-bordered w-full text-blue-700 dark:bg-slate-100" />
                         </label>
 
                         <div class="my-5 flex flex-wrap justify-center gap-2">

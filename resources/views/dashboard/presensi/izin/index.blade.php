@@ -44,15 +44,21 @@
     </script>
     <style>
         .swal2-confirm {
-    background-color: #007bff !important; /* Warna biru untuk tombol OK */
-    color: white !important; /* Teks tombol OK menjadi putih */
-}
-.swal2-cancel {
-    background-color: #007bff !important; /* Warna biru untuk tombol OK */
-    color: white !important; /* Teks tombol OK menjadi putih */
-    border-color: #007bff !important; /* Border tombol OK menjadi biru */
-}
-</style>
+            background-color: #007bff !important;
+            /* Warna biru untuk tombol OK */
+            color: white !important;
+            /* Teks tombol OK menjadi putih */
+        }
+
+        .swal2-cancel {
+            background-color: #007bff !important;
+            /* Warna biru untuk tombol OK */
+            color: white !important;
+            /* Teks tombol OK menjadi putih */
+            border-color: #007bff !important;
+            /* Border tombol OK menjadi biru */
+        }
+    </style>
 @endsection
 
 @section('container')
@@ -72,9 +78,11 @@
                     </div>
 
                     @php
-                        $kuotaTahunan = 12; // Sesuaikan default kuota cuti per tahun
+                        $user = \App\Models\Karyawan::where('nik', auth()->user()->nik)->first();
+
+                        $kuotaTahunan = $user?->kuota_cuti ?? 12; // fallback ke 12 jika tidak ditemukan
                         $cutiTerpakai = \DB::table('pengajuan_presensi')
-                            ->where('nik', auth()->user()->nik) // Pastikan auth user dipakai
+                            ->where('nik', auth()->user()->nik)
                             ->where('status', 'C')
                             ->where('status_approved', 2)
                             ->whereYear('tanggal_mulai', date('Y'))
@@ -82,8 +90,9 @@
                             ->sum(function ($cuti) {
                                 $start = \Carbon\Carbon::parse($cuti->tanggal_mulai);
                                 $end = \Carbon\Carbon::parse($cuti->tanggal_selesai);
-                                return $start->diffInDays($end) + 1; // +1 agar inklusif
+                                return $start->diffInDays($end) + 1;
                             });
+
                         $sisaKuota = $kuotaTahunan - $cutiTerpakai;
                     @endphp
 

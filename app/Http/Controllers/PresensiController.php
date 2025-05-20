@@ -23,10 +23,12 @@ class PresensiController extends Controller
     public function index()
     {
         $karyawan = Karyawan::all();
-        $riwayatPresensi = DB::table("presensi")
-            ->where('nik', auth()->guard('karyawan')->user()->nik)
-            ->orderBy("tanggal_presensi", "desc")
-            ->paginate(10);
+            $riwayatPresensi = DB::table("presensi as p")
+        ->join('karyawan as k', 'p.nik', '=', 'k.nik')  // Join dengan tabel karyawan
+        ->select('p.*', 'k.nama_lengkap as nama_karyawan')  // Pilih kolom yang dibutuhkan
+        ->where('p.nik', auth()->guard('karyawan')->user()->nik)
+        ->orderBy("p.tanggal_presensi", "asc")
+        ->paginate(30);
         $bulan = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
 
         $title = 'Absensi';
@@ -256,63 +258,65 @@ class PresensiController extends Controller
     }
 
     public function pengajuanPresensiStore(Request $request)
-    {
-        $nik = auth()->guard('karyawan')->user()->nik;
+{
+    $nik = auth()->guard('karyawan')->user()->nik;
 
-        // Validasi input
-        $request->validate([
-            'status' => 'required',
-            'tanggal_mulai' => 'required|date',
-            'tanggal_selesai' => 'required|date|after_or_equal:tanggal_mulai',
-            'keterangan' => 'nullable|string',
-        ]);
+    // Validasi input
+    $request->validate([
+        'status' => 'required',
+        'tanggal_mulai' => 'required|date',
+        'tanggal_selesai' => 'required|date|after_or_equal:tanggal_mulai',
+        'keterangan' => 'nullable|string',
+    ]);
 
-        // Cek apakah di rentang tanggal sudah pernah mengajukan
-        $cekPengajuan = DB::table('pengajuan_presensi')
-            ->where('nik', $nik)
-            ->where(function ($query) use ($request) {
-                $query->whereBetween('tanggal_mulai', [$request->tanggal_mulai, $request->tanggal_selesai])
-                    ->orWhereBetween('tanggal_selesai', [$request->tanggal_mulai, $request->tanggal_selesai]);
-            })
-            ->where(function ($query) {
-                $query->where('status_approved', 0)
-                    ->orWhere('status_approved', 1);
-            })
-            ->first();
+    // Cek apakah di rentang tanggal sudah pernah mengajukan
+    $cekPengajuan = DB::table('pengajuan_presensi')
+        ->where('nik', $nik)
+        ->where(function ($query) use ($request) {
+            $query->whereBetween('tanggal_mulai', [$request->tanggal_mulai, $request->tanggal_selesai])
+                ->orWhereBetween('tanggal_selesai', [$request->tanggal_mulai, $request->tanggal_selesai]);
+        })
+        ->where(function ($query) {
+            $query->where('status_approved', 0)
+                ->orWhere('status_approved', 1); // Status pengajuan yang belum disetujui
+        })
+        ->first();
 
-        if ($cekPengajuan) {
-            return to_route('karyawan.izin')->with("error", "Anda sudah memiliki pengajuan pada rentang tanggal tersebut.");
-        }
-
-        // *Cek status pengajuan, hanya kurangi kuota jika statusnya Cuti*
-        if ($request->status == 'C') {
-            $karyawan = Karyawan::find($nik);
-            $sisaKuota = $karyawan->sisaKuotaCuti();
-            $jumlahHari = Carbon::parse($request->tanggal_mulai)->diffInDays(Carbon::parse($request->tanggal_selesai));
-
-            // Pastikan kuota cukup
-            if ($sisaKuota < $jumlahHari) {
-                return to_route('karyawan.izin')->with("error", "Kuota cuti Anda tidak mencukupi untuk rentang tanggal ini ($jumlahHari hari).");
-            }
-
-            // Jika status Cuti, kurangi kuota cuti
-            $karyawan->kuota_cuti -= $jumlahHari;
-            $karyawan->save();
-        }
-
-        // Simpan pengajuan presensi
-        DB::table('pengajuan_presensi')->insert([
-            'nik' => $nik,
-            'status' => $request->status,
-            'tanggal_mulai' => $request->tanggal_mulai,
-            'tanggal_selesai' => $request->tanggal_selesai,
-            'keterangan' => $request->keterangan,
-            'created_at' => Carbon::now(),
-            'updated_at' => Carbon::now(),
-        ]);
-
-        return to_route('karyawan.izin')->with("success", "Berhasil menambahkan pengajuan");
+    if ($cekPengajuan) {
+        return to_route('karyawan.izin')->with("error", "Anda sudah memiliki pengajuan pada rentang tanggal tersebut.");
     }
+
+    // Jangan mengurangi kuota jika statusnya bukan Cuti
+    if ($request->status == 'C') {
+        $karyawan = Karyawan::find($nik);
+        $sisaKuota = $karyawan->sisaKuotaCuti();
+        $jumlahHari = Carbon::parse($request->tanggal_mulai)->diffInDays(Carbon::parse($request->tanggal_selesai));
+
+        // Pastikan kuota cukup hanya saat pengajuan disetujui
+        if ($sisaKuota < $jumlahHari) {
+            return to_route('karyawan.izin')->with("error", "Kuota cuti Anda tidak mencukupi untuk rentang tanggal ini ($jumlahHari hari).");
+        }
+
+        // Hanya kurangi kuota setelah pengajuan disetujui oleh admin
+        // Di sini kita tidak mengurangi kuota langsung.
+    }
+
+    // Simpan pengajuan presensi dengan status Pending (belum disetujui)
+    DB::table('pengajuan_presensi')->insert([
+        'nik' => $nik,
+        'status' => $request->status,
+        'tanggal_mulai' => $request->tanggal_mulai,
+        'tanggal_selesai' => $request->tanggal_selesai,
+        'keterangan' => $request->keterangan,
+        'status_approved' => 1, // Status pengajuan masih Pending
+        'created_at' => Carbon::now(),
+        'updated_at' => Carbon::now(),
+    ]);
+
+    return to_route('karyawan.izin')->with("success", "Berhasil menambahkan pengajuan. Menunggu persetujuan admin.");
+}
+
+
 
     public function searchPengajuanHistory(Request $request)
     {
@@ -385,6 +389,24 @@ class PresensiController extends Controller
         ]);
 
         $karyawan = Karyawan::find($nik);
+        $cutiTerpakai = DB::table('pengajuan_presensi')
+            ->where('nik', $karyawan->nik)
+            ->where('status', 'C')
+            ->where('status_approved', 2)
+            ->whereYear('tanggal_mulai', date('Y'))
+            ->get()
+            ->sum(function ($cuti) {
+                $start = \Carbon\Carbon::parse($cuti->tanggal_mulai);
+                $end = \Carbon\Carbon::parse($cuti->tanggal_selesai);
+                return $start->diffInDays($end) + 1;
+            });
+
+        // Pastikan kuota yang diupdate cukup untuk sisa cuti yang terpakai
+        if ($request->kuota_cuti < $cutiTerpakai) {
+            return redirect()->route('admin.kuota-cuti')->with('error', 'Kuota cuti tidak boleh lebih rendah dari cuti yang sudah terpakai.');
+        }
+
+        // Update kuota cuti
         $karyawan->kuota_cuti = $request->kuota_cuti;
         $karyawan->save();
 
@@ -392,15 +414,35 @@ class PresensiController extends Controller
     }
 
     public function viewLokasi(Request $request)
-    {
-        if ($request->tipe == "lokasi_masuk") {
-            $data = DB::table('presensi')->where('nik', $request->nik)->first('lokasi_masuk');
-            return $data;
-        } elseif ($request->tipe == "lokasi_keluar") {
-            $data = DB::table('presensi')->where('nik', $request->nik)->first('lokasi_keluar');
-            return $data;
-        }
+{
+    $lokasi = '';
+    
+    // Jika ada tanggal presensi, cari berdasarkan tanggal dan nik
+    if ($request->has('tanggal_presensi')) {
+        // Untuk Karyawan: Mencari berdasarkan tanggal dan nik
+        $data = DB::table('presensi')
+                  ->where('nik', $request->nik)
+                  ->whereDate('tanggal_presensi', $request->tanggal_presensi)
+                  ->first();
+    } else {
+        // Untuk Admin: Mencari hanya berdasarkan nik
+        $data = DB::table('presensi')->where('nik', $request->nik)->first();
     }
+
+    if ($request->tipe == "lokasi_masuk") {
+        $lokasi = $data ? $data->lokasi_masuk : null;
+    } elseif ($request->tipe == "lokasi_keluar") {
+        $lokasi = $data ? $data->lokasi_keluar : null;
+    }
+
+    if (!$lokasi) {
+        return response()->json(['error' => 'Lokasi tidak ditemukan'], 404);
+    }
+
+    return response()->json([$lokasi]);
+}
+
+
 
     public function laporan(Request $request)
     {

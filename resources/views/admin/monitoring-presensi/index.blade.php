@@ -359,190 +359,216 @@
                     </div>
                     <input type="text" name="lokasi" placeholder="Lokasi"
                         class="input input-bordered w-full text-blue-700" readonly />
-                    <div id="lokasi-map" class="mx-auto mt-3 h-80 w-full rounded-md"></div>
+                    <div id="lokasi-map" class="mx-auto mt-3 w-full rounded-md" style="height: 320px;"></div>
                 </label>
             </div>
         </div>
     </div>
     {{-- Akhir Modal View Lokasi --}}
+    @push('scripts')
+        <script>
+            let lokasiMap = null;
+            @if (session()->has('success'))
+                Swal.fire({
+                    title: 'Berhasil',
+                    text: '{{ session('success') }}',
+                    icon: 'success',
+                    confirmButtonColor: '#6419E6',
+                    confirmButtonText: 'OK',
+                });
+            @endif
 
-    <script>
-        @if (session()->has('success'))
-            Swal.fire({
-                title: 'Berhasil',
-                text: '{{ session('success') }}',
-                icon: 'success',
-                confirmButtonColor: '#6419E6',
-                confirmButtonText: 'OK',
-            });
-        @endif
+            @if (session()->has('error'))
+                Swal.fire({
+                    title: 'Gagal',
+                    text: '{{ session('error') }}',
+                    icon: 'error',
+                    confirmButtonColor: '#6419E6',
+                    confirmButtonText: 'OK',
+                });
+            @endif
 
-        @if (session()->has('error'))
-            Swal.fire({
-                title: 'Gagal',
-                text: '{{ session('error') }}',
-                icon: 'error',
-                confirmButtonColor: '#6419E6',
-                confirmButtonText: 'OK',
-            });
-        @endif
-
-        function maps(latitude, longitude) {
-            let map = L.map('lokasi-map').setView([latitude, longitude], 17);
-            L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                maxZoom: 19,
-                attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-            }).addTo(map);
-
-            let marker = L.marker([latitude, longitude]).addTo(map);
-            marker.bindPopup("<b>Anda berada di sini</b>").openPopup();
-
-            let circle = L.circle([{{ $lokasiKantor->latitude }}, {{ $lokasiKantor->longitude }}], {
-                color: 'red',
-                fillColor: '#f03',
-                fillOpacity: 0.5,
-                radius: {{ $lokasiKantor->radius }}
-            }).addTo(map);
-        }
-
-        function viewLokasi(tipe, nik) {
-            // Buka modal lokasi
-            document.getElementById('view_modal').checked = true;
-
-            // Loading effect start
-            let loading = `<span class="loading loading-dots loading-md text-purple-600"></span>`;
-            $("#loading_edit1").html(loading);
-
-            $.ajax({
-                type: "post",
-                url: "{{ route('admin.monitoring-presensi.lokasi') }}",
-                data: {
-                    "_token": "{{ csrf_token() }}",
-                    "tipe": tipe,
-                    "nik": nik,
-                },
-                success: function(data) {
-                    // console.log(data);
-                    let items = [];
-                    $.each(data, function(key, val) {
-                        items.push(val);
-                    });
-
-                    $(".judul-lokasi").html(tipe);
-                    $("input[name='lokasi']").val(items[0]);
-
-                    // Loading effect end
-                    loading = "";
-                    $("#loading_edit1").html(loading);
-
-                    let lokasi = items[0].split(",");
-                    maps(lokasi[0], lokasi[1]);
-                },
-                error: function(xhr, status, error) {
-                    // Tambahkan error handling
-                    $("#loading_edit1").html("");
-                    Swal.fire({
-                        title: "Error",
-                        text: "Gagal memuat data lokasi. Silakan coba lagi.",
-                        icon: "error",
-                        confirmButtonColor: '#6419E6',
-                    });
+            function maps(latitude, longitude) {
+                if (lokasiMap !== null) {
+                    lokasiMap.remove();
+                    lokasiMap = null; // Reset
                 }
-            });
-        }
-    </script>
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // Menangani klik pada detail button notifikasi
-            // Gunakan delegasi event untuk mengatasi button yang baru ditambahkan
-            document.addEventListener('click', function(e) {
-                // Cek apakah yang diklik adalah btn-detail atau elemen di dalamnya
-                const detailButton = e.target.closest('.btn-detail');
-                if (detailButton) {
-                    e.preventDefault();
 
-                    // Ambil ID dari atribut data
-                    const id = detailButton.getAttribute('data-id');
-                    console.log('Button detail diklik dengan ID:', id);
+                setTimeout(() => {
+                    lokasiMap = L.map('lokasi-map').setView([latitude, longitude], 17);
 
-                    // Show the details of the notification
-                    showDetailModal(id);
+                    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                        maxZoom: 19,
+                        attribution: '&copy; OpenStreetMap contributors'
+                    }).addTo(lokasiMap);
 
-                    // Cari elemen notifikasi parent - coba beberapa selector yang umum
-                    // Gunakan closest dengan selector yang lebih umum
-                    const notificationItem = detailButton.closest('li') ||
-                        detailButton.closest('.notification-item') ||
-                        detailButton.closest('.dropdown-item');
+                    let marker = L.marker([latitude, longitude]).addTo(lokasiMap);
+                    marker.bindPopup("<b>Anda berada di sini</b>").openPopup();
 
-                    // Log untuk debugging
-                    console.log('Elemen notifikasi yang ditemukan:', notificationItem);
+                    L.circle([{{ $lokasiKantor->latitude }}, {{ $lokasiKantor->longitude }}], {
+                        color: 'red',
+                        fillColor: '#f03',
+                        fillOpacity: 0.5,
+                        radius: {{ $lokasiKantor->radius }}
+                    }).addTo(lokasiMap);
 
-                    if (notificationItem) {
-                        // Tambahkan animasi fadeOut sebelum menghapus item
-                        notificationItem.style.transition = 'opacity 0.3s';
-                        notificationItem.style.opacity = '0';
+                    lokasiMap.invalidateSize();
+                }, 300);
+            }
 
-                        // Sembunyikan notifikasi
+
+
+
+            function viewLokasi(tipe, nik) {
+                // Buka modal lokasi (checkbox diaktifkan)
+                document.getElementById('view_modal').checked = true;
+
+                // Loading...
+                let loading = `<span class="loading loading-dots loading-md text-purple-600"></span>`;
+                $("#loading_edit1").html(loading);
+
+                $.ajax({
+                    type: "POST",
+                    url: "{{ route('admin.monitoring-presensi.lokasi') }}",
+                    data: {
+                        "_token": "{{ csrf_token() }}",
+                        "tipe": tipe,
+                        "nik": nik,
+                    },
+                    success: function(data) {
+                        if (data.error) {
+                            Swal.fire({
+                                title: 'Error',
+                                text: data.error,
+                                icon: 'error',
+                                confirmButtonColor: '#6419E6',
+                            });
+                            return;
+                        }
+
+                        let koordinat = data[0]; // Mengambil koordinat dari response
+                        $(".judul-lokasi").html(tipe);
+                        $("input[name='lokasi']").val(koordinat);
+                        $("#loading_edit1").html(""); // stop loading
+
+                        let [lat, lon] = koordinat.split(",");
+
+                        // Tampilkan peta dengan koordinat yang benar
                         setTimeout(() => {
-                            notificationItem.remove();
-
-                            // Perbarui counter notifikasi jika ada
-                            updateNotificationCounter();
-
-                            // Tandai sebagai dibaca di server
-                            markNotificationAsRead(id);
-                        }, 300);
+                            maps(parseFloat(lat), parseFloat(lon)); // Inisialisasi peta dengan lat lon
+                        }, 300); // jeda 300ms agar modal terlihat
+                    },
+                    error: function(xhr) {
+                        $("#loading_edit1").html("");
+                        Swal.fire({
+                            title: "Error",
+                            text: "Gagal memuat data lokasi.",
+                            icon: "error",
+                            confirmButtonColor: '#6419E6',
+                        });
                     }
-                }
+                });
+            }
+        </script>
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                // Menangani klik pada detail button notifikasi
+                // Gunakan delegasi event untuk mengatasi button yang baru ditambahkan
+                document.addEventListener('click', function(e) {
+                    // Cek apakah yang diklik adalah btn-detail atau elemen di dalamnya
+                    const detailButton = e.target.closest('.btn-detail');
+                    if (detailButton) {
+                        e.preventDefault();
+
+                        // Ambil ID dari atribut data
+                        const id = detailButton.getAttribute('data-id');
+                        console.log('Button detail diklik dengan ID:', id);
+
+                        // Show the details of the notification
+                        showDetailModal(id);
+
+                        // Cari elemen notifikasi parent - coba beberapa selector yang umum
+                        // Gunakan closest dengan selector yang lebih umum
+                        const notificationItem = detailButton.closest('li') ||
+                            detailButton.closest('.notification-item') ||
+                            detailButton.closest('.dropdown-item');
+
+                        // Log untuk debugging
+                        console.log('Elemen notifikasi yang ditemukan:', notificationItem);
+
+                        if (notificationItem) {
+                            // Tambahkan animasi fadeOut sebelum menghapus item
+                            notificationItem.style.transition = 'opacity 0.3s';
+                            notificationItem.style.opacity = '0';
+
+                            // Sembunyikan notifikasi
+                            setTimeout(() => {
+                                notificationItem.remove();
+
+                                // Perbarui counter notifikasi jika ada
+                                updateNotificationCounter();
+
+                                // Tandai sebagai dibaca di server
+                                markNotificationAsRead(id);
+                            }, 300);
+                        }
+                    }
+                });
             });
-        });
 
-        function updateNotificationCounter() {
-            const notifCounter = document.getElementById('notification-counter') ||
-                document.querySelector('.notification-counter');
+            function updateNotificationCounter() {
+                const notifCounter = document.getElementById('notification-counter') ||
+                    document.querySelector('.notification-counter');
 
-            if (notifCounter) {
-                let currentCount = parseInt(notifCounter.textContent);
-                if (!isNaN(currentCount) && currentCount > 0) {
-                    currentCount--;
-                    notifCounter.textContent = currentCount;
+                if (notifCounter) {
+                    let currentCount = parseInt(notifCounter.textContent);
+                    if (!isNaN(currentCount) && currentCount > 0) {
+                        currentCount--;
+                        notifCounter.textContent = currentCount;
 
-                    // Sembunyikan counter jika tidak ada notifikasi
-                    if (currentCount === 0) {
-                        notifCounter.classList.add('hidden');
+                        // Sembunyikan counter jika tidak ada notifikasi
+                        if (currentCount === 0) {
+                            notifCounter.classList.add('hidden');
+                        }
                     }
                 }
             }
-        }
 
-        function markNotificationAsRead(id) {
-            // Log untuk debugging
-            console.log('Menandai notifikasi sebagai telah dibaca:', id);
+            function markNotificationAsRead(id) {
+                // Log untuk debugging
+                console.log('Menandai notifikasi sebagai telah dibaca:', id);
 
-            // Gunakan $.ajax karena kodenya menggunakan jQuery
-            $.ajax({
-                url: '/admin/notifications/mark-as-read/' + id,
-                type: 'POST',
-                data: {
-                    "_token": "{{ csrf_token() }}"
-                },
-                success: function(response) {
-                    console.log('Notifikasi berhasil ditandai sebagai dibaca');
-                },
-                error: function(xhr, status, error) {
-                    console.error('Gagal menandai notifikasi:', error);
-                }
-            });
-        }
-
-        function showDetailModal(id) {
-            // Fetch the details dynamically (if needed)
-            fetch(`/admin/tukar-jadwal/detail/${id}`)
-                .then(response => response.json())
-                .then(data => {
-                    // Populate modal content
-                    alert(`Detail: ${data.pengaju} ↔ ${data.penerima}`); // Replace with modal code
+                // Gunakan $.ajax karena kodenya menggunakan jQuery
+                $.ajax({
+                    url: '/admin/notifications/mark-as-read/' + id,
+                    type: 'POST',
+                    data: {
+                        "_token": "{{ csrf_token() }}"
+                    },
+                    success: function(response) {
+                        console.log('Notifikasi berhasil ditandai sebagai dibaca');
+                    },
+                    error: function(xhr, status, error) {
+                        console.error('Gagal menandai notifikasi:', error);
+                    }
                 });
+            }
+
+            function showDetailModal(id) {
+                // Fetch the details dynamically (if needed)
+                fetch(`/admin/tukar-jadwal/detail/${id}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        // Populate modal content
+                        alert(`Detail: ${data.pengaju} ↔ ${data.penerima}`); // Replace with modal code
+                    });
+            }
+        </script>
+    @endpush
+    <style>
+        #lokasi-map {
+            height: 320px;
+            /* atau sesuai tinggi yang kamu butuhkan */
         }
-    </script>
+    </style>
 </x-app-layout>

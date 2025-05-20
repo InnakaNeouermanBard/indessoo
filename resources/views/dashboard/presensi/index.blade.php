@@ -823,6 +823,27 @@
             }
         });
     </script>
+
+    <script>
+        function openModal(button) {
+            // Ambil target dari data-target yang ada pada tombol
+            const modalId = button.getAttribute('data-target');
+            const modal = document.querySelector(modalId);
+
+            if (modal) {
+                // Centang checkbox untuk memunculkan modal
+                modal.checked = true;
+            }
+        }
+
+        // Menutup modal ketika klik di luar modal
+        document.addEventListener('click', function(event) {
+            const modal = document.querySelector('.modal-toggle:checked');
+            if (modal && !modal.closest('.modal-box').contains(event.target)) {
+                modal.checked = false; // Menyembunyikan modal
+            }
+        });
+    </script>
 @endsection
 
 
@@ -1108,71 +1129,142 @@
                                         <th class="px-4 py-3">Jam Masuk</th>
                                         <th class="px-4 py-3">Jam Keluar</th>
                                         <th class="px-4 py-3">Status</th>
+                                        <th class="px-4 py-3">Aksi</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     @foreach ($riwayatPresensi as $value => $item)
-                                        @php
-                                            // Cari jadwal shift untuk tanggal tersebut
-                                            $jadwalShift = App\Models\ShiftSchedule::where(
-                                                'karyawan_nik',
-                                                auth()->guard('karyawan')->user()->nik,
-                                            )
-                                                ->where('tanggal', $item->tanggal_presensi)
-                                                ->with('shift')
-                                                ->first();
-
-                                            // Set jam default
-                                            $jamMasukStandar = '08:00:00';
-                                            $jamKeluarStandar = '16:00:00';
-
-                                            // Jika ada jadwal shift, gunakan jam dari shift
-                                            if ($jadwalShift && $jadwalShift->shift) {
-                                                $jamMasukStandar = Carbon\Carbon::parse(
-                                                    $jadwalShift->shift->waktu_mulai,
-                                                )->format('H:i:s');
-                                                $jamKeluarStandar = Carbon\Carbon::parse(
-                                                    $jadwalShift->shift->waktu_selesai,
-                                                )->format('H:i:s');
-                                            }
-
-                                            // Status presensi
-                                            $statusMasuk =
-                                                $item->jam_masuk < $jamMasukStandar
-                                                    ? 'text-success font-medium'
-                                                    : 'text-error font-medium';
-                                            $statusKeluar =
-                                                $item->jam_keluar > $jamKeluarStandar
-                                                    ? 'text-success font-medium'
-                                                    : 'text-error font-medium';
-                                        @endphp
-                                        <tr
-                                            class="hover:bg-gray-50 dark:hover:bg-gray-700 border-b border-gray-200 dark:border-gray-700">
-                                            <td class="px-4 py-3 text-center font-bold">
-                                                {{ $riwayatPresensi->firstItem() + $value }}</td>
-                                            <td class="px-4 py-3 text-slate-500 dark:text-slate-300">
-                                                {{ date('l', strtotime($item->tanggal_presensi)) }}</td>
-                                            <td class="px-4 py-3 text-slate-500 dark:text-slate-300">
-                                                {{ date('d-m-Y', strtotime($item->tanggal_presensi)) }}</td>
-                                            <td class="px-4 py-3 {{ $statusMasuk }}">
-                                                {{ date('H:i:s', strtotime($item->jam_masuk)) }}</td>
-                                            @if ($item != null && $item->jam_keluar != null)
-                                                <td class="px-4 py-3 {{ $statusKeluar }}">
-                                                    {{ date('H:i:s', strtotime($item->jam_keluar)) }}</td>
-                                            @else
-                                                <td class="px-4 py-3 text-yellow-500 font-medium">Belum Presensi</td>
-                                            @endif
-                                            <td class="px-4 py-3">
-                                                @if ($jadwalShift && $jadwalShift->is_libur)
-                                                    <span class="badge badge-error">Libur</span>
-                                                @elseif($jadwalShift && $jadwalShift->shift)
-                                                    <span class="badge badge-info">{{ $jadwalShift->shift->nama }}</span>
+                                        <tr class="hover">
+                                            <td class="font-bold">{{ $riwayatPresensi->firstItem() + $value }}</td>
+                                            <td>{{ date('l', strtotime($item->tanggal_presensi)) }}</td>
+                                            <td>{{ date('d-m-Y', strtotime($item->tanggal_presensi)) }}</td>
+                                            <td>{{ date('H:i:s', strtotime($item->jam_masuk)) }}</td>
+                                            <td>
+                                                @if ($item->jam_keluar)
+                                                    {{ date('H:i:s', strtotime($item->jam_keluar)) }}
                                                 @else
-                                                    <span class="badge badge-ghost">Reguler</span>
+                                                    <div class="w-fit rounded-md bg-error p-1 text-white">Belum Presensi
+                                                    </div>
+                                                @endif
+                                            </td>
+                                            <td>
+                                                @if ($item->jam_masuk)
+                                                    @php
+                                                        $jadwalShift = App\Models\ShiftSchedule::where(
+                                                            'karyawan_nik',
+                                                            $item->nik,
+                                                        )
+                                                            ->where('tanggal', $item->tanggal_presensi)
+                                                            ->first();
+                                                        $shiftMulai = Carbon\Carbon::parse(
+                                                            $jadwalShift->shift->waktu_mulai ?? '08:00',
+                                                        );
+                                                        $jamMasuk = Carbon\Carbon::parse($item->jam_masuk);
+
+                                                        $terlambat = $jamMasuk->gt($shiftMulai);
+                                                        $selisih = $terlambat
+                                                            ? $jamMasuk->diffInMinutes($shiftMulai) . ' menit'
+                                                            : 'Tepat Waktu';
+                                                    @endphp
+                                                    <span
+                                                        class="badge {{ $terlambat ? 'badge-error' : 'badge-success' }}">{{ $selisih }}</span>
+                                                @else
+                                                    <span class="badge badge-warning">Akan Datang</span>
+                                                @endif
+                                            </td>
+                                            <td>
+                                                @if ($item->jam_masuk)
+                                                    <!-- Tombol Detail hanya aktif jika karyawan sudah presensi -->
+                                                    <label
+                                                        for="detail_modal_{{ $item->nik }}_{{ $item->tanggal_presensi }}"
+                                                        class="btn btn-primary btn-sm">
+                                                        Detail
+                                                    </label>
+                                                @else
+                                                    <button class="btn btn-primary btn-sm" disabled>
+                                                        Detail
+                                                    </button>
                                                 @endif
                                             </td>
                                         </tr>
+
+                                        <!-- Modal Detail untuk Setiap Karyawan -->
+                                        <input type="checkbox"
+                                            id="detail_modal_{{ $item->nik }}_{{ $item->tanggal_presensi }}"
+                                            class="modal-toggle" />
+                                        <div class="modal" role="dialog">
+                                            <div class="modal-box">
+                                                <div class="mb-3 flex justify-between">
+                                                    <h3 class="text-lg font-bold">Detail Presensi</h3>
+                                                    <label
+                                                        for="detail_modal_{{ $item->nik }}_{{ $item->tanggal_presensi }}"
+                                                        class="cursor-pointer">
+                                                        <i class="ri-close-large-fill"></i>
+                                                    </label>
+                                                </div>
+                                                <div class="mb-4">
+                                                    <h4 class="font-semibold">Informasi Karyawan</h4>
+                                                    <p><span class="font-medium">NIK:</span> {{ $item->nik }}</p>
+                                                    <p><span class="font-medium">Nama:</span> {{ $item->nama_karyawan }}
+                                                    </p>
+                                                    <p><span class="font-medium">Tanggal:</span>
+                                                        {{ $item->tanggal_presensi }}</p>
+                                                </div>
+                                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                    <div class="border rounded-md p-3">
+                                                        <h5 class="font-semibold mb-2">Foto Masuk</h5>
+                                                        <div class="avatar">
+                                                            <div class="w-full rounded">
+                                                                <img src="{{ asset("storage/unggah/presensi/{$item->foto_masuk}") }}"
+                                                                    alt="{{ $item->foto_masuk }}" />
+                                                            </div>
+                                                        </div>
+                                                        <p class="mt-2"><span class="font-medium">Jam Masuk:</span>
+                                                            {{ $item->jam_masuk }}</p>
+                                                        <button class="btn btn-sm btn-info mt-2"
+                                                            onclick="return viewLokasi('lokasi_masuk', '{{ $item->nik }}', '{{ $item->tanggal_presensi }}')">
+                                                            Lihat Lokasi
+                                                        </button>
+                                                    </div>
+                                                    <div class="border rounded-md p-3">
+                                                        <h5 class="font-semibold mb-2">Foto Keluar</h5>
+                                                        <div class="avatar">
+                                                            <div class="w-full rounded">
+                                                                @if ($item->foto_keluar)
+                                                                    <img src="{{ asset("storage/unggah/presensi/{$item->foto_keluar}") }}"
+                                                                        alt="{{ $item->foto_keluar }}" />
+                                                                @else
+                                                                    <div
+                                                                        class="flex items-center justify-center h-32 bg-gray-200 rounded-md">
+                                                                        <p class="text-gray-500">Belum ada foto keluar</p>
+                                                                    </div>
+                                                                @endif
+                                                            </div>
+                                                        </div>
+                                                        <p class="mt-2"><span class="font-medium">Jam Keluar:</span>
+                                                            @if ($item->jam_keluar)
+                                                                {{ $item->jam_keluar }}
+                                                            @else
+                                                                <span class="text-error">Belum Presensi</span>
+                                                            @endif
+                                                        </p>
+                                                        @if ($item->jam_keluar)
+                                                            <button class="btn btn-sm btn-info mt-2"
+                                                                onclick="return viewLokasi('lokasi_keluar', '{{ $item->nik }}', '{{ $item->tanggal_presensi }}')">
+                                                                Lihat Lokasi
+                                                            </button>
+                                                        @endif
+                                                    </div>
+                                                </div>
+                                                <div class="modal-action">
+                                                    <label
+                                                        for="detail_modal_{{ $item->nik }}_{{ $item->tanggal_presensi }}"
+                                                        class="btn btn-outline">Kembali</label>
+                                                </div>
+                                            </div>
+                                        </div>
                                     @endforeach
+
                                 </tbody>
                             </table>
                             <div class="mx-3 mb-5">
@@ -1184,4 +1276,58 @@
             </div>
         </div>
     </div>
+    <script>
+        function viewLokasi(tipe, nik, tanggalPresensi) {
+            // Aktifkan modal lokasi
+            document.getElementById('view_modal').checked = true;
+
+            // Tampilkan loading
+            let loading = `<span class="loading loading-dots loading-md text-purple-600"></span>`;
+            $("#loading_edit1").html(loading);
+
+            $.ajax({
+                type: "POST",
+                url: "{{ route('karyawan.monitoring-presensi.lokasi') }}", // Pastikan route ini benar
+                data: {
+                    "_token": "{{ csrf_token() }}",
+                    "tipe": tipe,
+                    "nik": nik,
+                    "tanggal_presensi": tanggalPresensi, // Pastikan tanggal presensi disertakan
+                },
+                success: function(data) {
+                    if (data.error) {
+                        Swal.fire({
+                            title: 'Error',
+                            text: data.error,
+                            icon: 'error',
+                            confirmButtonColor: '#6419E6',
+                        });
+                        return;
+                    }
+
+                    let koordinat = data[0]; // Koordinat dari response
+                    $(".judul-lokasi").html(tipe); // Judul Lokasi (masuk/keluar)
+                    $("input[name='lokasi']").val(koordinat); // Menampilkan koordinat di input
+
+                    $("#loading_edit1").html(""); // Stop loading
+
+                    let [lat, lon] = koordinat.split(","); // Ambil lat dan lon
+
+                    // Tampilkan peta dengan koordinat yang benar
+                    setTimeout(() => {
+                        maps(parseFloat(lat), parseFloat(lon)); // Inisialisasi peta dengan lat lon
+                    }, 300);
+                },
+                error: function(xhr) {
+                    $("#loading_edit1").html("");
+                    Swal.fire({
+                        title: "Error",
+                        text: "Gagal memuat data lokasi.",
+                        icon: "error",
+                        confirmButtonColor: '#6419E6',
+                    });
+                }
+            });
+        }
+    </script>
 @endsection

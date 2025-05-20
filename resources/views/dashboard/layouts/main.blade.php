@@ -17,11 +17,11 @@
 
     <script>
         // Set theme based on localStorage or media preference
-        if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia(
-                '(prefers-color-scheme: dark)').matches)) {
-            document.documentElement.classList.add('dark')
+        if (localStorage.theme === 'light' || (!('theme' in localStorage) && window.matchMedia(
+                '(prefers-color-scheme: light)').matches)) {
+            document.documentElement.classList.add('light')
         } else {
-            document.documentElement.classList.remove('dark')
+            document.documentElement.classList.remove('light')
         }
     </script>
 </head>
