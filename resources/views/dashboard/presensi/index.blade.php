@@ -1163,7 +1163,9 @@
 
                                                         $terlambat = $jamMasuk->gt($shiftMulai);
                                                         $selisih = $terlambat
-                                                            ? $jamMasuk->diffInMinutes($shiftMulai) . ' menit'
+                                                            ? 'Terlambat ' .
+                                                                $jamMasuk->diffInMinutes($shiftMulai) .
+                                                                ' menit'
                                                             : 'Tepat Waktu';
                                                     @endphp
                                                     <span

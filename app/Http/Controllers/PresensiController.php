@@ -23,12 +23,12 @@ class PresensiController extends Controller
     public function index()
     {
         $karyawan = Karyawan::all();
-            $riwayatPresensi = DB::table("presensi as p")
-        ->join('karyawan as k', 'p.nik', '=', 'k.nik')  // Join dengan tabel karyawan
-        ->select('p.*', 'k.nama_lengkap as nama_karyawan')  // Pilih kolom yang dibutuhkan
-        ->where('p.nik', auth()->guard('karyawan')->user()->nik)
-        ->orderBy("p.tanggal_presensi", "asc")
-        ->paginate(30);
+        $riwayatPresensi = DB::table("presensi as p")
+            ->join('karyawan as k', 'p.nik', '=', 'k.nik')  // Join dengan tabel karyawan
+            ->select('p.*', 'k.nama_lengkap as nama_karyawan')  // Pilih kolom yang dibutuhkan
+            ->where('p.nik', auth()->guard('karyawan')->user()->nik)
+            ->orderBy("p.tanggal_presensi", "asc")
+            ->paginate(30);
         $bulan = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
 
         $title = 'Absensi';
@@ -196,7 +196,7 @@ class PresensiController extends Controller
 
     public function validation_radius_presensi($langtitudeKantor, $longtitudeKantor, $langtitudeUser, $longtitudeUser)
     {
-        
+
         $theta = $longtitudeKantor - $longtitudeUser;
         $hitungKoordinat = (sin(deg2rad($langtitudeKantor)) * sin(deg2rad($langtitudeUser))) + (cos(deg2rad($langtitudeKantor)) * cos(deg2rad($langtitudeUser)) * cos(deg2rad($theta)));
         $miles = rad2deg(acos($hitungKoordinat)) * 60 * 1.1515;
@@ -258,63 +258,63 @@ class PresensiController extends Controller
     }
 
     public function pengajuanPresensiStore(Request $request)
-{
-    $nik = auth()->guard('karyawan')->user()->nik;
+    {
+        $nik = auth()->guard('karyawan')->user()->nik;
 
-    // Validasi input
-    $request->validate([
-        'status' => 'required',
-        'tanggal_mulai' => 'required|date',
-        'tanggal_selesai' => 'required|date|after_or_equal:tanggal_mulai',
-        'keterangan' => 'nullable|string',
-    ]);
+        // Validasi input
+        $request->validate([
+            'status' => 'required',
+            'tanggal_mulai' => 'required|date',
+            'tanggal_selesai' => 'required|date|after_or_equal:tanggal_mulai',
+            'keterangan' => 'nullable|string',
+        ]);
 
-    // Cek apakah di rentang tanggal sudah pernah mengajukan
-    $cekPengajuan = DB::table('pengajuan_presensi')
-        ->where('nik', $nik)
-        ->where(function ($query) use ($request) {
-            $query->whereBetween('tanggal_mulai', [$request->tanggal_mulai, $request->tanggal_selesai])
-                ->orWhereBetween('tanggal_selesai', [$request->tanggal_mulai, $request->tanggal_selesai]);
-        })
-        ->where(function ($query) {
-            $query->where('status_approved', 0)
-                ->orWhere('status_approved', 1); // Status pengajuan yang belum disetujui
-        })
-        ->first();
+        // Cek apakah di rentang tanggal sudah pernah mengajukan
+        $cekPengajuan = DB::table('pengajuan_presensi')
+            ->where('nik', $nik)
+            ->where(function ($query) use ($request) {
+                $query->whereBetween('tanggal_mulai', [$request->tanggal_mulai, $request->tanggal_selesai])
+                    ->orWhereBetween('tanggal_selesai', [$request->tanggal_mulai, $request->tanggal_selesai]);
+            })
+            ->where(function ($query) {
+                $query->where('status_approved', 0)
+                    ->orWhere('status_approved', 1); // Status pengajuan yang belum disetujui
+            })
+            ->first();
 
-    if ($cekPengajuan) {
-        return to_route('karyawan.izin')->with("error", "Anda sudah memiliki pengajuan pada rentang tanggal tersebut.");
-    }
-
-    // Jangan mengurangi kuota jika statusnya bukan Cuti
-    if ($request->status == 'C') {
-        $karyawan = Karyawan::find($nik);
-        $sisaKuota = $karyawan->sisaKuotaCuti();
-        $jumlahHari = Carbon::parse($request->tanggal_mulai)->diffInDays(Carbon::parse($request->tanggal_selesai));
-
-        // Pastikan kuota cukup hanya saat pengajuan disetujui
-        if ($sisaKuota < $jumlahHari) {
-            return to_route('karyawan.izin')->with("error", "Kuota cuti Anda tidak mencukupi untuk rentang tanggal ini ($jumlahHari hari).");
+        if ($cekPengajuan) {
+            return to_route('karyawan.izin')->with("error", "Anda sudah memiliki pengajuan pada rentang tanggal tersebut.");
         }
 
-        // Hanya kurangi kuota setelah pengajuan disetujui oleh admin
-        // Di sini kita tidak mengurangi kuota langsung.
+        // Jangan mengurangi kuota jika statusnya bukan Cuti
+        if ($request->status == 'C') {
+            $karyawan = Karyawan::find($nik);
+            $sisaKuota = $karyawan->sisaKuotaCuti();
+            $jumlahHari = Carbon::parse($request->tanggal_mulai)->diffInDays(Carbon::parse($request->tanggal_selesai));
+
+            // Pastikan kuota cukup hanya saat pengajuan disetujui
+            if ($sisaKuota < $jumlahHari) {
+                return to_route('karyawan.izin')->with("error", "Kuota cuti Anda tidak mencukupi untuk rentang tanggal ini ($jumlahHari hari).");
+            }
+
+            // Hanya kurangi kuota setelah pengajuan disetujui oleh admin
+            // Di sini kita tidak mengurangi kuota langsung.
+        }
+
+        // Simpan pengajuan presensi dengan status Pending (belum disetujui)
+        DB::table('pengajuan_presensi')->insert([
+            'nik' => $nik,
+            'status' => $request->status,
+            'tanggal_mulai' => $request->tanggal_mulai,
+            'tanggal_selesai' => $request->tanggal_selesai,
+            'keterangan' => $request->keterangan,
+            'status_approved' => 1, // Status pengajuan masih Pending
+            'created_at' => Carbon::now(),
+            'updated_at' => Carbon::now(),
+        ]);
+
+        return to_route('karyawan.izin')->with("success", "Berhasil menambahkan pengajuan. Menunggu persetujuan admin.");
     }
-
-    // Simpan pengajuan presensi dengan status Pending (belum disetujui)
-    DB::table('pengajuan_presensi')->insert([
-        'nik' => $nik,
-        'status' => $request->status,
-        'tanggal_mulai' => $request->tanggal_mulai,
-        'tanggal_selesai' => $request->tanggal_selesai,
-        'keterangan' => $request->keterangan,
-        'status_approved' => 1, // Status pengajuan masih Pending
-        'created_at' => Carbon::now(),
-        'updated_at' => Carbon::now(),
-    ]);
-
-    return to_route('karyawan.izin')->with("success", "Berhasil menambahkan pengajuan. Menunggu persetujuan admin.");
-}
 
 
 
@@ -372,15 +372,31 @@ class PresensiController extends Controller
     }
 
     // Tambahkan metode baru untuk mengelola kuota cuti karyawan (admin)
-    public function manajemenKuotaCuti()
+    public function manajemenKuotaCuti(Request $request)
     {
         $title = 'Manajemen Kuota Cuti';
-        $karyawan = Karyawan::with('departemen')
-            ->orderBy('nama_lengkap', 'asc')
-            ->paginate(10);
 
+        // Memulai query untuk mengambil data karyawan
+        $query = Karyawan::with('departemen')
+            ->orderBy('nik', 'asc');
+
+        // Memeriksa apakah ada input pencarian berdasarkan NIK
+        if ($request->has('nik') && $request->nik != '') {
+            $query->where('nik', 'like', '%' . $request->nik . '%');
+        }
+
+        // Memeriksa apakah ada input pencarian berdasarkan Nama Karyawan
+        if ($request->has('nama') && $request->nama != '') {
+            $query->where('nama_lengkap', 'like', '%' . $request->nama . '%');
+        }
+
+        // Menambahkan paginasi
+        $karyawan = $query->paginate(10);
+
+        // Mengembalikan data ke view
         return view('admin.monitoring-presensi.kuota-cuti', compact('title', 'karyawan'));
     }
+
 
     public function updateKuotaCuti(Request $request, $nik)
     {
@@ -414,33 +430,33 @@ class PresensiController extends Controller
     }
 
     public function viewLokasi(Request $request)
-{
-    $lokasi = '';
-    
-    // Jika ada tanggal presensi, cari berdasarkan tanggal dan nik
-    if ($request->has('tanggal_presensi')) {
-        // Untuk Karyawan: Mencari berdasarkan tanggal dan nik
-        $data = DB::table('presensi')
-                  ->where('nik', $request->nik)
-                  ->whereDate('tanggal_presensi', $request->tanggal_presensi)
-                  ->first();
-    } else {
-        // Untuk Admin: Mencari hanya berdasarkan nik
-        $data = DB::table('presensi')->where('nik', $request->nik)->first();
-    }
+    {
+        $lokasi = '';
 
-    if ($request->tipe == "lokasi_masuk") {
-        $lokasi = $data ? $data->lokasi_masuk : null;
-    } elseif ($request->tipe == "lokasi_keluar") {
-        $lokasi = $data ? $data->lokasi_keluar : null;
-    }
+        // Jika ada tanggal presensi, cari berdasarkan tanggal dan nik
+        if ($request->has('tanggal_presensi')) {
+            // Untuk Karyawan: Mencari berdasarkan tanggal dan nik
+            $data = DB::table('presensi')
+                ->where('nik', $request->nik)
+                ->whereDate('tanggal_presensi', $request->tanggal_presensi)
+                ->first();
+        } else {
+            // Untuk Admin: Mencari hanya berdasarkan nik
+            $data = DB::table('presensi')->where('nik', $request->nik)->first();
+        }
 
-    if (!$lokasi) {
-        return response()->json(['error' => 'Lokasi tidak ditemukan'], 404);
-    }
+        if ($request->tipe == "lokasi_masuk") {
+            $lokasi = $data ? $data->lokasi_masuk : null;
+        } elseif ($request->tipe == "lokasi_keluar") {
+            $lokasi = $data ? $data->lokasi_keluar : null;
+        }
 
-    return response()->json([$lokasi]);
-}
+        if (!$lokasi) {
+            return response()->json(['error' => 'Lokasi tidak ditemukan'], 404);
+        }
+
+        return response()->json([$lokasi]);
+    }
 
 
 
@@ -470,7 +486,7 @@ class PresensiController extends Controller
         $bulan = $request->bulan;
 
         $karyawan = auth()->guard('karyawan')->user(); // hanya karyawan yang login
-                $riwayatPresensi = [];
+        $riwayatPresensi = [];
         $startDate = Carbon::make($bulan)->startOfMonth();
         $endDate = Carbon::make($bulan)->endOfMonth();
 
@@ -849,12 +865,6 @@ class PresensiController extends Controller
         }
     }
 
-    public function markAsRead(Request $request)
-{
-    auth()->user()->unreadNotifications->markAsRead();
-    return response()->json(['success' => true]);
-}
-    
     public function ajukanTukarJadwal(Request $request)
     {
         // Validasi input

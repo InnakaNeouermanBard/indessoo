@@ -150,14 +150,20 @@
     </script>
     <style>
         .swal2-confirm {
-    background-color: #007bff !important; /* Warna biru untuk tombol OK */
-    color: white !important; /* Teks tombol OK menjadi putih */
-}
-.swal2-cancel {
-    background-color: #007bff !important; /* Warna biru untuk tombol OK */
-    color: white !important; /* Teks tombol OK menjadi putih */
-    border-color: #007bff !important; /* Border tombol OK menjadi biru */
-}
-</style>
+            background-color: #007bff !important;
+            /* Warna biru untuk tombol OK */
+            color: white !important;
+            /* Teks tombol OK menjadi putih */
+        }
+
+        .swal2-cancel {
+            background-color: #007bff !important;
+            /* Warna biru untuk tombol OK */
+            color: white !important;
+            /* Teks tombol OK menjadi putih */
+            border-color: #007bff !important;
+            /* Border tombol OK menjadi biru */
+        }
+    </style>
     {{-- Pastikan SweetAlert2, DaisyUI & Alpine.js di-include di layout utama --}}
 </x-app-layout>

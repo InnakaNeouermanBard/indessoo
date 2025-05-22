@@ -9,6 +9,21 @@
                 <span>Kembali ke Perizinan</span>
             </a>
         </div>
+        <!-- Form Pencarian -->
+        <div class="flex items-center gap-4 mt-4">
+            <form method="GET" action="{{ route('admin.kuota-cuti') }}">
+                <!-- Input Pencarian NIK -->
+                <input type="text" name="nik" id="search-nik" placeholder="Cari NIK" class="input input-bordered"
+                    value="{{ request('nik') }}" />
+
+                <!-- Input Pencarian Nama -->
+                <input type="text" name="nama" id="search-nama" placeholder="Cari Nama Karyawan"
+                    class="input input-bordered" value="{{ request('nama') }}" />
+
+                <!-- Tombol Cari -->
+                <button type="submit" class="btn btn-primary">Cari</button>
+            </form>
+        </div>
     </x-slot>
 
     <div class="container mx-auto px-5 pt-5">
@@ -39,7 +54,7 @@
                                     $start = \Carbon\Carbon::parse($cuti->tanggal_mulai);
                                     $end = \Carbon\Carbon::parse($cuti->tanggal_selesai);
                                     return $start->diffInDays($end) + 1; // +1 untuk menghitung hari terakhir
-                            });
+                                });
 
                             $sisaKuota = $item->kuota_cuti - $cutiTerpakai;
                         @endphp
@@ -51,15 +66,14 @@
                             <td class="px-4 py-3">{{ $item->kuota_cuti }} hari</td>
                             <td class="px-4 py-3">{{ $cutiTerpakai }} hari</td>
                             <td class="px-4 py-3">
-                                <span class="{{ $sisaKuota <= 0 ? 'text-red-500 font-bold' : 'text-green-500 font-bold' }}">
+                                <span
+                                    class="{{ $sisaKuota <= 0 ? 'text-red-500 font-bold' : 'text-green-500 font-bold' }}">
                                     {{ $sisaKuota }} hari
                                 </span>
                             </td>
                             <td class="px-4 py-3 text-center">
-                                <button class="edit-kuota-btn btn btn-info btn-sm"
-                                    data-nik="{{ $item->nik }}"
-                                    data-nama="{{ $item->nama_lengkap }}"
-                                    data-kuota="{{ $item->kuota_cuti }}">
+                                <button class="edit-kuota-btn btn btn-info btn-sm" data-nik="{{ $item->nik }}"
+                                    data-nama="{{ $item->nama_lengkap }}" data-kuota="{{ $item->kuota_cuti }}">
                                     Edit Kuota
                                 </button>
                             </td>
@@ -90,7 +104,8 @@
 
                 <div class="mb-4">
                     <label for="edit-kuota" class="block text-sm font-medium mb-2">Kuota Cuti (Hari)</label>
-                    <input type="number" id="edit-kuota" name="kuota_cuti" class="input input-bordered w-full" min="0" required>
+                    <input type="number" id="edit-kuota" name="kuota_cuti" class="input input-bordered w-full"
+                        min="0" required>
                 </div>
 
                 <div class="flex justify-end gap-2 mt-6">
@@ -130,33 +145,34 @@
     @endpush
 
     @push('scripts')
-    <script>
-        $(document).ready(function () {
-            $(".edit-kuota-btn").click(function () {
-                const nik = $(this).data("nik");
-                const nama = $(this).data("nama");
-                const kuota = $(this).data("kuota");
+        <script>
+            $(document).ready(function() {
+                $(".edit-kuota-btn").click(function() {
+                    const nik = $(this).data("nik");
+                    const nama = $(this).data("nama");
+                    const kuota = $(this).data("kuota");
 
-                $("#edit-nik").val(nik);
-                $("#edit-nama").text(nama);
-                $("#edit-kuota").val(kuota);
+                    $("#edit-nik").val(nik);
+                    $("#edit-nama").text(nama);
+                    $("#edit-kuota").val(kuota);
 
-                const route = `{{ route('admin.kuota-cuti.update', ['nik' => '__nik__']) }}`.replace('__nik__', nik);
-                $("#formEditKuota").attr("action", route);
+                    const route = `{{ route('admin.kuota-cuti.update', ['nik' => '__nik__']) }}`.replace(
+                        '__nik__', nik);
+                    $("#formEditKuota").attr("action", route);
 
-                $("#editKuotaModal").addClass("modal-open");
-            });
+                    $("#editKuotaModal").addClass("modal-open");
+                });
 
-            $(".close-modal").click(function () {
-                $("#editKuotaModal").removeClass("modal-open");
-            });
-
-            $(document).click(function (event) {
-                if ($(event.target).is("#editKuotaModal")) {
+                $(".close-modal").click(function() {
                     $("#editKuotaModal").removeClass("modal-open");
-                }
+                });
+
+                $(document).click(function(event) {
+                    if ($(event.target).is("#editKuotaModal")) {
+                        $("#editKuotaModal").removeClass("modal-open");
+                    }
+                });
             });
-        });
-    </script>
-@endpush
+        </script>
+    @endpush
 </x-app-layout>

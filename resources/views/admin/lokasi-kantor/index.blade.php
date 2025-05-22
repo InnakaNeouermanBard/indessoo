@@ -42,7 +42,7 @@
                                             id="status-text-{{ $item->id }}">{{ $item->is_used ? 'Aktif' : 'Tidak Aktif' }}</span>
                                     </label> --}}
                                     <span class="label-text ml-2"
-                                            id="status-text-{{ $item->id }}">{{ $item->is_used ? 'Aktif' : 'Tidak Aktif' }}</span>
+                                        id="status-text-{{ $item->id }}">{{ $item->is_used ? 'Aktif' : 'Tidak Aktif' }}</span>
                                 </div>
                             </td>
                             <td>
@@ -607,6 +607,13 @@
 
     <style>
         .swal2-confirm {
+            background-color: #007bff !important;
+            /* Warna biru untuk tombol OK */
+            color: white !important;
+            /* Teks tombol OK menjadi putih */
+        }
+
+        .swal2-cancel {
             background-color: #007bff !important;
             /* Warna biru untuk tombol OK */
             color: white !important;

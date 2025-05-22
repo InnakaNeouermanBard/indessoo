@@ -1,37 +1,37 @@
 {{-- form-lembur index --}}
 <x-app-layout>
-<x-slot name="header">
-    <div class="flex items-center justify-between">
-        <div>
-            <h2 class="text-xl font-semibold leading-tight text-gray-800">
-                {{ __('Form Lembur') }}
-            </h2>
-            <h3 class="text-lg text-gray-600 mt-2"> <!-- Menambahkan subjudul dengan h3 -->
-                Karyawan Outsourcing
-            </h3>
+    <x-slot name="header">
+        <div class="flex items-center justify-between">
+            <div>
+                <h2 class="text-xl font-semibold leading-tight text-gray-800">
+                    {{ __('Form Lembur') }}
+                </h2>
+                <h3 class="text-lg text-gray-600 mt-2"> <!-- Menambahkan subjudul dengan h3 -->
+                    Karyawan Outsourcing
+                </h3>
+            </div>
+            <label class="btn btn-primary btn-sm" for="create_modal">Tambah</label>
         </div>
-        <label class="btn btn-primary btn-sm" for="create_modal">Tambah</label>
-    </div>
-</x-slot>
+    </x-slot>
 
 
     <div class="container mx-auto px-5 pt-5">
         <form action="{{ route('form-lembur.index') }}" method="get" class="my-3">
-    <div class="flex w-full flex-wrap gap-2 md:flex-nowrap">
-        <!-- Input untuk NIK -->
-        <input type="text" name="cari_nik" placeholder="Cari NIK" class="input input-bordered w-32 md:w-48"
-            value="{{ request()->cari_nik }}" />
-        
-        <!-- Input untuk Nama Karyawan -->
-        <input type="text" name="cari_nama" placeholder="Cari Nama Karyawan" class="input input-bordered w-32 md:w-48"
-       value="{{ request()->cari_nama }}" />
+            <div class="flex w-full flex-wrap gap-2 md:flex-nowrap">
+                <!-- Input untuk NIK -->
+                <input type="text" name="cari_nik" placeholder="Cari NIK" class="input input-bordered w-32 md:w-48"
+                    value="{{ request()->cari_nik }}" />
 
-        <!-- Tombol Submit -->
-        <button type="submit" class="btn btn-success w-14">
-            <i class="ri-search-2-line text-lg text-white"></i>
-        </button>
-    </div>
-</form>
+                <!-- Input untuk Nama Karyawan -->
+                <input type="text" name="cari_nama" placeholder="Cari Nama Karyawan"
+                    class="input input-bordered w-32 md:w-48" value="{{ request()->cari_nama }}" />
+
+                <!-- Tombol Submit -->
+                <button type="submit" class="btn btn-success w-14">
+                    <i class="ri-search-2-line text-lg text-white"></i>
+                </button>
+            </div>
+        </form>
 
 
         <div class="w-full overflow-x-auto rounded-md bg-slate-200 px-10">
@@ -259,7 +259,8 @@
 
                 <label class="form-control w-full mt-2">
                     <span class="label-text">Keterangan Lembur</span>
-                    <textarea id="edit_keterangan" name="keterangan" class="input input-bordered w-full" rows="4" required readonly></textarea>
+                    <textarea id="edit_keterangan" name="keterangan" class="input input-bordered w-full" rows="4" required
+                        readonly></textarea>
                 </label>
 
                 <label class="form-control w-full mt-2">
@@ -426,4 +427,21 @@
             });
         }
     </script>
+    <style>
+        .swal2-confirm {
+            background-color: #007bff !important;
+            /* Warna biru untuk tombol OK */
+            color: white !important;
+            /* Teks tombol OK menjadi putih */
+        }
+
+        .swal2-cancel {
+            background-color: #007bff !important;
+            /* Warna biru untuk tombol OK */
+            color: white !important;
+            /* Teks tombol OK menjadi putih */
+            border-color: #007bff !important;
+            /* Border tombol OK menjadi biru */
+        }
+    </style>
 </x-app-layout>
